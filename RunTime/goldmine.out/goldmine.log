@@ -1,54 +1,6 @@
-2024-10-01 11:05:41,925 - INFO - goldmine.py -             <module> - User specified assertion file does not exist. Continuing with auto-generated assertions
-2024-10-01 11:05:41,925 - INFO - goldmine.py -             <module> - No Mining Engine specified. Engine specified in the goldmine.cfg will be used
-2024-10-01 11:05:41,935 - WARNING - goldmine.py -             <module> - VCS Executable Not Found.
-2024-10-01 11:05:41,936 - WARNING - goldmine.py -             <module> - IFV Executable Not Found. Assertion Verification won't be possible.
-2024-10-01 11:05:52,320 - INFO - goldmine.py -             <module> - Total time for parsing, ranking: 0:00:10.379983
-2024-10-01 11:05:52,320 - INFO - goldmine.py -             <module> - Peak Memory Usage for parsing, ranking: 857.64 MB
-2024-10-01 11:06:09,342 - WARNING - goldmine.py -             <module> - Cannot remove a non-existent directory: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/static/cone
-2024-10-01 11:07:00,614 - INFO - simulation.py -             write_testbench - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage_bench.v
-2024-10-01 11:07:00,614 - INFO - simulation.py -             write_testbench - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage.vcd
-2024-10-01 11:07:00,614 - INFO - goldmine.py -             <module> - Simulating with: iverilog
-2024-10-01 11:07:00,614 - INFO - simulation.py -             simulate - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage_compile.log
-2024-10-01 11:07:00,614 - INFO - simulation.py -             simulate - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage_err.log
-2024-10-01 11:07:01,626 - INFO - goldmine.py -             <module> - Compile Time: 0:00:01.010231
-2024-10-01 11:07:01,626 - INFO - goldmine.py -             <module> - Compile Memory Usage: 6.6 MB
-2024-10-01 11:07:01,627 - INFO - simulation.py -             simulate - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage_run.log
-2024-10-01 11:07:02,638 - INFO - goldmine.py -             <module> - Run Time: 0:00:01.010231
-2024-10-01 11:07:02,639 - INFO - goldmine.py -             <module> - Run Memory Usage: 6.43 MB
-2024-10-01 11:07:02,643 - INFO - goldmine.py -             <module> - Parsing VCD file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage.vcd
-2024-10-01 11:07:02,649 - WARNING - simulation.py -             parse - Intermodular assertion parsing requested. Proecssing will be significantly slow due to intermodular data parsing...
-2024-10-01 11:07:02,651 - INFO - simulation.py -             parse - Parsing VCD file generated on: Tue Oct  1 11:07:01 2024
-2024-10-01 11:07:02,652 - INFO - simulation.py -             parse - VCD file created by the tool: Icarus Verilog
-2024-10-01 11:07:02,652 - INFO - simulation.py -             parse - Design was simulated using timescale: 1ps
-2024-10-01 11:07:02,671 - INFO - simulation.py -             parse - Parsing trace data
-2024-10-01 11:08:15,004 - INFO - simulation.py -             parse - Creating time shifted data for Sequential circuit type
-2024-10-01 11:10:26,363 - INFO - simulation.py -             parse - Converting time shifted mine data in dataframes
-2024-10-01 11:10:39,249 - INFO - simulation.py -             parse - Validating simulation data
-2024-10-01 11:11:09,608 - INFO - goldmine.py -             <module> - Number of added unique data examples: 999
-2024-10-01 11:11:09,608 - INFO - goldmine.py -             <module> - Number of valid examples: 0
-2024-10-01 11:11:09,608 - INFO - goldmine.py -             <module> - Number of invalid examples: 999
-2024-10-01 11:11:09,608 - INFO - goldmine.py -             <module> - Total time to parse VCD file: 0:04:06.964649
-2024-10-01 11:11:13,731 - INFO - goldmine.py -             <module> - Engine used for mining: prism
-2024-10-01 11:11:13,732 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
-2024-10-01 11:11:22,054 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
-2024-10-01 11:11:22,055 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 992
-2024-10-01 11:11:22,055 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 7
-2024-10-01 11:11:24,568 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
-2024-10-01 11:11:24,573 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/csr_access_o/csr_access_o.cone
-2024-10-01 11:11:24,573 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/csr_access_o/csr_access_o.gold
-2024-10-01 11:11:25,157 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
-2024-10-01 11:11:36,366 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
-2024-10-01 11:11:36,366 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
-2024-10-01 11:11:36,367 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
-2024-10-01 11:11:38,855 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
-2024-10-01 11:11:38,859 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/perf_branch_o/perf_branch_o.cone
-2024-10-01 11:11:38,860 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/perf_branch_o/perf_branch_o.gold
-2024-10-01 11:11:39,362 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
-2024-10-01 11:11:58,974 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
-2024-10-01 11:11:58,974 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
-2024-10-01 11:11:58,974 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
-2024-10-01 11:11:58,994 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
-2024-10-01 11:11:58,995 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
-2024-10-01 11:12:34,062 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
-2024-10-01 11:12:34,063 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
-2024-10-01 11:12:34,063 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 11:30:38,970 - INFO - goldmine.py -             <module> - User specified assertion file does not exist. Continuing with auto-generated assertions
+2024-10-01 11:30:38,970 - INFO - goldmine.py -             <module> - No Mining Engine specified. Engine specified in the goldmine.cfg will be used
+2024-10-01 11:30:38,976 - WARNING - goldmine.py -             <module> - VCS Executable Not Found.
+2024-10-01 11:30:38,976 - WARNING - goldmine.py -             <module> - IFV Executable Not Found. Assertion Verification won't be possible.
+2024-10-01 11:30:38,977 - CRITICAL - configuration.py -             set_config_file_path - Neither VCS nor IVerilog found. No VCD suppiled. Assertion generation not possible
+2024-10-01 11:30:38,977 - CRITICAL - configuration.py -             set_config_file_path - Neither VCS nor IVerilog found. No VCD suppiled. Assertion generation not possible
