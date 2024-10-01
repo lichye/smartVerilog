@@ -3,7 +3,7 @@ https://sites.google.com/view/goldmine-illinois/tool#h.p_8a_9TqGJ65kR
 
 docker build --network=host -t pgoldmine .
 docker run -it pgoldmine /bin/bash
-
+docker run -it -v /home/magna/smart/GoldMiner/RunTime:/opt/goldmine/RunTime  pgoldmine /bin/bash
 
 
 
