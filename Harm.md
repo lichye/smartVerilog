@@ -23,4 +23,11 @@ make
 
 export PATH=$PATH:path_to_/build
 
-harm --vcd bl_master1h.vcd --clk clock --conf bl_masterConfig.xml
+harm --vcd bl_master1h.vcd --clk wb_clk --conf bl_masterConfig.xml
+
+
+Type-2:
+Run Docker
+
+docker run -it samger/harm:latest
+export PATH=$PATH:/harm/build
