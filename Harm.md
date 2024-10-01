@@ -23,8 +23,4 @@ make
 
 export PATH=$PATH:path_to_/build
 
-./harm --vcd trace.vcd --clk clock --conf config.xml
-
-harm --vcd bl_master1h.vcd --conf bl_masterConfig.xml
-
-harm --csv ex3.csv --conf ex3Config.xml
+harm --vcd bl_master1h.vcd --clk clock --conf bl_masterConfig.xml
