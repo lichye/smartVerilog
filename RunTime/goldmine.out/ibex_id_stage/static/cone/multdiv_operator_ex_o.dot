@@ -1,0 +1,50 @@
+strict digraph "" {
+	instr_rdata_i	 [complexity=8,
+		importance=0.102451569708,
+		rank=0.0128064462135];
+	"decoder_i.instr_rdata_i"	 [complexity=8,
+		importance=0.100955607017,
+		rank=0.0126194508771];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"decoder_i.MD_OP_DIV"	 [complexity=6,
+		importance=0.0250976581259,
+		rank=0.00418294302099];
+	"decoder_i.multdiv_operator_o"	 [complexity=2,
+		importance=0.0118008477177,
+		rank=0.00590042385887];
+	"decoder_i.MD_OP_DIV" -> "decoder_i.multdiv_operator_o";
+	multdiv_operator_ex_o	 [complexity=0,
+		importance=0.00339559280683,
+		rank=0.0];
+	multdiv_operator	 [complexity=2,
+		importance=0.00719450822196,
+		rank=0.00359725411098];
+	multdiv_operator -> multdiv_operator_ex_o;
+	"decoder_i.opcode"	 [complexity=3,
+		importance=0.0966547146656,
+		rank=0.0322182382219];
+	"decoder_i.opcode" -> "decoder_i.multdiv_operator_o";
+	"decoder_i.multdiv_operator_o" -> multdiv_operator;
+	"decoder_i.instr"	 [complexity=6,
+		importance=0.0990856452357,
+		rank=0.016514274206];
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.multdiv_operator_o";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=6,
+		importance=0.0981506773561,
+		rank=0.016358446226];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	"decoder_i.MD_OP_MULH"	 [complexity=8,
+		importance=0.0368985058437,
+		rank=0.00461231323046];
+	"decoder_i.MD_OP_MULH" -> "decoder_i.multdiv_operator_o";
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.MD_OP_MULL"	 [complexity=6,
+		importance=0.0250976581259,
+		rank=0.00418294302099];
+	"decoder_i.MD_OP_MULL" -> "decoder_i.multdiv_operator_o";
+	"decoder_i.MD_OP_REM"	 [complexity=6,
+		importance=0.0250976581259,
+		rank=0.00418294302099];
+	"decoder_i.MD_OP_REM" -> "decoder_i.multdiv_operator_o";
+}

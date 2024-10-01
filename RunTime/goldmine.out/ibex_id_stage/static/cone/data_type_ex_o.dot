@@ -1,0 +1,34 @@
+strict digraph "" {
+	instr_rdata_i	 [complexity=8,
+		importance=0.0725445059411,
+		rank=0.00906806324264];
+	"decoder_i.instr_rdata_i"	 [complexity=8,
+		importance=0.0710485432507,
+		rank=0.00888106790634];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"decoder_i.opcode"	 [complexity=3,
+		importance=0.0667476508992,
+		rank=0.0222492169664];
+	"decoder_i.data_type_o"	 [complexity=2,
+		importance=0.00644997179755,
+		rank=0.00322498589877];
+	"decoder_i.opcode" -> "decoder_i.data_type_o";
+	"decoder_i.instr"	 [complexity=6,
+		importance=0.0691785814693,
+		rank=0.0115297635782];
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.data_type_o";
+	data_type_ex_o	 [complexity=0,
+		importance=0.00263107088437,
+		rank=0.0];
+	data_type_id	 [complexity=2,
+		importance=0.00490135824031,
+		rank=0.00245067912015];
+	"decoder_i.data_type_o" -> data_type_id;
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=6,
+		importance=0.0682436135896,
+		rank=0.0113739355983];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	data_type_id -> data_type_ex_o;
+}

@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"439:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7fcd17b29a90>",
+		def_var="['sign_b']",
+		fillcolor=deepskyblue,
+		label="439:AS
+sign_b = op_b_i[31] & signed_mode_i[1];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['op_b_i', 'signed_mode_i']"];
+}

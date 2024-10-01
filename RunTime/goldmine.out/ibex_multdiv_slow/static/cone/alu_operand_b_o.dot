@@ -1,0 +1,256 @@
+strict digraph "" {
+	"[1]accum_window_d"	 [complexity=4,
+		importance=0.18215834559,
+		rank=0.0455395863975];
+	accum_window_q	 [complexity=2,
+		importance=0.0950281501034,
+		rank=0.0475140750517];
+	"[1]accum_window_d" -> accum_window_q;
+	alu_operand_b_o	 [complexity=0,
+		importance=0.0400121306605,
+		rank=0.0];
+	accum_window_q -> alu_operand_b_o;
+	"[1]MD_CHANGE_SIGN"	 [complexity=12,
+		importance=0.696363825633,
+		rank=0.0580303188027];
+	"[1]md_state_d"	 [complexity=8,
+		importance=0.342897938459,
+		rank=0.0428622423074];
+	"[1]MD_CHANGE_SIGN" -> "[1]md_state_d";
+	op_a_bw_last_pp	 [complexity=5,
+		importance=0.0574518549523,
+		rank=0.0114903709905];
+	op_a_bw_last_pp -> alu_operand_b_o;
+	op_a_bw_pp	 [complexity=7,
+		importance=0.0974639856128,
+		rank=0.0139234265161];
+	op_a_bw_pp -> alu_operand_b_o;
+	"[1]accum_window_q"	 [complexity=26,
+		importance=0.248961201739,
+		rank=0.00957543083613];
+	"[1]accum_window_q" -> "[1]accum_window_d";
+	"[1]op_remainder"	 [complexity=14,
+		importance=0.401891132387,
+		rank=0.0287065094562];
+	"[1]accum_window_q" -> "[1]op_remainder";
+	"[1]is_greater_equal"	 [complexity=21,
+		importance=0.193945182296,
+		rank=0.00923548487126];
+	"[1]accum_window_q" -> "[1]is_greater_equal";
+	"[1]next_reminder"	 [complexity=10,
+		importance=0.388267043932,
+		rank=0.0388267043932];
+	"[1]op_remainder" -> "[1]next_reminder";
+	b_0	 [complexity=12,
+		importance=0.109678948625,
+		rank=0.00913991238545];
+	b_0 -> op_a_bw_last_pp;
+	b_0 -> op_a_bw_pp;
+	"[1]MD_COMP"	 [complexity=18,
+		importance=1.38215970255,
+		rank=0.0767866501418];
+	"[1]MD_COMP" -> "[1]md_state_d";
+	"[1]MD_ABS_B"	 [complexity=10,
+		importance=0.353465887173,
+		rank=0.0353465887173];
+	"[1]MD_ABS_B" -> "[1]md_state_d";
+	"[1]multdiv_state_m1"	 [complexity=8,
+		importance=0.195434691687,
+		rank=0.0244293364609];
+	"[1]multdiv_state_m1" -> "[1]accum_window_d";
+	"[1]op_numerator_q"	 [complexity=10,
+		importance=0.385301643245,
+		rank=0.0385301643245];
+	"[1]op_numerator_q" -> "[1]accum_window_d";
+	md_state_q	 [complexity=6,
+		importance=0.282861276153,
+		rank=0.0471435460256];
+	md_state_q -> alu_operand_b_o;
+	"[1]sign_b"	 [complexity=23,
+		importance=0.359090665824,
+		rank=0.0156126376445];
+	"[1]op_b_ext"	 [complexity=20,
+		importance=0.345220251648,
+		rank=0.0172610125824];
+	"[1]sign_b" -> "[1]op_b_ext";
+	"[1]op_b_shift_d"	 [complexity=16,
+		importance=0.165840038255,
+		rank=0.010365002391];
+	"[1]sign_b" -> "[1]op_b_shift_d";
+	"[1]div_change_sign"	 [complexity=8,
+		importance=0.196854390397,
+		rank=0.0246067987996];
+	"[1]sign_b" -> "[1]div_change_sign";
+	"[1]equal_to_zero"	 [complexity=16,
+		importance=0.696363825633,
+		rank=0.0435227391021];
+	"[1]equal_to_zero" -> "[1]md_state_d";
+	"[1]res_adder_l"	 [complexity=10,
+		importance=0.559684957853,
+		rank=0.0559684957853];
+	"[1]res_adder_l" -> "[1]accum_window_d";
+	"[1]op_b_ext" -> "[1]op_b_shift_d";
+	"[1]op_a_shift_d"	 [complexity=14,
+		importance=0.15272688699,
+		rank=0.0109090633565];
+	op_a_shift_q	 [complexity=12,
+		importance=0.123517792065,
+		rank=0.0102931493388];
+	"[1]op_a_shift_d" -> op_a_shift_q;
+	op_a_shift_q -> op_a_bw_last_pp;
+	op_a_shift_q -> op_a_bw_pp;
+	"[1]rst_ni"	 [complexity=15,
+		importance=0.282631766527,
+		rank=0.0188421177685];
+	"[1]rst_ni" -> accum_window_q;
+	"[1]rst_ni" -> md_state_q;
+	"[1]rst_ni" -> op_a_shift_q;
+	op_b_shift_q	 [complexity=14,
+		importance=0.136031908906,
+		rank=0.00971656492188];
+	"[1]rst_ni" -> op_b_shift_q;
+	"[1]next_quotient"	 [complexity=16,
+		importance=0.176472429895,
+		rank=0.0110295268685];
+	"[1]next_quotient" -> "[1]accum_window_d";
+	"[1]next_quotient" -> "[1]op_a_shift_d";
+	"[1]op_a_ext"	 [complexity=18,
+		importance=0.319159071641,
+		rank=0.0177310595356];
+	"[1]op_a_ext" -> "[1]accum_window_d";
+	"[1]op_a_ext" -> "[1]op_a_shift_d";
+	"[1]operator_i"	 [complexity=18,
+		importance=0.673928101735,
+		rank=0.0374404500964];
+	"[1]operator_i" -> "[1]accum_window_d";
+	"[1]operator_i" -> "[1]op_a_shift_d";
+	"[1]operator_i" -> "[1]op_b_shift_d";
+	"[1]operator_i" -> "[1]md_state_d";
+	"[1]rem_change_sign"	 [complexity=8,
+		importance=0.194542657065,
+		rank=0.0243178321332];
+	"[1]rem_change_sign" -> "[1]accum_window_d";
+	"[1]res_adder_h"	 [complexity=26,
+		importance=0.20715510338,
+		rank=0.00796750397615];
+	"[1]res_adder_h" -> "[1]accum_window_d";
+	"[1]res_adder_h" -> "[1]is_greater_equal";
+	"[1]res_adder_h" -> "[1]next_reminder";
+	"[1]is_greater_equal" -> "[1]next_quotient";
+	"[1]is_greater_equal" -> "[1]next_reminder";
+	MD_LAST	 [complexity=5,
+		importance=0.0505800793746,
+		rank=0.0101160158749];
+	MD_LAST -> alu_operand_b_o;
+	op_b_shift_q -> op_a_bw_last_pp;
+	op_b_shift_q -> op_a_bw_pp;
+	op_b_shift_q -> b_0;
+	op_b_shift_q -> alu_operand_b_o;
+	"[1]op_b_shift_d" -> op_b_shift_q;
+	"[1]op_a_shift_q"	 [complexity=21,
+		importance=0.202526236348,
+		rank=0.00964410649275];
+	"[1]op_a_shift_q" -> "[1]op_a_shift_d";
+	"[1]op_a_shift_q" -> "[1]next_quotient";
+	"[1]signed_mode_i"	 [complexity=26,
+		importance=0.369658614538,
+		rank=0.0142176390207];
+	"[1]signed_mode_i" -> "[1]sign_b";
+	"[1]sign_a"	 [complexity=21,
+		importance=0.333689978909,
+		rank=0.0158899989957];
+	"[1]signed_mode_i" -> "[1]sign_a";
+	op_a_i	 [complexity=2,
+		importance=0.0505800793746,
+		rank=0.0252900396873];
+	op_a_i -> alu_operand_b_o;
+	"[1]one_shift"	 [complexity=21,
+		importance=0.189748775992,
+		rank=0.00903565599963];
+	"[1]one_shift" -> "[1]next_quotient";
+	"[1]div_en_i"	 [complexity=18,
+		importance=0.83976813999,
+		rank=0.046653785555];
+	"[1]div_en_i" -> "[1]accum_window_d";
+	"[1]div_en_i" -> "[1]op_a_shift_d";
+	"[1]div_en_i" -> "[1]op_b_shift_d";
+	"[1]div_en_i" -> "[1]md_state_d";
+	"[1]op_a_i"	 [complexity=24,
+		importance=0.344257927623,
+		rank=0.0143440803176];
+	"[1]op_a_i" -> "[1]op_a_ext";
+	"[1]op_a_i" -> "[1]sign_a";
+	op_b_i	 [complexity=4,
+		importance=0.0905922100351,
+		rank=0.0226480525088];
+	op_b_i -> alu_operand_b_o;
+	"[1]op_b_shift_q"	 [complexity=22,
+		importance=0.523873075047,
+		rank=0.0238124125021];
+	"[1]op_b_shift_q" -> "[1]is_greater_equal";
+	"[1]op_b_shift_q" -> "[1]op_b_shift_d";
+	"[1]sign_a" -> "[1]op_a_ext";
+	"[1]sign_a" -> "[1]rem_change_sign";
+	"[1]sign_a" -> "[1]div_change_sign";
+	"[1]alu_adder_ext_i"	 [complexity=28,
+		importance=0.217723052094,
+		rank=0.00777582328907];
+	"[1]alu_adder_ext_i" -> "[1]res_adder_l";
+	"[1]alu_adder_ext_i" -> "[1]res_adder_h";
+	"[1]MD_LAST"	 [complexity=12,
+		importance=0.353465887173,
+		rank=0.0294554905978];
+	"[1]MD_LAST" -> "[1]md_state_d";
+	"[1]multdiv_state_q"	 [complexity=23,
+		importance=0.2114162674,
+		rank=0.0091920116261];
+	"[1]multdiv_state_q" -> "[1]multdiv_state_m1";
+	"[1]multdiv_state_q" -> "[1]one_shift";
+	"[1]multdiv_state_q" -> "[1]md_state_d";
+	"[1]md_state_d" -> md_state_q;
+	"[1]alu_adder_i"	 [complexity=20,
+		importance=0.176407986969,
+		rank=0.00882039934847];
+	"[1]alu_adder_i" -> "[1]accum_window_d";
+	"[1]alu_adder_i" -> "[1]op_b_shift_d";
+	"[1]MD_ABS_A"	 [complexity=16,
+		importance=0.696363825633,
+		rank=0.0435227391021];
+	"[1]MD_ABS_A" -> "[1]md_state_d";
+	operator_i	 [complexity=1,
+		importance=0.290652863338,
+		rank=0.290652863338];
+	operator_i -> alu_operand_b_o;
+	"[1]mult_en_i"	 [complexity=18,
+		importance=0.83976813999,
+		rank=0.046653785555];
+	"[1]mult_en_i" -> "[1]accum_window_d";
+	"[1]mult_en_i" -> "[1]op_a_shift_d";
+	"[1]mult_en_i" -> "[1]op_b_shift_d";
+	"[1]mult_en_i" -> "[1]md_state_d";
+	"[1]MD_FINISH"	 [complexity=18,
+		importance=1.03926176409,
+		rank=0.0577367646718];
+	"[1]MD_FINISH" -> "[1]md_state_d";
+	"[1]next_reminder" -> "[1]accum_window_d";
+	"[1]div_change_sign" -> "[1]accum_window_d";
+	"[1]MD_IDLE"	 [complexity=14,
+		importance=1.03926176409,
+		rank=0.0742329831494];
+	"[1]MD_IDLE" -> md_state_q;
+	"[1]MD_IDLE" -> "[1]md_state_d";
+	"[1]md_state_q"	 [complexity=17,
+		importance=0.871988683467,
+		rank=0.0512934519686];
+	"[1]md_state_q" -> "[1]accum_window_d";
+	"[1]md_state_q" -> "[1]op_a_shift_d";
+	"[1]md_state_q" -> "[1]op_b_shift_d";
+	"[1]md_state_q" -> "[1]md_state_d";
+	"[1]op_b_i"	 [complexity=26,
+		importance=0.369658614538,
+		rank=0.0142176390207];
+	"[1]op_b_i" -> "[1]accum_window_d";
+	"[1]op_b_i" -> "[1]sign_b";
+	"[1]op_b_i" -> "[1]op_b_ext";
+	"[1]op_b_i" -> "[1]op_b_shift_d";
+}

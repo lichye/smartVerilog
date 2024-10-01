@@ -1,0 +1,25 @@
+strict digraph "" {
+	instr_rdata_i	 [complexity=6,
+		importance=0.0111314396899,
+		rank=0.00185523994832];
+	"decoder_i.instr_rdata_i"	 [complexity=6,
+		importance=0.00963547699949,
+		rank=0.00160591283325];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	regfile_waddr	 [complexity=2,
+		importance=0.00383464990627,
+		rank=0.00191732495314];
+	rfvi_reg_waddr_rd_o	 [complexity=0,
+		importance=0.00196369500569,
+		rank=0.0];
+	regfile_waddr -> rfvi_reg_waddr_rd_o;
+	"decoder_i.regfile_waddr_o"	 [complexity=2,
+		importance=0.00533458464794,
+		rank=0.00266729232397];
+	"decoder_i.regfile_waddr_o" -> regfile_waddr;
+	"decoder_i.instr"	 [complexity=4,
+		importance=0.00776551521804,
+		rank=0.00194137880451];
+	"decoder_i.instr" -> "decoder_i.regfile_waddr_o";
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+}

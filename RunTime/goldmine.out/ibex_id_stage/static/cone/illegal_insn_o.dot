@@ -1,0 +1,130 @@
+strict digraph "" {
+	"decoder_i.regfile_we"	 [complexity=16,
+		importance=0.0166412511321,
+		rank=0.00104007819576];
+	"decoder_i.illegal_reg_rv32e"	 [complexity=7,
+		importance=0.014658549213,
+		rank=0.00209407845901];
+	"decoder_i.regfile_we" -> "decoder_i.illegal_reg_rv32e";
+	"decoder_i.illegal_c_insn_i"	 [complexity=18,
+		importance=0.0225437624669,
+		rank=0.00125243124816];
+	"decoder_i.illegal_insn"	 [complexity=17,
+		importance=0.0202998015945,
+		rank=0.00119410597615];
+	"decoder_i.illegal_c_insn_i" -> "decoder_i.illegal_insn";
+	"decoder_i.instr_new_i"	 [complexity=19,
+		importance=0.109669706438,
+		rank=0.00577208981255];
+	"decoder_i.instr_new_i" -> "decoder_i.regfile_we";
+	"decoder_i.alu_op_b_mux_sel_o"	 [complexity=16,
+		importance=0.0180223959038,
+		rank=0.00112639974399];
+	"decoder_i.instr_new_i" -> "decoder_i.alu_op_b_mux_sel_o";
+	"decoder_i.alu_op_a_mux_sel_o"	 [complexity=16,
+		importance=0.018761007017,
+		rank=0.00117256293856];
+	"decoder_i.instr_new_i" -> "decoder_i.alu_op_a_mux_sel_o";
+	"decoder_i.instr"	 [complexity=23,
+		importance=0.0264854537371,
+		rank=0.00115154146683];
+	"decoder_i.instr" -> "decoder_i.regfile_we";
+	"decoder_i.instr" -> "decoder_i.alu_op_b_mux_sel_o";
+	"decoder_i.instr" -> "decoder_i.alu_op_a_mux_sel_o";
+	"decoder_i.csr_illegal"	 [complexity=19,
+		importance=0.0218065902433,
+		rank=0.00114771527596];
+	"decoder_i.instr" -> "decoder_i.csr_illegal";
+	"decoder_i.regfile_raddr_b_o"	 [complexity=16,
+		importance=0.0161584839547,
+		rank=0.00100990524717];
+	"decoder_i.instr" -> "decoder_i.regfile_raddr_b_o";
+	"decoder_i.regfile_raddr_a_o"	 [complexity=16,
+		importance=0.0161584839547,
+		rank=0.00100990524717];
+	"decoder_i.instr" -> "decoder_i.regfile_raddr_a_o";
+	"decoder_i.opcode"	 [complexity=20,
+		importance=0.024054523167,
+		rank=0.00120272615835];
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.regfile_waddr_o"	 [complexity=16,
+		importance=0.0161584839547,
+		rank=0.00100990524717];
+	"decoder_i.instr" -> "decoder_i.regfile_waddr_o";
+	"decoder_i.instr" -> "decoder_i.illegal_insn";
+	"decoder_i.illegal_insn_o"	 [complexity=4,
+		importance=0.00962737849749,
+		rank=0.00240684462437];
+	illegal_insn_dec	 [complexity=4,
+		importance=0.00669068285218,
+		rank=0.00167267071304];
+	"decoder_i.illegal_insn_o" -> illegal_insn_dec;
+	"decoder_i.instr_rdata_i"	 [complexity=25,
+		importance=0.0283554155186,
+		rank=0.00113421662074];
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.alu_op_b_mux_sel_o" -> "decoder_i.illegal_reg_rv32e";
+	"decoder_i.OP_A_REG_A"	 [complexity=34,
+		importance=0.883263292491,
+		rank=0.0259783321321];
+	"decoder_i.OP_A_REG_A" -> "decoder_i.alu_op_a_mux_sel_o";
+	"decoder_i.OP_A_REG_A" -> "decoder_i.illegal_reg_rv32e";
+	"decoder_i.OP_A_CURRPC"	 [complexity=28,
+		importance=0.114062004793,
+		rank=0.00407364302831];
+	"decoder_i.OP_A_CURRPC" -> "decoder_i.alu_op_a_mux_sel_o";
+	"decoder_i.alu_op_a_mux_sel_o" -> "decoder_i.illegal_reg_rv32e";
+	"decoder_i.csr_illegal" -> "decoder_i.illegal_insn";
+	"decoder_i.regfile_raddr_b_o" -> "decoder_i.illegal_reg_rv32e";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=23,
+		importance=0.0255504858575,
+		rank=0.00111089068945];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	"decoder_i.OP_B_IMM"	 [complexity=46,
+		importance=0.704369402937,
+		rank=0.0153123783247];
+	"decoder_i.OP_B_IMM" -> "decoder_i.alu_op_b_mux_sel_o";
+	instr_valid_i	 [complexity=4,
+		importance=0.00522207831638,
+		rank=0.00130551957909];
+	illegal_insn_o	 [complexity=0,
+		importance=0.00372611562594,
+		rank=0.0];
+	instr_valid_i -> illegal_insn_o;
+	illegal_insn_dec -> illegal_insn_o;
+	"decoder_i.OP_A_IMM"	 [complexity=22,
+		importance=0.0577789837415,
+		rank=0.0026263174428];
+	"decoder_i.OP_A_IMM" -> "decoder_i.alu_op_a_mux_sel_o";
+	instr_new_i	 [complexity=19,
+		importance=0.111165669129,
+		rank=0.00585082469099];
+	instr_new_i -> "decoder_i.instr_new_i";
+	"decoder_i.regfile_raddr_a_o" -> "decoder_i.illegal_reg_rv32e";
+	instr_rdata_i	 [complexity=25,
+		importance=0.029851378209,
+		rank=0.00119405512836];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	illegal_c_insn_i	 [complexity=18,
+		importance=0.0240397251574,
+		rank=0.00133554028652];
+	illegal_c_insn_i -> "decoder_i.illegal_c_insn_i";
+	"decoder_i.OP_B_REG_B"	 [complexity=22,
+		importance=0.397988672573,
+		rank=0.0180903942079];
+	"decoder_i.OP_B_REG_B" -> "decoder_i.alu_op_b_mux_sel_o";
+	"decoder_i.OP_B_REG_B" -> "decoder_i.illegal_reg_rv32e";
+	"decoder_i.illegal_reg_rv32e" -> "decoder_i.illegal_insn_o";
+	"decoder_i.opcode" -> "decoder_i.regfile_we";
+	"decoder_i.opcode" -> "decoder_i.alu_op_b_mux_sel_o";
+	"decoder_i.opcode" -> "decoder_i.alu_op_a_mux_sel_o";
+	"decoder_i.opcode" -> "decoder_i.csr_illegal";
+	"decoder_i.opcode" -> "decoder_i.illegal_insn";
+	"decoder_i.regfile_waddr_o" -> "decoder_i.illegal_reg_rv32e";
+	illegal_csr_insn_i	 [complexity=4,
+		importance=0.00522207831638,
+		rank=0.00130551957909];
+	illegal_csr_insn_i -> illegal_insn_o;
+	"decoder_i.illegal_insn" -> "decoder_i.regfile_we";
+	"decoder_i.illegal_insn" -> "decoder_i.illegal_insn_o";
+}

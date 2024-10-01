@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"774:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2170027510>",
+		def_var="['regfile_we_o']",
+		fillcolor=deepskyblue,
+		label="774:AS
+regfile_we_o = regfile_we & ~illegal_reg_rv32e;",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['regfile_we', 'illegal_reg_rv32e']"];
+}

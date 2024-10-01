@@ -1,0 +1,215 @@
+strict digraph "" {
+	imm_b_type	 [complexity=9,
+		importance=0.026717535343,
+		rank=0.00296861503811];
+	imm_b	 [complexity=7,
+		importance=0.0244715882323,
+		rank=0.00349594117604];
+	imm_b_type -> imm_b;
+	"decoder_i.imm_b_mux_sel_o"	 [complexity=12,
+		importance=0.211412435166,
+		rank=0.0176177029305];
+	imm_b_mux_sel_dec	 [complexity=12,
+		importance=0.205182304761,
+		rank=0.0170985253968];
+	"decoder_i.imm_b_mux_sel_o" -> imm_b_mux_sel_dec;
+	"decoder_i.imm_s_type_o"	 [complexity=9,
+		importance=0.0282174700847,
+		rank=0.00313527445385];
+	imm_s_type	 [complexity=9,
+		importance=0.026717535343,
+		rank=0.00296861503811];
+	"decoder_i.imm_s_type_o" -> imm_s_type;
+	imm_j_type	 [complexity=9,
+		importance=0.026717535343,
+		rank=0.00296861503811];
+	imm_j_type -> imm_b;
+	"decoder_i.instr_new_i"	 [complexity=14,
+		importance=0.143734435378,
+		rank=0.0102667453842];
+	"decoder_i.instr_new_i" -> "decoder_i.imm_b_mux_sel_o";
+	"decoder_i.alu_op_b_mux_sel_o"	 [complexity=11,
+		importance=0.0236998507271,
+		rank=0.00215453188428];
+	"decoder_i.instr_new_i" -> "decoder_i.alu_op_b_mux_sel_o";
+	OP_B_IMM	 [complexity=11,
+		importance=0.0194950970798,
+		rank=0.00177228155271];
+	alu_op_b_mux_sel	 [complexity=7,
+		importance=0.0179991343894,
+		rank=0.00257130491277];
+	OP_B_IMM -> alu_op_b_mux_sel;
+	alu_operand_b	 [complexity=2,
+		importance=0.0147113432591,
+		rank=0.00735567162955];
+	OP_B_IMM -> alu_operand_b;
+	"decoder_i.imm_i_type_o"	 [complexity=9,
+		importance=0.0282174700847,
+		rank=0.00313527445385];
+	imm_i_type	 [complexity=9,
+		importance=0.026717535343,
+		rank=0.00296861503811];
+	"decoder_i.imm_i_type_o" -> imm_i_type;
+	imm_b_mux_sel	 [complexity=8,
+		importance=0.200571626689,
+		rank=0.0250714533361];
+	imm_b_mux_sel -> imm_b;
+	alu_op_b_mux_sel_dec	 [complexity=11,
+		importance=0.0203360040364,
+		rank=0.00184872763967];
+	alu_op_b_mux_sel_dec -> alu_op_b_mux_sel;
+	alu_op_b_mux_sel -> alu_operand_b;
+	imm_i_type -> imm_b;
+	"decoder_i.instr_rdata_i"	 [complexity=34,
+		importance=0.0314032362002,
+		rank=0.000923624594124];
+	"decoder_i.instr"	 [complexity=32,
+		importance=0.0295332744188,
+		rank=0.000922914825587];
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	instr_is_compressed_i	 [complexity=9,
+		importance=0.0259675509227,
+		rank=0.00288528343586];
+	instr_is_compressed_i -> imm_b;
+	imm_b_mux_sel_dec -> imm_b_mux_sel;
+	regfile_raddr_b	 [complexity=30,
+		importance=0.025602409107,
+		rank=0.0008534136369];
+	"registers_i.raddr_b_i"	 [complexity=30,
+		importance=0.0237314542064,
+		rank=0.000791048473548];
+	regfile_raddr_b -> "registers_i.raddr_b_i";
+	"decoder_i.alu_op_b_mux_sel_o" -> alu_op_b_mux_sel_dec;
+	"registers_i.rdata_b_o"	 [complexity=7,
+		importance=0.0217677592007,
+		rank=0.00310967988582];
+	regfile_rdata_b	 [complexity=7,
+		importance=0.0180608416139,
+		rank=0.00258012023056];
+	"registers_i.rdata_b_o" -> regfile_rdata_b;
+	"decoder_i.opcode"	 [complexity=12,
+		importance=1.54273823018,
+		rank=0.128561519182];
+	"decoder_i.opcode" -> "decoder_i.imm_b_mux_sel_o";
+	"decoder_i.opcode" -> "decoder_i.alu_op_b_mux_sel_o";
+	"registers_i.DataWidth"	 [complexity=56,
+		importance=0.026434816806,
+		rank=0.000472050300107];
+	"registers_i.DataWidth" -> "registers_i.rdata_b_o";
+	"registers_i.rf_reg"	 [complexity=30,
+		importance=0.0249388541156,
+		rank=0.000831295137185];
+	"registers_i.DataWidth" -> "registers_i.rf_reg";
+	"decoder_i.IMM_B_INCR_PC"	 [complexity=18,
+		importance=0.635733268188,
+		rank=0.0353185148993];
+	"decoder_i.IMM_B_INCR_PC" -> "decoder_i.imm_b_mux_sel_o";
+	"[1]registers_i.NUM_WORDS"	 [complexity=60,
+		importance=0.0289125196484,
+		rank=0.000481875327473];
+	"registers_i.rf_reg_tmp"	 [complexity=56,
+		importance=0.0274165569579,
+		rank=0.000489581374249];
+	"[1]registers_i.NUM_WORDS" -> "registers_i.rf_reg_tmp";
+	regfile_rdata_b -> alu_operand_b;
+	"[1]rst_ni"	 [complexity=57,
+		importance=0.0305019821116,
+		rank=0.000535122493185];
+	"[1]registers_i.rst_ni"	 [complexity=57,
+		importance=0.0290060194211,
+		rank=0.000508877533704];
+	"[1]rst_ni" -> "[1]registers_i.rst_ni";
+	"decoder_i.regfile_raddr_b_o"	 [complexity=30,
+		importance=0.0271023438487,
+		rank=0.000903411461623];
+	"decoder_i.regfile_raddr_b_o" -> regfile_raddr_b;
+	"decoder_i.imm_j_type_o"	 [complexity=9,
+		importance=0.0282174700847,
+		rank=0.00313527445385];
+	"decoder_i.imm_j_type_o" -> imm_j_type;
+	"decoder_i.sv2v_cast_DB892"	 [complexity=15,
+		importance=1.54423419287,
+		rank=0.102948946192];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	"decoder_i.IMM_B_S"	 [complexity=14,
+		importance=0.212908397856,
+		rank=0.015207742704];
+	"decoder_i.IMM_B_S" -> "decoder_i.imm_b_mux_sel_o";
+	"decoder_i.OP_B_IMM"	 [complexity=41,
+		importance=0.925790141047,
+		rank=0.0225802473426];
+	"decoder_i.OP_B_IMM" -> "decoder_i.alu_op_b_mux_sel_o";
+	"decoder_i.IMM_B_U"	 [complexity=16,
+		importance=0.424320833022,
+		rank=0.0265200520639];
+	"decoder_i.IMM_B_U" -> "decoder_i.imm_b_mux_sel_o";
+	imm_u_type	 [complexity=9,
+		importance=0.026717535343,
+		rank=0.00296861503811];
+	imm_u_type -> imm_b;
+	lsu_addr_incr_req_i	 [complexity=11,
+		importance=0.0194950970798,
+		rank=0.00177228155271];
+	lsu_addr_incr_req_i -> imm_b_mux_sel;
+	lsu_addr_incr_req_i -> alu_op_b_mux_sel;
+	alu_operand_b_ex_o	 [complexity=0,
+		importance=0.00589950688565,
+		rank=0.0];
+	alu_operand_b -> alu_operand_b_ex_o;
+	instr_new_i	 [complexity=14,
+		importance=0.145230398069,
+		rank=0.0103735998621];
+	instr_new_i -> "decoder_i.instr_new_i";
+	"decoder_i.IMM_B_B"	 [complexity=14,
+		importance=0.212908397856,
+		rank=0.015207742704];
+	"decoder_i.IMM_B_B" -> "decoder_i.imm_b_mux_sel_o";
+	imm_b -> alu_operand_b;
+	"registers_i.NUM_WORDS"	 [complexity=56,
+		importance=0.026434816806,
+		rank=0.000472050300107];
+	"registers_i.NUM_WORDS" -> "registers_i.rdata_b_o";
+	"registers_i.NUM_WORDS" -> "registers_i.rf_reg";
+	"decoder_i.imm_u_type_o"	 [complexity=9,
+		importance=0.0282174700847,
+		rank=0.00313527445385];
+	"decoder_i.imm_u_type_o" -> imm_u_type;
+	"decoder_i.IMM_B_J"	 [complexity=14,
+		importance=0.212908397856,
+		rank=0.015207742704];
+	"decoder_i.IMM_B_J" -> "decoder_i.imm_b_mux_sel_o";
+	IMM_B_INCR_ADDR	 [complexity=12,
+		importance=0.202067589379,
+		rank=0.0168389657816];
+	IMM_B_INCR_ADDR -> imm_b_mux_sel;
+	"decoder_i.IMM_B_I"	 [complexity=22,
+		importance=4.86398197151,
+		rank=0.221090089614];
+	"decoder_i.IMM_B_I" -> "decoder_i.imm_b_mux_sel_o";
+	"registers_i.raddr_b_i" -> "registers_i.rdata_b_o";
+	instr_rdata_i	 [complexity=34,
+		importance=0.0328991988907,
+		rank=0.000967623496784];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	imm_s_type -> imm_b;
+	"decoder_i.OP_B_REG_B"	 [complexity=17,
+		importance=0.522892678686,
+		rank=0.0307583928639];
+	"decoder_i.OP_B_REG_B" -> "decoder_i.alu_op_b_mux_sel_o";
+	"[1]registers_i.rst_ni" -> "registers_i.rf_reg_tmp";
+	"registers_i.rf_reg_tmp" -> "registers_i.rf_reg";
+	"decoder_i.instr" -> "decoder_i.imm_b_mux_sel_o";
+	"decoder_i.instr" -> "decoder_i.imm_s_type_o";
+	"decoder_i.instr" -> "decoder_i.imm_i_type_o";
+	"decoder_i.instr" -> "decoder_i.alu_op_b_mux_sel_o";
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.regfile_raddr_b_o";
+	"decoder_i.instr" -> "decoder_i.imm_j_type_o";
+	"decoder_i.instr" -> "decoder_i.imm_u_type_o";
+	"decoder_i.imm_b_type_o"	 [complexity=9,
+		importance=0.0282174700847,
+		rank=0.00313527445385];
+	"decoder_i.instr" -> "decoder_i.imm_b_type_o";
+	"decoder_i.imm_b_type_o" -> imm_b_type;
+	"registers_i.rf_reg" -> "registers_i.rdata_b_o";
+}

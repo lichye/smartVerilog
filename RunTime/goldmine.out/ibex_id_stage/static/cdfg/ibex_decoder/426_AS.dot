@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"426:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2170027250>",
+		def_var="['zimm_rs1_type_o']",
+		fillcolor=deepskyblue,
+		label="426:AS
+zimm_rs1_type_o = { 27'b0, instr[19:15] };",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['instr']"];
+}

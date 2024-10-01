@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"608:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2170023d90>",
+		def_var="['rfvi_reg_raddr_ra_o']",
+		fillcolor=deepskyblue,
+		label="608:AS
+rfvi_reg_raddr_ra_o = regfile_raddr_a;",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['regfile_raddr_a']"];
+}

@@ -1,0 +1,110 @@
+strict digraph "" {
+	"decoder_i.ALU_SRA"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.alu_operator_o"	 [complexity=2,
+		importance=0.0296227096011,
+		rank=0.0148113548005];
+	"decoder_i.ALU_SRA" -> "decoder_i.alu_operator_o";
+	alu_operator	 [complexity=2,
+		importance=0.0148321890748,
+		rank=0.00741609453738];
+	"decoder_i.alu_operator_o" -> alu_operator;
+	"decoder_i.instr_new_i"	 [complexity=5,
+		importance=0.149648879021,
+		rank=0.0299297758043];
+	"decoder_i.instr_new_i" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_GE"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_GE" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_OR"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.ALU_OR" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_SRL"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.ALU_SRL" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_LTU"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_LTU" -> "decoder_i.alu_operator_o";
+	alu_operator_ex_o	 [complexity=0,
+		importance=0.00594195886629,
+		rank=0.0];
+	"decoder_i.instr_rdata_i"	 [complexity=8,
+		importance=1.57655243413,
+		rank=0.197069054267];
+	"decoder_i.instr"	 [complexity=6,
+		importance=1.57468247235,
+		rank=0.262447078725];
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.ALU_EQ"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_EQ" -> "decoder_i.alu_operator_o";
+	"decoder_i.opcode"	 [complexity=3,
+		importance=1.57225154178,
+		rank=0.52408384726];
+	"decoder_i.opcode" -> "decoder_i.alu_operator_o";
+	alu_operator -> alu_operator_ex_o;
+	"decoder_i.ALU_AND"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.ALU_AND" -> "decoder_i.alu_operator_o";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=6,
+		importance=1.57374750447,
+		rank=0.262291250745];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	"decoder_i.sv2v_cast_F99D1"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.sv2v_cast_F99D1" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_SLT"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.ALU_SLT" -> "decoder_i.alu_operator_o";
+	instr_new_i	 [complexity=5,
+		importance=0.151144841712,
+		rank=0.0302289683423];
+	instr_new_i -> "decoder_i.instr_new_i";
+	"decoder_i.ALU_LT"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_LT" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_SUB"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_SUB" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_SLTU"	 [complexity=8,
+		importance=0.0903640914937,
+		rank=0.0112955114367];
+	"decoder_i.ALU_SLTU" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_SLL"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.ALU_SLL" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_NE"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_NE" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_XOR"	 [complexity=6,
+		importance=0.0607413818926,
+		rank=0.0101235636488];
+	"decoder_i.ALU_XOR" -> "decoder_i.alu_operator_o";
+	"decoder_i.ALU_ADD"	 [complexity=44,
+		importance=0.860554541122,
+		rank=0.0195580577528];
+	"decoder_i.ALU_ADD" -> "decoder_i.alu_operator_o";
+	instr_rdata_i	 [complexity=8,
+		importance=1.57804839682,
+		rank=0.197256049603];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"decoder_i.ALU_GEU"	 [complexity=4,
+		importance=0.0311186722915,
+		rank=0.00777966807288];
+	"decoder_i.ALU_GEU" -> "decoder_i.alu_operator_o";
+	"decoder_i.instr" -> "decoder_i.alu_operator_o";
+	"decoder_i.instr" -> "decoder_i.opcode";
+}

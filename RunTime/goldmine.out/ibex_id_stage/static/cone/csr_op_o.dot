@@ -1,0 +1,54 @@
+strict digraph "" {
+	"decoder_i.CSR_OP_CLEAR"	 [complexity=9,
+		importance=0.0202857581522,
+		rank=0.00225397312802];
+	"decoder_i.csr_op_o"	 [complexity=0,
+		importance=0.00540056360163,
+		rank=0.0];
+	"decoder_i.CSR_OP_CLEAR" -> "decoder_i.csr_op_o";
+	"decoder_i.csr_op"	 [complexity=7,
+		importance=0.0187897954618,
+		rank=0.00268425649454];
+	"decoder_i.CSR_OP_CLEAR" -> "decoder_i.csr_op";
+	instr_rdata_i	 [complexity=13,
+		importance=0.064414174351,
+		rank=0.00495493648854];
+	"decoder_i.instr_rdata_i"	 [complexity=13,
+		importance=0.0629182116606,
+		rank=0.00483986243543];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"decoder_i.CSR_OP_READ"	 [complexity=9,
+		importance=0.0202857581522,
+		rank=0.00225397312802];
+	"decoder_i.CSR_OP_READ" -> "decoder_i.csr_op_o";
+	"decoder_i.CSR_OP_READ" -> "decoder_i.csr_op";
+	"decoder_i.CSR_OP_SET"	 [complexity=9,
+		importance=0.0202857581522,
+		rank=0.00225397312802];
+	"decoder_i.CSR_OP_SET" -> "decoder_i.csr_op_o";
+	"decoder_i.CSR_OP_SET" -> "decoder_i.csr_op";
+	csr_op_o	 [complexity=0,
+		importance=0.00179631169164,
+		rank=0.0];
+	"decoder_i.csr_op_o" -> csr_op_o;
+	"decoder_i.opcode"	 [complexity=8,
+		importance=0.058617319309,
+		rank=0.00732716491363];
+	"decoder_i.opcode" -> "decoder_i.csr_op";
+	"decoder_i.CSR_OP_WRITE"	 [complexity=9,
+		importance=0.0202857581522,
+		rank=0.00225397312802];
+	"decoder_i.CSR_OP_WRITE" -> "decoder_i.csr_op";
+	"decoder_i.instr"	 [complexity=11,
+		importance=0.0610482498791,
+		rank=0.0055498408981];
+	"decoder_i.instr" -> "decoder_i.csr_op_o";
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.csr_op";
+	"decoder_i.csr_op" -> "decoder_i.csr_op_o";
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=11,
+		importance=0.0601132819994,
+		rank=0.00546484381813];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+}

@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"399:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7fcd1817f4d0>",
+		def_var="['res_adder_l']",
+		fillcolor=deepskyblue,
+		label="399:AS
+res_adder_l = alu_adder_ext_i[32:0];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['alu_adder_ext_i']"];
+}

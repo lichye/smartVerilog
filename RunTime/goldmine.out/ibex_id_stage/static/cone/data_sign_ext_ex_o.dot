@@ -1,0 +1,34 @@
+strict digraph "" {
+	data_sign_ext_id	 [complexity=2,
+		importance=0.0048734883443,
+		rank=0.00243674417215];
+	data_sign_ext_ex_o	 [complexity=0,
+		importance=0.00262177761202,
+		rank=0.0];
+	data_sign_ext_id -> data_sign_ext_ex_o;
+	instr_rdata_i	 [complexity=8,
+		importance=0.0335845900046,
+		rank=0.00419807375057];
+	"decoder_i.instr_rdata_i"	 [complexity=8,
+		importance=0.0320886273141,
+		rank=0.00401107841427];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"decoder_i.opcode"	 [complexity=3,
+		importance=0.0277877349626,
+		rank=0.00926257832086];
+	"decoder_i.data_sign_extension_o"	 [complexity=2,
+		importance=0.00638495050972,
+		rank=0.00319247525486];
+	"decoder_i.opcode" -> "decoder_i.data_sign_extension_o";
+	"decoder_i.instr"	 [complexity=6,
+		importance=0.0302186655327,
+		rank=0.00503644425545];
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.data_sign_extension_o";
+	"decoder_i.data_sign_extension_o" -> data_sign_ext_id;
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=6,
+		importance=0.029283697653,
+		rank=0.0048806162755];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+}

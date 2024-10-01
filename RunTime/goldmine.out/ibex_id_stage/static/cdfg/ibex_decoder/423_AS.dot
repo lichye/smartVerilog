@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"423:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2170027110>",
+		def_var="['imm_b_type_o']",
+		fillcolor=deepskyblue,
+		label="423:AS
+imm_b_type_o = { { 19{ instr[31] } }, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0 };",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['instr', 'instr', 'instr', 'instr', 'instr']"];
+}

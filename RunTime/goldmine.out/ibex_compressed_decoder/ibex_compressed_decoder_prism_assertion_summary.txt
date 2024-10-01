@@ -1,0 +1,21 @@
+Assertion report generated on: 01-Oct-2024 10:57:45 AM
+
+Assertion summary report for design: ibex_compressed_decoder
+############################################################
+
+    Target      | Total | Passed | Failed | Vacuous | Hit | Miss
+--------------- | ----- | ------ | ------ | ------- | --- | ----
+illegal_instr_o |  29   |   0    |   0    |   29    | 0.0 | 1.0 
+is_compressed_o |   3   |   0    |   0    |    3    | 0.0 | 1.0 
+
+
+Resource usage summary report for the desing: ibex_compressed_decoder
+#####################################################################
+
+      Phase       | Time (in [H]H:MM:SS:UUUUUU) | Memory (in MB)
+----------------- | --------------------------- | --------------
+V Parse & Ranking |       0:00:01.407854        |     839.96    
+   Simulation     |       0:00:02.021134        |     904.21    
+     D Parse      |       0:00:03.233222        |     905.6     
+     Mining       |       0:00:26.742247        |    1036.32    
+     Overall      |       0:00:41.628057        |    1036.32    

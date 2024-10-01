@@ -1,0 +1,50 @@
+strict digraph "" {
+	instr_rdata_i	 [complexity=9,
+		importance=0.0166411106373,
+		rank=0.00184901229303];
+	"decoder_i.instr_rdata_i"	 [complexity=9,
+		importance=0.0151451479469,
+		rank=0.00168279421632];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"decoder_i.illegal_c_insn_i"	 [complexity=2,
+		importance=0.00933349489524,
+		rank=0.00466674744762];
+	"decoder_i.illegal_insn"	 [complexity=1,
+		importance=0.00708953402278,
+		rank=0.00708953402278];
+	"decoder_i.illegal_c_insn_i" -> "decoder_i.illegal_insn";
+	csr_access_o	 [complexity=0,
+		importance=0.00171097393887,
+		rank=0.0];
+	illegal_c_insn_i	 [complexity=2,
+		importance=0.0108294575857,
+		rank=0.00541472879284];
+	illegal_c_insn_i -> "decoder_i.illegal_c_insn_i";
+	"decoder_i.opcode"	 [complexity=4,
+		importance=0.0108442555953,
+		rank=0.00271106389883];
+	"decoder_i.csr_illegal"	 [complexity=3,
+		importance=0.00859632267163,
+		rank=0.00286544089054];
+	"decoder_i.opcode" -> "decoder_i.csr_illegal";
+	"decoder_i.csr_access_o"	 [complexity=0,
+		importance=0.00343098356044,
+		rank=0.0];
+	"decoder_i.opcode" -> "decoder_i.csr_access_o";
+	"decoder_i.opcode" -> "decoder_i.illegal_insn";
+	"decoder_i.instr"	 [complexity=7,
+		importance=0.0132751861654,
+		rank=0.00189645516649];
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.csr_illegal";
+	"decoder_i.instr" -> "decoder_i.csr_access_o";
+	"decoder_i.instr" -> "decoder_i.illegal_insn";
+	"decoder_i.csr_illegal" -> "decoder_i.illegal_insn";
+	"decoder_i.csr_access_o" -> csr_access_o;
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.sv2v_cast_DB892"	 [complexity=7,
+		importance=0.0123402182858,
+		rank=0.00176288832654];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	"decoder_i.illegal_insn" -> "decoder_i.csr_access_o";
+}

@@ -1,0 +1,67 @@
+strict digraph "" {
+	instr_rdata_i	 [complexity=29,
+		importance=0.0201025252886,
+		rank=0.000693190527192];
+	"decoder_i.instr_rdata_i"	 [complexity=29,
+		importance=0.0186065625981,
+		rank=0.000641605606833];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	"registers_i.NUM_WORDS"	 [complexity=51,
+		importance=0.0136381432039,
+		rank=0.000267414572626];
+	"registers_i.rdata_b_o"	 [complexity=2,
+		importance=0.00897108559865,
+		rank=0.00448554279933];
+	"registers_i.NUM_WORDS" -> "registers_i.rdata_b_o";
+	"registers_i.rf_reg"	 [complexity=25,
+		importance=0.0121421805135,
+		rank=0.000485687220539];
+	"registers_i.NUM_WORDS" -> "registers_i.rf_reg";
+	regfile_rdata_b	 [complexity=2,
+		importance=0.00526416801186,
+		rank=0.00263208400593];
+	"registers_i.rdata_b_o" -> regfile_rdata_b;
+	"registers_i.rf_reg_tmp"	 [complexity=51,
+		importance=0.0146198833559,
+		rank=0.000286664379527];
+	"registers_i.rf_reg_tmp" -> "registers_i.rf_reg";
+	"registers_i.DataWidth"	 [complexity=51,
+		importance=0.0136381432039,
+		rank=0.000267414572626];
+	"registers_i.DataWidth" -> "registers_i.rdata_b_o";
+	"registers_i.DataWidth" -> "registers_i.rf_reg";
+	data_wdata_ex_o	 [complexity=0,
+		importance=0.00191466965703,
+		rank=0.0];
+	"registers_i.raddr_b_i"	 [complexity=25,
+		importance=0.0109347806043,
+		rank=0.000437391224174];
+	"registers_i.raddr_b_i" -> "registers_i.rdata_b_o";
+	"decoder_i.instr"	 [complexity=27,
+		importance=0.0167366008167,
+		rank=0.000619874104322];
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	"decoder_i.regfile_raddr_b_o"	 [complexity=25,
+		importance=0.0143056702466,
+		rank=0.000572226809864];
+	"decoder_i.instr" -> "decoder_i.regfile_raddr_b_o";
+	"[1]registers_i.NUM_WORDS"	 [complexity=55,
+		importance=0.0161158460463,
+		rank=0.00029301538266];
+	"[1]registers_i.NUM_WORDS" -> "registers_i.rf_reg_tmp";
+	regfile_rdata_b -> data_wdata_ex_o;
+	"[1]rst_ni"	 [complexity=52,
+		importance=0.0177053085095,
+		rank=0.000340486702105];
+	"[1]registers_i.rst_ni"	 [complexity=52,
+		importance=0.016209345819,
+		rank=0.000311718188828];
+	"[1]rst_ni" -> "[1]registers_i.rst_ni";
+	regfile_raddr_b	 [complexity=25,
+		importance=0.0128057355049,
+		rank=0.000512229420197];
+	"decoder_i.regfile_raddr_b_o" -> regfile_raddr_b;
+	"[1]registers_i.rst_ni" -> "registers_i.rf_reg_tmp";
+	"registers_i.rf_reg" -> "registers_i.rdata_b_o";
+	regfile_raddr_b -> "registers_i.raddr_b_i";
+}

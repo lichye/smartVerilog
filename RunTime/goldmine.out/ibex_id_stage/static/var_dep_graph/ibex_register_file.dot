@@ -1,0 +1,15 @@
+strict digraph "" {
+	NUM_WORDS -> rf_reg	 [weight=1.0];
+	NUM_WORDS -> rdata_a_o	 [weight=1.0];
+	NUM_WORDS -> rdata_b_o	 [weight=1.0];
+	NUM_WORDS -> rf_reg_tmp	 [weight=1.0];
+	raddr_b_i -> rdata_b_o	 [weight=1.0];
+	rst_ni -> rf_reg_tmp	 [weight=1.0];
+	raddr_a_i -> rdata_a_o	 [weight=1.0];
+	rf_reg -> rdata_a_o	 [weight=1.0];
+	rf_reg -> rdata_b_o	 [weight=1.0];
+	rf_reg_tmp -> rf_reg	 [weight=1.0];
+	DataWidth -> rf_reg	 [weight=1.0];
+	DataWidth -> rdata_a_o	 [weight=1.0];
+	DataWidth -> rdata_b_o	 [weight=1.0];
+}

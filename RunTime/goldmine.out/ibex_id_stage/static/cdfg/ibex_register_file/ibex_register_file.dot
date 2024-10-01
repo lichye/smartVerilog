@@ -1,0 +1,117 @@
+strict digraph "compose( ,  )" {
+	node [label="\N"];
+	"48:AL"	 [ast="<pyverilog.vparser.ast.Always object at 0x7f2172e9c250>",
+		clk_sens=True,
+		fillcolor=gold,
+		label="48:AL",
+		sens="['clk_i', 'rst_ni']",
+		statements="[]",
+		style=filled,
+		typ=Always,
+		use_var="['rst_ni', 'NUM_WORDS']"];
+	"49:IF"	 [ast="<pyverilog.vparser.ast.IfStatement object at 0x7f2172e9c410>",
+		fillcolor=springgreen,
+		label="49:IF",
+		statements="[]",
+		style=filled,
+		typ=IfStatement];
+	"48:AL" -> "49:IF"	 [cond="[]",
+		lineno=None];
+	"Leaf_41:AL"	 [def_var="[]",
+		label="Leaf_41:AL"];
+	"57:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2172e91110>",
+		def_var="['rf_reg']",
+		fillcolor=deepskyblue,
+		label="57:AS
+rf_reg[((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?0:NUM_WORDS-1)*((DataWidth-1>=0)?DataWidth:2-DataWidth):((DataWidth-1>=\
+0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?0:NUM_WORDS-1)*((DataWidth-1>=0)?DataWidth:2-DataWidth)+((DataWidth-1>=0)?DataWidth:2-DataWidth)] = \
+1'sb0;",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="[]"];
+	"59:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2172e98310>",
+		def_var="['rdata_a_o']",
+		fillcolor=deepskyblue,
+		label="59:AS
+rdata_a_o = rf_reg[((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?raddr_a_i:0-(raddr_a_i-(NUM_WORDS-1)))*((DataWidth-1>=\
+0)?DataWidth:2-DataWidth):((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?raddr_a_i:0-(raddr_a_i-(NUM_WORDS-1)))*((DataWidth-1>=\
+0)?DataWidth:2-DataWidth)+((DataWidth-1>=0)?DataWidth:2-DataWidth)];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['rf_reg', 'NUM_WORDS', 'raddr_a_i', 'raddr_a_i', 'NUM_WORDS', 'NUM_WORDS', 'raddr_a_i', 'raddr_a_i', 'NUM_WORDS', 'DataWidth', '\
+DataWidth', 'DataWidth', 'DataWidth', 'DataWidth', 'DataWidth']"];
+	"57:AS" -> "59:AS";
+	"60:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2172e9d210>",
+		def_var="['rdata_b_o']",
+		fillcolor=deepskyblue,
+		label="60:AS
+rdata_b_o = rf_reg[((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?raddr_b_i:0-(raddr_b_i-(NUM_WORDS-1)))*((DataWidth-1>=\
+0)?DataWidth:2-DataWidth):((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?raddr_b_i:0-(raddr_b_i-(NUM_WORDS-1)))*((DataWidth-1>=\
+0)?DataWidth:2-DataWidth)+((DataWidth-1>=0)?DataWidth:2-DataWidth)];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['rf_reg', 'NUM_WORDS', 'raddr_b_i', 'raddr_b_i', 'NUM_WORDS', 'NUM_WORDS', 'raddr_b_i', 'raddr_b_i', 'NUM_WORDS', 'DataWidth', '\
+DataWidth', 'DataWidth', 'DataWidth', 'DataWidth', 'DataWidth']"];
+	"57:AS" -> "60:AS";
+	"Leaf_48:AL"	 [def_var="['rf_reg_tmp']",
+		label="Leaf_48:AL"];
+	"58:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f2172e95210>",
+		def_var="['rf_reg']",
+		fillcolor=deepskyblue,
+		label="58:AS
+rf_reg[((DataWidth-1>=0)?DataWidth:2-DataWidth)+((NUM_WORDS-1>=1)?NUM_WORDS-1:3-NUM_WORDS)*((DataWidth-1>=0)?DataWidth:2-DataWidth)\
+-1:(DataWidth-1>=0)?DataWidth:2-DataWidth] = rf_reg_tmp[((DataWidth-1>=0)?DataWidth:2-DataWidth)+((NUM_WORDS-1>=1)?NUM_WORDS-1:3-NUM_\
+WORDS)*((DataWidth-1>=0)?DataWidth:2-DataWidth)-1:(DataWidth-1>=0)?DataWidth:2-DataWidth];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['rf_reg_tmp', 'NUM_WORDS', 'NUM_WORDS', 'NUM_WORDS', 'DataWidth', 'DataWidth', 'DataWidth', 'DataWidth']"];
+	"Leaf_48:AL" -> "58:AS";
+	"58:AS" -> "59:AS";
+	"58:AS" -> "60:AS";
+	"41:BL"	 [ast="<pyverilog.vparser.ast.Block object at 0x7f2172ea1d50>",
+		fillcolor=turquoise,
+		label="41:BL",
+		statements="[]",
+		style=filled,
+		typ=Block];
+	"41:BL" -> "Leaf_41:AL"	 [cond="[]",
+		lineno=None];
+	"50:NS"	 [ast="<pyverilog.vparser.ast.NonblockingSubstitution object at 0x7f2172e9c5d0>",
+		fillcolor=firebrick,
+		label="50:NS
+rf_reg_tmp <= { (NUM_WORDS - 1 >= 1)? NUM_WORDS - 1 : 3 - NUM_WORDS{ 1'sb0 } };",
+		statements="[<pyverilog.vparser.ast.NonblockingSubstitution object at 0x7f2172e9c5d0>]",
+		style=filled,
+		typ=NonblockingSubstitution];
+	"50:NS" -> "Leaf_48:AL"	 [cond="[]",
+		lineno=None];
+	"49:IF" -> "50:NS"	 [cond="['rst_ni']",
+		label="(!rst_ni)",
+		lineno=49];
+	"51:BL"	 [ast="<pyverilog.vparser.ast.Block object at 0x7f2172e9ce50>",
+		fillcolor=turquoise,
+		label="51:BL",
+		statements="[]",
+		style=filled,
+		typ=Block];
+	"49:IF" -> "51:BL"	 [cond="['rst_ni']",
+		label="!((!rst_ni))",
+		lineno=49];
+	"41:AL"	 [ast="<pyverilog.vparser.ast.Always object at 0x7f2172ea13d0>",
+		clk_sens=False,
+		fillcolor=gold,
+		label="41:AL",
+		sens="[]",
+		statements="[]",
+		style=filled,
+		typ=Always,
+		use_var="[]"];
+	"41:AL" -> "41:BL"	 [cond="[]",
+		lineno=None];
+	"51:BL" -> "Leaf_48:AL"	 [cond="[]",
+		lineno=None];
+}

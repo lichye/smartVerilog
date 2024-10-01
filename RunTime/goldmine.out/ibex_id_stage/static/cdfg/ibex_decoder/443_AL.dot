@@ -1,0 +1,93 @@
+strict digraph "" {
+	node [label="\N"];
+	"447:BS"	 [ast="<pyverilog.vparser.ast.BlockingSubstitution object at 0x7f2170027550>",
+		fillcolor=cadetblue,
+		label="447:BS
+csr_pipe_flush_o = 1'b1;",
+		statements="[<pyverilog.vparser.ast.BlockingSubstitution object at 0x7f2170027550>]",
+		style=filled,
+		typ=BlockingSubstitution];
+	"Leaf_443:AL"	 [def_var="['csr_pipe_flush_o']",
+		label="Leaf_443:AL"];
+	"447:BS" -> "Leaf_443:AL"	 [cond="[]",
+		lineno=None];
+	"449:IF"	 [ast="<pyverilog.vparser.ast.IfStatement object at 0x7f2170027250>",
+		fillcolor=springgreen,
+		label="449:IF",
+		statements="[]",
+		style=filled,
+		typ=IfStatement];
+	"450:IF"	 [ast="<pyverilog.vparser.ast.IfStatement object at 0x7f2170027490>",
+		fillcolor=springgreen,
+		label="450:IF",
+		statements="[]",
+		style=filled,
+		typ=IfStatement];
+	"449:IF" -> "450:IF"	 [cond="['csr_access_o', 'csr_op_o', 'CSR_OP_READ']",
+		label="((csr_access_o == 1'b1) && (csr_op_o != CSR_OP_READ))",
+		lineno=449];
+	"451:BS"	 [ast="<pyverilog.vparser.ast.BlockingSubstitution object at 0x7f21700275d0>",
+		fillcolor=cadetblue,
+		label="451:BS
+csr_pipe_flush_o = 1'b1;",
+		statements="[<pyverilog.vparser.ast.BlockingSubstitution object at 0x7f21700275d0>]",
+		style=filled,
+		typ=BlockingSubstitution];
+	"450:IF" -> "451:BS"	 [cond="['sv2v_cast_290A1', 'instr', 'CSR_DCSR', 'sv2v_cast_290A1', 'instr', 'CSR_DPC', 'sv2v_cast_290A1', 'instr', 'CSR_DSCRATCH0', 'sv2v_\
+cast_290A1', 'instr', 'CSR_DSCRATCH1']",
+		label="((sv2v_cast_290A1(instr[31:20]) == CSR_DCSR) || (sv2v_cast_290A1(instr[31:20]) == CSR_DPC) || (sv2v_cast_290A1(instr[31:20]) == \
+CSR_DSCRATCH0) || (sv2v_cast_290A1(instr[31:20]) == CSR_DSCRATCH1))",
+		lineno=450];
+	"446:IF"	 [ast="<pyverilog.vparser.ast.IfStatement object at 0x7f2170023e10>",
+		fillcolor=springgreen,
+		label="446:IF",
+		statements="[]",
+		style=filled,
+		typ=IfStatement];
+	"446:IF" -> "447:BS"	 [cond="['sv2v_cast_290A1', 'instr', 'CSR_MSTATUS', 'sv2v_cast_290A1', 'instr', 'CSR_MIE']",
+		label="((sv2v_cast_290A1(instr[31:20]) == CSR_MSTATUS) || (sv2v_cast_290A1(instr[31:20]) == CSR_MIE))",
+		lineno=446];
+	"443:BL"	 [ast="<pyverilog.vparser.ast.Block object at 0x7f2170026150>",
+		fillcolor=turquoise,
+		label="443:BL
+csr_pipe_flush_o = 1'b0;",
+		statements="[<pyverilog.vparser.ast.BlockingSubstitution object at 0x7f2170023e50>]",
+		style=filled,
+		typ=Block];
+	"445:IF"	 [ast="<pyverilog.vparser.ast.IfStatement object at 0x7f2170026550>",
+		fillcolor=springgreen,
+		label="445:IF",
+		statements="[]",
+		style=filled,
+		typ=IfStatement];
+	"443:BL" -> "445:IF"	 [cond="[]",
+		lineno=None];
+	"445:BL"	 [ast="<pyverilog.vparser.ast.Block object at 0x7f21700264d0>",
+		fillcolor=turquoise,
+		label="445:BL",
+		statements="[]",
+		style=filled,
+		typ=Block];
+	"445:BL" -> "446:IF"	 [cond="[]",
+		lineno=None];
+	"443:AL"	 [ast="<pyverilog.vparser.ast.Always object at 0x7f2170026250>",
+		clk_sens=False,
+		fillcolor=gold,
+		label="443:AL",
+		sens="[]",
+		statements="[]",
+		style=filled,
+		typ=Always,
+		use_var="['CSR_MSTATUS', 'csr_access_o', 'CSR_MIE', 'CSR_DSCRATCH0', 'CSR_DSCRATCH1', 'instr', 'sv2v_cast_290A1', 'CSR_OP_SET', 'csr_op_o', '\
+CSR_OP_WRITE', 'CSR_OP_READ', 'CSR_DPC', 'CSR_DCSR']"];
+	"443:AL" -> "443:BL"	 [cond="[]",
+		lineno=None];
+	"445:IF" -> "449:IF"	 [cond="['csr_access_o', 'csr_op_o', 'CSR_OP_WRITE', 'csr_op_o', 'CSR_OP_SET']",
+		label="!(((csr_access_o == 1'b1) && ((csr_op_o == CSR_OP_WRITE) || (csr_op_o == CSR_OP_SET))))",
+		lineno=445];
+	"445:IF" -> "445:BL"	 [cond="['csr_access_o', 'csr_op_o', 'CSR_OP_WRITE', 'csr_op_o', 'CSR_OP_SET']",
+		label="((csr_access_o == 1'b1) && ((csr_op_o == CSR_OP_WRITE) || (csr_op_o == CSR_OP_SET)))",
+		lineno=445];
+	"451:BS" -> "Leaf_443:AL"	 [cond="[]",
+		lineno=None];
+}

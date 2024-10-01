@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"434:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7fcd1817f450>",
+		def_var="['next_quotient']",
+		fillcolor=deepskyblue,
+		label="434:AS
+next_quotient = (is_greater_equal)? op_a_shift_q | one_shift : op_a_shift_q;",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['is_greater_equal', 'op_a_shift_q', 'one_shift', 'op_a_shift_q']"];
+}

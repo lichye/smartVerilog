@@ -1,0 +1,12 @@
+strict digraph "" {
+	node [label="\N"];
+	"431:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7fcd1817f390>",
+		def_var="['is_greater_equal']",
+		fillcolor=deepskyblue,
+		label="431:AS
+is_greater_equal = ((accum_window_q[31] ^ op_b_shift_q[31]) == 1'b0)? res_adder_h[31] == 1'b0 : accum_window_q[31];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['accum_window_q', 'op_b_shift_q', 'res_adder_h', 'accum_window_q']"];
+}

@@ -1,0 +1,15 @@
+strict digraph "" {
+	node [label="\N"];
+	"59:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f21720aeb10>",
+		def_var="['rdata_a_o']",
+		fillcolor=deepskyblue,
+		label="59:AS
+rdata_a_o = rf_reg[((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?raddr_a_i:0-(raddr_a_i-(NUM_WORDS-1)))*((DataWidth-1>=\
+0)?DataWidth:2-DataWidth):((DataWidth-1>=0)?0:DataWidth-1)+((NUM_WORDS-1>=0)?raddr_a_i:0-(raddr_a_i-(NUM_WORDS-1)))*((DataWidth-1>=\
+0)?DataWidth:2-DataWidth)+((DataWidth-1>=0)?DataWidth:2-DataWidth)];",
+		statements="[]",
+		style=filled,
+		typ=Assign,
+		use_var="['rf_reg', 'NUM_WORDS', 'raddr_a_i', 'raddr_a_i', 'NUM_WORDS', 'NUM_WORDS', 'raddr_a_i', 'raddr_a_i', 'NUM_WORDS', 'DataWidth', '\
+DataWidth', 'DataWidth', 'DataWidth', 'DataWidth', 'DataWidth']"];
+}

@@ -1,0 +1,45 @@
+strict digraph "" {
+	node [label="\N"];
+	"48:AL"	 [ast="<pyverilog.vparser.ast.Always object at 0x7f21720aeb10>",
+		clk_sens=True,
+		fillcolor=gold,
+		label="48:AL",
+		sens="['clk_i', 'rst_ni']",
+		statements="[]",
+		style=filled,
+		typ=Always,
+		use_var="['rst_ni', 'NUM_WORDS']"];
+	"49:IF"	 [ast="<pyverilog.vparser.ast.IfStatement object at 0x7f21720aed50>",
+		fillcolor=springgreen,
+		label="49:IF",
+		statements="[]",
+		style=filled,
+		typ=IfStatement];
+	"48:AL" -> "49:IF"	 [cond="[]",
+		lineno=None];
+	"50:NS"	 [ast="<pyverilog.vparser.ast.NonblockingSubstitution object at 0x7f217002df10>",
+		fillcolor=firebrick,
+		label="50:NS
+rf_reg_tmp <= { (NUM_WORDS - 1 >= 1)? NUM_WORDS - 1 : 3 - NUM_WORDS{ 1'sb0 } };",
+		statements="[<pyverilog.vparser.ast.NonblockingSubstitution object at 0x7f217002df10>]",
+		style=filled,
+		typ=NonblockingSubstitution];
+	"49:IF" -> "50:NS"	 [cond="['rst_ni']",
+		label="(!rst_ni)",
+		lineno=49];
+	"51:BL"	 [ast="<pyverilog.vparser.ast.Block object at 0x7f21720ae250>",
+		fillcolor=turquoise,
+		label="51:BL",
+		statements="[]",
+		style=filled,
+		typ=Block];
+	"49:IF" -> "51:BL"	 [cond="['rst_ni']",
+		label="!((!rst_ni))",
+		lineno=49];
+	"Leaf_48:AL"	 [def_var="['rf_reg_tmp']",
+		label="Leaf_48:AL"];
+	"50:NS" -> "Leaf_48:AL"	 [cond="[]",
+		lineno=None];
+	"51:BL" -> "Leaf_48:AL"	 [cond="[]",
+		lineno=None];
+}

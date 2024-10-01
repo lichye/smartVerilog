@@ -1,0 +1,62 @@
+strict digraph "" {
+	csr_rdata_i	 [complexity=4,
+		importance=0.00978721699262,
+		rank=0.00244680424815];
+	regfile_wdata	 [complexity=2,
+		importance=0.00829125430219,
+		rank=0.00414562715109];
+	csr_rdata_i -> regfile_wdata;
+	regfile_wdata_lsu_i	 [complexity=4,
+		importance=0.00978721699262,
+		rank=0.00244680424815];
+	regfile_wdata_lsu_i -> regfile_wdata;
+	rfvi_reg_wdata_rd_o	 [complexity=0,
+		importance=0.00285512826174,
+		rank=0.0];
+	regfile_wdata -> rfvi_reg_wdata_rd_o;
+	"decoder_i.sv2v_cast_DB892"	 [complexity=7,
+		importance=0.407241204152,
+		rank=0.0581773148789];
+	"decoder_i.opcode"	 [complexity=4,
+		importance=0.405745241462,
+		rank=0.101436310366];
+	"decoder_i.sv2v_cast_DB892" -> "decoder_i.opcode";
+	"decoder_i.regfile_wdata_sel_o"	 [complexity=3,
+		importance=0.0403497308538,
+		rank=0.0134499102846];
+	"decoder_i.opcode" -> "decoder_i.regfile_wdata_sel_o";
+	regfile_wdata_ex_i	 [complexity=4,
+		importance=0.00978721699262,
+		rank=0.00244680424815];
+	regfile_wdata_ex_i -> regfile_wdata;
+	"decoder_i.RF_WD_CSR"	 [complexity=5,
+		importance=0.0418456935443,
+		rank=0.00836913870885];
+	"decoder_i.RF_WD_CSR" -> "decoder_i.regfile_wdata_sel_o";
+	"decoder_i.RF_WD_LSU"	 [complexity=5,
+		importance=0.0418456935443,
+		rank=0.00836913870885];
+	"decoder_i.RF_WD_LSU" -> "decoder_i.regfile_wdata_sel_o";
+	"decoder_i.instr"	 [complexity=7,
+		importance=0.408176172032,
+		rank=0.0583108817189];
+	"decoder_i.instr" -> "decoder_i.opcode";
+	"decoder_i.instr" -> "decoder_i.regfile_wdata_sel_o";
+	instr_rdata_i	 [complexity=9,
+		importance=0.411542096504,
+		rank=0.0457268996116];
+	"decoder_i.instr_rdata_i"	 [complexity=9,
+		importance=0.410046133814,
+		rank=0.0455606815348];
+	instr_rdata_i -> "decoder_i.instr_rdata_i";
+	regfile_wdata_sel	 [complexity=3,
+		importance=0.0365571227505,
+		rank=0.0121857075835];
+	"decoder_i.regfile_wdata_sel_o" -> regfile_wdata_sel;
+	"decoder_i.RF_WD_EX"	 [complexity=5,
+		importance=0.0418456935443,
+		rank=0.00836913870885];
+	"decoder_i.RF_WD_EX" -> "decoder_i.regfile_wdata_sel_o";
+	"decoder_i.instr_rdata_i" -> "decoder_i.instr";
+	regfile_wdata_sel -> regfile_wdata;
+}
