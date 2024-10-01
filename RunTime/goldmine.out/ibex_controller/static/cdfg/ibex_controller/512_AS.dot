@@ -1,6 +1,6 @@
 strict digraph "" {
 	node [label="\N"];
-	"512:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f42bff18950>",
+	"512:AS"	 [ast="<pyverilog.vparser.ast.Assign object at 0x7f41afbc7d90>",
 		def_var="['enter_debug_mode']",
 		fillcolor=deepskyblue,
 		label="512:AS

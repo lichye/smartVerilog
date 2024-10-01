@@ -1,6 +1,174 @@
-2024-10-01 11:30:38,970 - INFO - goldmine.py -             <module> - User specified assertion file does not exist. Continuing with auto-generated assertions
-2024-10-01 11:30:38,970 - INFO - goldmine.py -             <module> - No Mining Engine specified. Engine specified in the goldmine.cfg will be used
-2024-10-01 11:30:38,976 - WARNING - goldmine.py -             <module> - VCS Executable Not Found.
-2024-10-01 11:30:38,976 - WARNING - goldmine.py -             <module> - IFV Executable Not Found. Assertion Verification won't be possible.
-2024-10-01 11:30:38,977 - CRITICAL - configuration.py -             set_config_file_path - Neither VCS nor IVerilog found. No VCD suppiled. Assertion generation not possible
-2024-10-01 11:30:38,977 - CRITICAL - configuration.py -             set_config_file_path - Neither VCS nor IVerilog found. No VCD suppiled. Assertion generation not possible
+2024-10-01 11:53:50,442 - INFO - goldmine.py -             <module> - User specified assertion file does not exist. Continuing with auto-generated assertions
+2024-10-01 11:53:50,442 - INFO - goldmine.py -             <module> - No Mining Engine specified. Engine specified in the goldmine.cfg will be used
+2024-10-01 11:53:50,452 - WARNING - goldmine.py -             <module> - VCS Executable Not Found.
+2024-10-01 11:53:50,452 - WARNING - goldmine.py -             <module> - IFV Executable Not Found. Assertion Verification won't be possible.
+2024-10-01 11:54:01,246 - INFO - goldmine.py -             <module> - Total time for parsing, ranking: 0:00:10.790452
+2024-10-01 11:54:01,246 - INFO - goldmine.py -             <module> - Peak Memory Usage for parsing, ranking: 857.64 MB
+2024-10-01 11:55:09,544 - INFO - goldmine.py -             <module> - Simulating with: iverilog
+2024-10-01 11:55:10,554 - INFO - goldmine.py -             <module> - Compile Time: 0:00:01.009262
+2024-10-01 11:55:10,555 - INFO - goldmine.py -             <module> - Compile Memory Usage: 6.47 MB
+2024-10-01 11:55:11,565 - INFO - goldmine.py -             <module> - Run Time: 0:00:01.009262
+2024-10-01 11:55:11,565 - INFO - goldmine.py -             <module> - Run Memory Usage: 3.61 MB
+2024-10-01 11:55:11,569 - INFO - goldmine.py -             <module> - Parsing VCD file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/ibex_id_stage.vcd
+2024-10-01 11:55:11,574 - WARNING - simulation.py -             parse - Intermodular assertion parsing requested. Proecssing will be significantly slow due to intermodular data parsing...
+2024-10-01 11:55:11,577 - INFO - simulation.py -             parse - Parsing VCD file generated on: Tue Oct  1 11:55:10 2024
+2024-10-01 11:55:11,577 - INFO - simulation.py -             parse - VCD file created by the tool: Icarus Verilog
+2024-10-01 11:55:11,577 - INFO - simulation.py -             parse - Design was simulated using timescale: 1ps
+2024-10-01 11:55:11,594 - INFO - simulation.py -             parse - Parsing trace data
+2024-10-01 11:56:23,377 - INFO - simulation.py -             parse - Creating time shifted data for Sequential circuit type
+2024-10-01 11:58:34,468 - INFO - simulation.py -             parse - Converting time shifted mine data in dataframes
+2024-10-01 11:58:46,897 - INFO - simulation.py -             parse - Validating simulation data
+2024-10-01 11:59:17,378 - INFO - goldmine.py -             <module> - Number of added unique data examples: 999
+2024-10-01 11:59:17,378 - INFO - goldmine.py -             <module> - Number of valid examples: 0
+2024-10-01 11:59:17,379 - INFO - goldmine.py -             <module> - Number of invalid examples: 999
+2024-10-01 11:59:17,379 - INFO - goldmine.py -             <module> - Total time to parse VCD file: 0:04:05.808618
+2024-10-01 11:59:21,515 - INFO - goldmine.py -             <module> - Engine used for mining: prism
+2024-10-01 11:59:21,516 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 11:59:29,911 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 11:59:29,911 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 992
+2024-10-01 11:59:29,911 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 7
+2024-10-01 11:59:32,385 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 11:59:32,925 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 11:59:44,350 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 11:59:44,351 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 11:59:44,351 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 11:59:46,962 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 11:59:47,488 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:00:07,335 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:00:07,335 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:00:07,335 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:00:07,354 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:00:07,355 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:00:42,989 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:00:42,989 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:00:42,990 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:02:43,825 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:02:43,834 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/id_in_ready_o/id_in_ready_o.cone
+2024-10-01 12:02:43,835 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/id_in_ready_o/id_in_ready_o.gold
+2024-10-01 12:02:44,413 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:03:18,930 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:03:18,930 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:03:18,930 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:05:29,446 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:05:29,455 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/instr_valid_clear_o/instr_valid_clear_o.cone
+2024-10-01 12:05:29,457 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/instr_valid_clear_o/instr_valid_clear_o.gold
+2024-10-01 12:05:29,936 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:05:57,013 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:05:57,014 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:05:57,014 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:09:14,497 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:09:14,512 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/csr_save_id_o/csr_save_id_o.cone
+2024-10-01 12:09:14,513 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/csr_save_id_o/csr_save_id_o.gold
+2024-10-01 12:09:15,127 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:09:42,004 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:09:42,004 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:09:42,004 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:09:42,028 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:09:42,029 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:10:04,036 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:10:04,036 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:10:04,036 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:10:04,058 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:10:04,059 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:10:12,645 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:10:12,646 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 992
+2024-10-01 12:10:12,646 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 7
+2024-10-01 12:10:13,970 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:10:13,974 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/data_we_ex_o/data_we_ex_o.cone
+2024-10-01 12:10:13,975 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/data_we_ex_o/data_we_ex_o.gold
+2024-10-01 12:10:14,453 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:10:43,249 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:10:43,250 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:10:43,250 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:14:15,786 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:14:15,801 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/csr_save_cause_o/csr_save_cause_o.cone
+2024-10-01 12:14:15,803 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/csr_save_cause_o/csr_save_cause_o.gold
+2024-10-01 12:14:16,350 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:14:24,627 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:14:24,628 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 992
+2024-10-01 12:14:24,628 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 7
+2024-10-01 12:14:24,992 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:14:24,996 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/data_sign_ext_ex_o/data_sign_ext_ex_o.cone
+2024-10-01 12:14:24,997 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/data_sign_ext_ex_o/data_sign_ext_ex_o.gold
+2024-10-01 12:14:25,479 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:14:56,342 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:14:56,342 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:14:56,342 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:14:56,371 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:14:56,372 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:15:15,618 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:15:15,618 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:15:15,618 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:15:15,638 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:15:15,639 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:15:33,584 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:15:33,585 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:15:33,585 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:15:33,604 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:15:33,605 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:15:42,886 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:15:42,886 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 992
+2024-10-01 12:15:42,887 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 7
+2024-10-01 12:15:44,522 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:15:44,526 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/illegal_insn_o/illegal_insn_o.cone
+2024-10-01 12:15:44,526 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/illegal_insn_o/illegal_insn_o.gold
+2024-10-01 12:15:45,011 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:16:06,743 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:16:06,743 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:16:06,743 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:16:06,764 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:16:06,765 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:16:16,303 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:16:16,303 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:16:16,303 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:16:16,315 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:16:16,316 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:16:48,825 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:16:48,826 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:16:48,826 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:20:35,351 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:20:35,365 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/pc_set_o/pc_set_o.cone
+2024-10-01 12:20:35,366 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/pc_set_o/pc_set_o.gold
+2024-10-01 12:20:35,839 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:20:57,562 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:20:57,562 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:20:57,562 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:20:57,583 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:20:57,584 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:21:28,661 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:21:28,661 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:21:28,661 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:21:28,688 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:21:28,688 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:21:49,232 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:21:49,232 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:21:49,232 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:21:50,902 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:21:50,906 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/instr_ret_o/instr_ret_o.cone
+2024-10-01 12:21:50,907 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/instr_ret_o/instr_ret_o.gold
+2024-10-01 12:21:51,448 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:22:18,463 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:22:18,463 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:22:18,464 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:22:18,490 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:22:18,491 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:22:42,770 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:22:42,771 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:22:42,771 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:22:44,823 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:22:44,827 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/rfvi_reg_we_o/rfvi_reg_we_o.cone
+2024-10-01 12:22:44,828 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/rfvi_reg_we_o/rfvi_reg_we_o.gold
+2024-10-01 12:22:45,385 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:23:06,393 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:23:06,394 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:23:06,394 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:23:08,404 - INFO - goldmine.py -             <module> - Formal verification of mined assertions was skipped as per user request
+2024-10-01 12:23:08,407 - INFO - assertion_analyzer.py -             analyze_for_rank - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/instr_ret_compressed_o/instr_ret_compressed_o.cone
+2024-10-01 12:23:08,408 - INFO - assertion_analyzer.py -             analyze - Cannot find file: /opt/goldmine/RunTime/goldmine.out/ibex_id_stage/verif/prism/instr_ret_compressed_o/instr_ret_compressed_o.gold
+2024-10-01 12:23:08,890 - INFO - miner.py -             miner - Constructing target specific data frame for mining..
+2024-10-01 12:23:28,008 - INFO - simulation.py -             erase_and_reindex_data - Number of added unique data examples: 999
+2024-10-01 12:23:28,008 - INFO - simulation.py -             erase_and_reindex_data - Number of valid examples: 991
+2024-10-01 12:23:28,008 - INFO - simulation.py -             erase_and_reindex_data - Number of invalid examples: 8
+2024-10-01 12:23:28,026 - INFO - goldmine.py -             <module> - Target value did not change in valid data rows. Mining cannot continue
+2024-10-01 12:23:28,027 - INFO - goldmine.py -             <module> - Total time to mine: 0:24:06.511901
+2024-10-01 12:23:28,027 - INFO - goldmine.py -             <module> - Total Run Time: 0:29:37.574367

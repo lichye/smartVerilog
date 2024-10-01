@@ -1,4 +1,4 @@
-Assertion report generated on: 01-Oct-2024 11:05:41 AM
+Assertion report generated on: 01-Oct-2024 11:53:49 AM
 
 Assertion summary report for design: ibex_multdiv_slow
 ######################################################
@@ -13,8 +13,8 @@ Resource usage summary report for the desing: ibex_multdiv_slow
 
       Phase       | Time (in [H]H:MM:SS:UUUUUU) | Memory (in MB)
 ----------------- | --------------------------- | --------------
-V Parse & Ranking |       0:00:01.503960        |     840.21    
-   Simulation     |       0:00:02.019820        |     904.71    
-     D Parse      |       0:00:47.175166        |     962.68    
-     Mining       |       0:00:10.290693        |    1086.22    
-     Overall      |       0:01:12.146392        |    1086.22    
+V Parse & Ranking |       0:00:01.525049        |     840.21    
+   Simulation     |       0:00:02.019891        |     904.71    
+     D Parse      |       0:00:48.549387        |     962.97    
+     Mining       |       0:00:10.612316        |    1086.26    
+     Overall      |       0:01:13.837490        |    1086.26    

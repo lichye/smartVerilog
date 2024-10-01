@@ -1,4 +1,4 @@
-Assertion report generated on: 01-Oct-2024 10:57:45 AM
+Assertion report generated on: 01-Oct-2024 11:45:33 AM
 
 Assertion summary report for design: ibex_compressed_decoder
 ############################################################
@@ -14,8 +14,8 @@ Resource usage summary report for the desing: ibex_compressed_decoder
 
       Phase       | Time (in [H]H:MM:SS:UUUUUU) | Memory (in MB)
 ----------------- | --------------------------- | --------------
-V Parse & Ranking |       0:00:01.407854        |     839.96    
-   Simulation     |       0:00:02.021134        |     904.21    
-     D Parse      |       0:00:03.233222        |     905.6     
-     Mining       |       0:00:26.742247        |    1036.32    
-     Overall      |       0:00:41.628057        |    1036.32    
+V Parse & Ranking |       0:00:01.425266        |     839.95    
+   Simulation     |       0:00:02.019586        |     904.2     
+     D Parse      |       0:00:03.611798        |     905.61    
+     Mining       |       0:00:28.081572        |    1036.31    
+     Overall      |       0:00:43.363407        |    1036.31    

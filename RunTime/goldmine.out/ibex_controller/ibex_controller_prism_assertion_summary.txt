@@ -1,4 +1,4 @@
-Assertion report generated on: 01-Oct-2024 11:04:28 AM
+Assertion report generated on: 01-Oct-2024 11:52:35 AM
 
 Assertion summary report for design: ibex_controller
 ####################################################
@@ -26,8 +26,8 @@ Resource usage summary report for the desing: ibex_controller
 
       Phase       | Time (in [H]H:MM:SS:UUUUUU) | Memory (in MB)
 ----------------- | --------------------------- | --------------
-V Parse & Ranking |       0:00:02.008519        |     843.2     
-   Simulation     |       0:00:02.021403        |     907.7     
-     D Parse      |       0:00:22.871836        |     925.89    
-     Mining       |       0:05:49.702237        |     1055.0    
-     Overall      |       0:06:42.664970        |     1055.0    
+V Parse & Ranking |       0:00:02.088655        |     843.21    
+   Simulation     |       0:00:02.020315        |     907.71    
+     D Parse      |       0:00:24.422187        |     925.91    
+     Mining       |       0:06:06.514450        |    1063.98    
+     Overall      |       0:07:01.122521        |    1063.98    
