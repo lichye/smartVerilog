@@ -1,0 +1,10 @@
+
+export PATH=$PATH:/home/magna/smart/harm/build
+https://github.com/SamueleGerminiani/harm
+
+
+./harm --vcd trace.vcd --clk clock --conf config.xml
+
+harm --vcd bl_master1h.vcd --conf bl_masterConfig.xml
+
+harm --csv ex3.csv --conf ex3Config.xml
