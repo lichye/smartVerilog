@@ -1,3 +1,6 @@
+website:
+https://sites.google.com/view/goldmine-illinois/home
+
 1. clone the code
 git clone https://bitbucket.org/debjitp/goldminer/src/master/
 
@@ -9,7 +12,7 @@ docker build --network=host -t pgoldmine .
 
 4. change the correct path
 
-docker run -it -v /home/magna/smartVerilog/RunTime:/opt/goldmine/RunTime  pgoldmine /bin/bash
+docker run -it -v Path_to/RunTime:/opt/goldmine/RunTime  pgoldmine /bin/bash
 
 
 
