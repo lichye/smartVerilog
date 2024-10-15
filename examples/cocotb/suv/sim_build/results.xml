@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1728988715" />
+    <testcase name="test_fixed_relu" classname="test" file="/home/magna/smartVerilog/examples/cocotb/suv/test.py" lineno="97" time="0.032219886779785156" sim_time_ns="200.001" ratio_time="6207.377492259879" />
+  </testsuite>
+</testsuites>

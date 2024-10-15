@@ -119,7 +119,7 @@ def runner():
     for k, v in test_case.get_dut_parameters().items():
         extra_args.append(f"-G{k}={v}")
     
-    #extra_args.append(f"--vcd=suv.vcd")
+    extra_args.append(f"--trace")
     
     print("Args is ")
     print(extra_args)
