@@ -195,11 +195,11 @@ module cacheline_formal (
     /*
     trace/constrainst:
 
-    attacker_hipmap = 11100000000bv8
-    io_metadata1 = 00000000000bv8
-    io_metadata2 = 00011100000bv8
+    attacker_hipmap = 11100000bv8
+    io_metadata1 = 00000000bv8
+    io_metadata2 = 11100000bv8
 
-    attacker_hipmap = 00000000111bv8
+    attacker_hipmap = 00000111bv8
     io_metadata1 = 00000000110bv8
     io_metadata2 = 00011100110bv8
 
