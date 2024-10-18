@@ -1,2 +1,4 @@
 otherTools/
 cmd/
+verilog-vcd-parser/
+sygus
