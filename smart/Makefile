@@ -1,6 +1,6 @@
 # Compiler and flags
-CXX             ?= g++ -std=c++17
-CXXFLAGS        += -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
+CXX             ?= g++ 
+CXXFLAGS        += -std=c++17 -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
 LDFLAGS         = -L./lib
 
 # Source and build directories
@@ -15,7 +15,7 @@ LEX_OBJ         ?= $(BUILD_DIR)/VCDScanner.o
 
 YAC_SRC         ?= $(SRC_DIR)/parser/VCDParser.ypp
 YAC_OUT         ?= $(BUILD_DIR)/VCDParser.cpp
-YAC_HEADER      ?= $(SRC_DIR)/parser/VCDParser.hpp
+YAC_HEADER      ?= $(BUILD_DIR)/VCDParser.hpp
 YAC_OBJ         ?= $(BUILD_DIR)/VCDParser.o
 
 VCD_SRC         ?= $(SRC_DIR)/VCDFile.cpp \
@@ -23,8 +23,8 @@ VCD_SRC         ?= $(SRC_DIR)/VCDFile.cpp \
                    $(SRC_DIR)/VCDFileParser.cpp
 
 
-TARGET          = smart.out
-TARGET_SRC      = ./src/smart.cpp
+SMART_TARGET	= smart.out
+SMART_SRC      	= ./src/smart.cpp
 
 TEST_TARGET     = test.out
 TEST_SRC        = ./src/test.cpp
@@ -41,19 +41,17 @@ $(YAC_OUT) : $(YAC_SRC)
 $(LEX_OUT) : $(LEX_SRC) $(YAC_OUT)
 	flex  -P VCDParser --header-file=$(LEX_HEADER) -o $(LEX_OUT) $(LEX_SRC)
 
+test: $(TEST_SRC) $(SRC_FILES) $(YAC_OBJ) $(LEX_OBJ)
+	$(CXX) $(CXXFLAGS) -o $(TEST_TARGET) $^
+	./$(TEST_TARGET)
 
-
-yac: $(YAC_OUT)
-
-flex: $(LEX_OUT)
-# Run the smart executable
-
-
-
+smart: $(SMART_SRC) $(SRC_FILES) $(YAC_OBJ) $(LEX_OBJ)
+	$(CXX) $(CXXFLAGS) -o $(SMART_TARGET) $^
+	./$(SMART_TARGET)
 
 # Clean rule to remove output files
 clean:
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
-           position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(TARGET)
+           position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET)
 	mkdir $(BUILD_DIR)
