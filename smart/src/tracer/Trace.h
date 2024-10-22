@@ -5,27 +5,13 @@
 #include "VCDFile.hpp"
 #include "VCDValue.hpp"
 #include "Value.h"
+#include "SignalGather.h"
 enum TraceType{
     VCD,
     SMT,
     UNKNOWN
 };
 
-struct Signal{
-    std::string name;
-    std::string moduleName;
-    SignalType type;
-    int lindex;
-    int rindex;
-    bool operator<(const Signal& rhs) const
-    {   
-        return name != rhs.name ? name < rhs.name :
-               moduleName != rhs.moduleName ? moduleName < rhs.moduleName :
-               type != rhs.type ? type < rhs.type :
-               lindex != rhs.lindex ? lindex < rhs.lindex :
-               rindex < rhs.rindex;
-    }
-};
 
 class Trace{
     public:

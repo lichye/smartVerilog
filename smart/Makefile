@@ -29,8 +29,6 @@ SMART_SRC      	= ./src/smart.cpp
 TEST_TARGET     = test.out
 TEST_SRC        = ./src/test.cpp
 
-
-# Other source files from the second Makefile
 SRC_DIRS        = ./src/parser ./src/tracer
 SRC_FILES       = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.cpp))
 

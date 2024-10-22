@@ -2,3 +2,5 @@ otherTools/
 cmd/
 verilog-vcd-parser/
 sygus
+inipp
+smart/build

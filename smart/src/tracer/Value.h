@@ -2,19 +2,7 @@
 #define VALUE_H
 
 #include "VCDValue.hpp"
-enum SignalType{
-    BOOLEAN,
-    BITS,
-    DOUBLE,
-    UNKNOWNSINGALTYPES
-};
-
-enum BitType{
-    ZERO,
-    ONE,
-    X,
-    Z
-};
+#include "utils.h"
 
 
 class Value{

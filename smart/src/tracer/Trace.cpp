@@ -68,6 +68,9 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
         return values;
     }
     else{
+        //TODO:
+        //optimize this part of code
+        //We might not need to loop over all the signals all the time to get its hash
         VCDSignal* signal = nullptr;
         for(VCDScope* scope : *vcdFile -> get_scopes()){
             //check if the signal is in the module
@@ -99,3 +102,12 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
     return values;
 }
 
+std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal> signals){
+    std::vector<std::vector<Value*>>* constraints = new std::vector<std::vector<Value*>>();
+    for(Signal s : signals){
+        std::vector<Value*>* values = getSignalValue(s);
+        constraints->push_back(*values);
+    }
+    return constraints;
+
+}
