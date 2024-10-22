@@ -32,16 +32,19 @@ int main(){
   }
 
   Signal signal;
+  signal.moduleName = "counter";
   signal.name = "out";
   signal.type = SignalType::BITS;
   signal.lindex = 7;
   signal.rindex = 0;
 
   //get the vector of a signal's values
-  std::vector<Value*> values=traces[0]->getSignals(signal);
+  std::vector<Value*>* values=traces[0]->getSignalValue(signal);
   
-  for(auto &value : values){
-    std::cout<<value->toString()<<std::endl;
+  
+  for(auto it = values->begin();it != values->end();++it){
+    Value* val = *it;
+    std::cout<<val->toString()<<std::endl;
   }
 
   for(auto &trace : traces){

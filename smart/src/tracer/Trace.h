@@ -11,12 +11,21 @@ enum TraceType{
     UNKNOWN
 };
 
-typedef struct{
+struct Signal{
     std::string name;
+    std::string moduleName;
     SignalType type;
     int lindex;
     int rindex;
-}Signal;
+    bool operator<(const Signal& rhs) const
+    {   
+        return name != rhs.name ? name < rhs.name :
+               moduleName != rhs.moduleName ? moduleName < rhs.moduleName :
+               type != rhs.type ? type < rhs.type :
+               lindex != rhs.lindex ? lindex < rhs.lindex :
+               rindex < rhs.rindex;
+    }
+};
 
 class Trace{
     public:
@@ -27,10 +36,10 @@ class Trace{
         void printScope();
         
         //get the constraints from the trace
-        std::vector<std::vector<Value*>> getConstraints(std::vector<Signal>);
+        std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>);
         
         //get the signal values from the trace
-        std::vector<Value*> getSignals(Signal);
+        std::vector<Value*>* getSignalValue(Signal);
     private:
         TraceType traceType;
 
@@ -41,7 +50,7 @@ class Trace{
         //if trace type is SMT
         std::string smtPath;
 
-        std::map<Signal, std::vector<Value*>> signals_map;
+        std::map<Signal, std::vector<Value*>*> signals_map;
 
 
 };

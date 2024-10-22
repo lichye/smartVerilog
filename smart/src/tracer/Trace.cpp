@@ -27,6 +27,12 @@ Trace::Trace(TraceType ctype, std::string path){
 
 Trace::~Trace(){
     std::cout<<"Trace Destructor called"<<std::endl;
+    for(auto &signal : signals_map){
+        for(auto &value : *signal.second){
+            delete value;
+        }
+        delete signal.second;
+    }
 }
 
 void Trace::printScope(){
@@ -49,8 +55,14 @@ void Trace::printScope(){
     return;
 }
 
-std::vector<Value*> Trace::getSignals(Signal s){
-    std::vector<Value*> values;
+std::vector<Value*>* Trace::getSignalValue(Signal s){
+    
+    if(signals_map.find(s) != signals_map.end()){
+        return signals_map[s];
+    }
+
+    std::vector<Value*>* values= new std::vector<Value*>();
+
     if(vcdFile == nullptr){
         std::cout<<"No VCD file to get signals"<<std::endl;
         return values;
@@ -58,11 +70,16 @@ std::vector<Value*> Trace::getSignals(Signal s){
     else{
         VCDSignal* signal = nullptr;
         for(VCDScope* scope : *vcdFile -> get_scopes()){
+            //check if the signal is in the module
+            if(scope -> name != s.moduleName){
+                continue;
+            }
             for(VCDSignal* sig : scope -> signals){
                 if(sig -> reference == s.name){
+                    if(sig -> lindex != s.lindex || sig -> rindex != s.rindex){
+                        continue;
+                    }
                     signal = sig;
-                    //TODO:
-                    // wait for support different signal types
                     break;
                 }
             }
@@ -75,9 +92,10 @@ std::vector<Value*> Trace::getSignals(Signal s){
         for(VCDTime time : *timestamps){
             VCDValue* val = vcdFile -> get_signal_value_at(signal -> hash, time);
             Value* value = new Value(val);
-            values.push_back(value);
+            values->push_back(value);
         }
     }
+    signals_map[s] = values;
     return values;
 }
 
