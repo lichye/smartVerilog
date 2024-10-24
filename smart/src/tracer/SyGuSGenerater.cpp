@@ -5,9 +5,7 @@
 
 SyGuSGenerater::SyGuSGenerater()
 {
-    isSetSignals = false;
-    isSetConstraints = false;
-    isPrintSysgus = false;
+
 }
 
 SyGuSGenerater::~SyGuSGenerater()
@@ -15,33 +13,24 @@ SyGuSGenerater::~SyGuSGenerater()
     std::cout<<"SyGuSGenerater Destructor called"<<std::endl;
 }
 
-void SyGuSGenerater::setSignals(const std::vector<Signal*> signals)
+void SyGuSGenerater::addSignalsAndConstraints(std::vector<Signal*> signals,std::vector<std::vector<Value*>> constraints)
 {
     for(auto &signal : signals){
         this->signals.push_back(signal);
     }
-    isSetSignals = true;
-}
 
-void SyGuSGenerater::setConstraints(std::vector<std::vector<Value*>> constraints)
-{
     for(auto &constraint : constraints){
         this->constraints.push_back(constraint);
     }
-    isSetConstraints = true;
 }
 
 void SyGuSGenerater::printSysgusPath(std::string path)
 {
-    if(!isSetSignals || !isSetConstraints){
-        std::cout<<"Signals or constraints not set"<<std::endl;
-        return;
-    }
     std::ofstream file;
     file.open(path);
     if(file.is_open()){
         file<<"(set-logic BV)\n";
-        file<<translateSignal2synthFun(signals);
+        file<<makeSyntheisFunction(signals);
         //print out  the constraints
         for(int i =0;i<constraints[0].size();i++){
             file<<createConstraint(true,i);
@@ -55,15 +44,17 @@ void SyGuSGenerater::printSysgusPath(std::string path)
 }
 
 //TODO: add support for other signal types
-std::string SyGuSGenerater::translateSignal2synthFun(const std::vector<Signal*> signals)
+std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal*> signals)
 {   
     std::string synthFun="";
+
+    //create the function header
+    std::string functionheader = createFunctionHeader(signals);
 
     //start the grammar parts
     std::string functionGrammar = "((Start Bool) (StartBv (_ BitVec 8)))\n";
     functionGrammar += "(" + createBoolGrammar() + createBvGrammar(signals, 8) + ")\n";
 
-    std::string functionheader = createFunctionHeader(signals);
     synthFun = "( "+ functionheader + functionGrammar+")\n";
     return synthFun;
 }

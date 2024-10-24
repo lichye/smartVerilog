@@ -14,7 +14,6 @@ enum BitType{
     Z
 };
 
-
 struct Signal{
     std::string name;
     std::string moduleName;
