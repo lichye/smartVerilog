@@ -72,7 +72,10 @@ Value::~Value(){
 
 std::string Value::toString(){
     if(type == SignalType::BOOLEAN){
-        return std::string(1,Bit2Char(value.bitValue));
+        if(value.bitValue == BitType::ZERO)
+            return "false";
+        else
+            return "true";
     }
     else if(type == SignalType::BITS){
         std::string str="#b";

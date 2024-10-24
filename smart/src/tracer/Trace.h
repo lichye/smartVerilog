@@ -31,6 +31,7 @@ class Trace{
 
         //if trace type is VCD
         VCDFile* vcdFile;
+  
         std::string vcdPath;
 
         //if trace type is SMT

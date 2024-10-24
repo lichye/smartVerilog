@@ -43,13 +43,17 @@ test: $(TEST_SRC) $(SRC_FILES) $(YAC_OBJ) $(LEX_OBJ)
 	$(CXX) $(CXXFLAGS) -o $(TEST_TARGET) $^
 	./$(TEST_TARGET)
 
-smart: $(SMART_SRC) $(SRC_FILES) $(YAC_OBJ) $(LEX_OBJ)
+compile: $(SMART_SRC) $(SRC_FILES) $(YAC_OBJ) $(LEX_OBJ)
 	$(CXX) $(CXXFLAGS) -o $(SMART_TARGET) $^
+
+run: 
 	./$(SMART_TARGET)
+	cvc5 --sygus sygus.sl
 
 # Clean rule to remove output files
 clean:
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
-           position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET)
+           position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET)\
+		   sygus.sl
 	mkdir $(BUILD_DIR)

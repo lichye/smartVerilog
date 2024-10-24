@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include "Trace.h"
+#include "SyGuSGenerater.h"
 namespace fs = std::filesystem;
 
 int main(){
@@ -43,18 +44,15 @@ int main(){
   // //get the vector of a signal's values
   // std::vector<Value*>* values=traces[0]->getSignalValue(s);
   
+  //TODO:
+  //find the constrains in multiple traces
   std::vector<std::vector<Value*>>* constraints = traces[0]->getConstraints({s1,s2});
   
-  //print the constraints
-  for(int i = 0; i<constraints->at(0).size(); i++)
-  {
-    for(int j =0; j<constraints->size(); j++){
-      Value* val = constraints->at(j).at(i);
-      std::cout<<val->toString()<<" ";
-    }
-    std::cout<<std::endl;
-  }
-
+  SyGuSGenerater sygus;
+  sygus.setSignals(*sg.getAllSignals());
+  sygus.setConstraints(*constraints);
+  sygus.printSysgusPath("sygus.sl");
+  
   //delete the traces
   for(auto &trace : traces){
     delete trace;

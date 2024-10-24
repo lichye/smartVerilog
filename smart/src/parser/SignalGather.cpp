@@ -5,7 +5,7 @@
 
 SignalGather::SignalGather(){
 
-    inih::INIReader reader("/home/magna/smartVerilog/smart/tests/config.ini");
+    inih::INIReader reader("tests/config.ini");
     std::set<std::string> sectionList = reader.Sections();
     for(auto &section : sectionList){
         Signal* signal = new Signal();
