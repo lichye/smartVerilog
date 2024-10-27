@@ -35,20 +35,29 @@ int main(){
     traces.push_back(trace);
   }
 
-  //The signalGather will pick good signals
+  //The signalGather will handle up all the signals from differernt inputs
   SignalGather sg;
 
   Signal s1 =sg.getOneSignal(0);
   Signal s2 =sg.getOneSignal(1);
 
   //get the constrains from the traces
-  std::vector<std::vector<Value*>>* constraints = traces[0]->getConstraints({s1,s2});
+  std::vector<std::vector<Value*>>* trueConstraints = traces[0]->getConstraints({s1,s2});
   
+  std::vector<std::vector<Value*>>* falseConstraints;
 
   //when we put the signals and the constraints into the sygus generator
   SyGuSGenerater sygus;
-  sygus.addSignalsAndConstraints(*sg.getAllSignals(),*constraints);
+  sygus.setSignals(*sg.getAllSignals());
+  sygus.addConstraints(*trueConstraints);
+
+  //we do not have false constraints now
+  //sygus.addFalseConstraints(*falseConstraints);
+
   sygus.printSysgusPath("sygus.sl");
+
+  //read back from the sygus files
+  
   
   //delete the traces
   for(auto &trace : traces){

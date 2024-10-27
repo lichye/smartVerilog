@@ -1,4 +1,5 @@
 #include "SyGuSGenerater.h"
+#include "utils.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -13,14 +14,68 @@ SyGuSGenerater::~SyGuSGenerater()
     std::cout<<"SyGuSGenerater Destructor called"<<std::endl;
 }
 
-void SyGuSGenerater::addSignalsAndConstraints(std::vector<Signal*> signals,std::vector<std::vector<Value*>> constraints)
+void SyGuSGenerater::setSignals(std::vector<Signal*> signals)
 {
     for(auto &signal : signals){
+        
+        SignalType signalType = signal->type;
+        int signalWidth = signal->lindex - signal->rindex + 1;
+        std::pair<SignalType,int> signalKey = std::make_pair(signalType,signalWidth);
+        
+        //add the Signal to the sameTypeSignals map
+        //then we have the relation ship between the signal type and the signal
+        if(sameTypeSignals.find(signalKey) == sameTypeSignals.end()){
+            sameTypeSignals[signalKey] = std::vector<Signal*>();
+            sameTypeSignals[signalKey].push_back(signal);
+        }
+        else{
+            sameTypeSignals[signalKey].push_back(signal);
+        }
         this->signals.push_back(signal);
     }
 
-    for(auto &constraint : constraints){
-        this->constraints.push_back(constraint);
+}
+
+void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstraints)
+{   
+    assert(inputConstraints.size() == this->signals.size());
+    //if the constraints are empty then we add the inputConstraints one by one
+    if(constraints.size() == 0){
+        for(auto &constraint : inputConstraints){
+            this->constraints.push_back(constraint);
+        }
+    }
+    else{
+        if(inputConstraints.size() == this->constraints.size()){
+            for(int i = 0;i<constraints.size();i++){
+                this->constraints[i].insert(this->constraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
+            }
+        }
+        else{
+            std::cout<<"The constraints size is not the same"<<std::endl;
+        }
+    }
+    
+}
+
+void SyGusGenerater::addFalseConstraints(std::vector<std::vector<Value*>> inputConstraints)
+{
+    assert(inputConstraints.size() == this->signals.size());
+
+    if(falseConstraints.size() == 0){
+        for(auto &constraint : inputConstraints){
+            this->falseConstraints.push_back(constraint);
+        }
+    }
+    else{
+        if(inputConstraints.size() == this->falseConstraints.size()){
+            for(int i = 0;i<falseConstraints.size();i++){
+                this->falseConstraints[i].insert(this->falseConstraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
+            }
+        }
+        else{
+            std::cout<<"The false constraints size is not the same length with the signals"<<std::endl;
+        }
     }
 }
 
@@ -35,6 +90,11 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         for(int i =0;i<constraints[0].size();i++){
             file<<createConstraint(true,i);
         }
+        //print out the false constraints
+        for(int i =0;i<falseConstraints[0].size();i++){
+            file<<createConstraint(false,i);
+        }
+        
         file<<"(check-synth)"<<std::endl;
         file.close();
     }

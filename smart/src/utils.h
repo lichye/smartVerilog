@@ -14,6 +14,7 @@ enum BitType{
     Z
 };
 
+//matain the signal information, to convert all other signal types to this format
 struct Signal{
     std::string name;
     std::string moduleName;
@@ -29,4 +30,11 @@ struct Signal{
                rindex < rhs.rindex;
     }
 };
+
+struct SygusVar{
+    std::string name;
+    SignalType type;
+    int width;
+};
+
 #endif // UTILS_H
