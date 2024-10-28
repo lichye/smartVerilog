@@ -19,7 +19,7 @@ SignalGather::SignalGather(){
 }
 
 SignalGather::SignalGather(std::string path){
-
+    
 }
 
 SignalGather::SignalGather(std::vector<VCDSignal>){
@@ -42,4 +42,8 @@ const Signal SignalGather::getOneSignal(int index){
     }
     
     return *signals[index];
+}
+
+int SignalGather::getSignalSize(){
+    return signals.size();
 }

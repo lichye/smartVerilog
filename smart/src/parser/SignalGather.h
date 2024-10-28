@@ -16,8 +16,11 @@ class SignalGather
         //void parseFile(const char* filename);
         const std::vector<Signal*>* getAllSignals();
         const Signal getOneSignal(int);
+        int getSignalSize();
+        
     private:
         std::vector<Signal*> signals;
+        
 
 };
 

@@ -16,6 +16,7 @@ class SyGuSGenerater
         ~SyGuSGenerater();
         
         void setSignals(std::vector<Signal>);
+        //void setSignals(std::string);
         void addConstraints(std::vector<std::vector<Value*>>);
         void addFalseConstraints(std::vector<std::vector<Value*>>);
         //the signals and value should be in the same order
@@ -38,6 +39,7 @@ class SyGuSGenerater
 
         std::string makeSyntheisFunction(const std::vector<Signal>);
         std::string createFunctionHeader(const std::vector<Signal>);
+        std::string createFunctionGrammar();
         std::string createBvGrammar(const std::vector<Signal>,int);
         std::string createBoolGrammar();
         std::string createConstraint(bool,int);

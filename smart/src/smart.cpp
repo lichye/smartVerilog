@@ -45,13 +45,11 @@ int main(){
   //defualt sg will read from config.ini file
   SignalGather sg;
 
-  Signal s1 =sg.getOneSignal(0);
-  Signal s2 =sg.getOneSignal(1);
+  std::vector<Signal> signals;
 
-  //get the constrains from the traces
-  //traces[0]->printDebug();
-
-  std::vector<Signal> signals = {s1,s2};
+  for(int i = 0; i<sg.getSignalSize(); i++){
+    signals.push_back(sg.getOneSignal(i));
+  }
 
   SyGuSGenerater sygus;
 

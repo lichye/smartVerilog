@@ -29,6 +29,14 @@ struct Signal{
                lindex != rhs.lindex ? lindex < rhs.lindex :
                rindex < rhs.rindex;
     }
+    std::string toSygusName()
+    {
+        return name + "_" + std::to_string(lindex) + "_" + std::to_string(rindex);
+    }
+    int getWidth()
+    {
+        return lindex - rindex + 1;
+    }
 };
 
 struct SygusVar{
