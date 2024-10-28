@@ -4,6 +4,7 @@
 */
 
 #include "VCDFileParser.hpp"
+#include <iostream>
 
 
 VCDFileParser::VCDFileParser() {
@@ -44,11 +45,14 @@ VCDFile *VCDFileParser::parse_file(const std::string &filepath)
     
     tr -> add_scope(scopes.top());
 
+    
     VCDParser::parser parser(*this);
+
 
     parser.set_debug_level(trace_parsing);
 
-    int result = parser.parse();
+    int result = parser.parse();//get bugs here
+
 
     scopes.pop();
 
@@ -65,6 +69,7 @@ VCDFile *VCDFileParser::parse_file(const std::string &filepath)
         delete this->fh;
         return nullptr;
     }
+    
 }
 
 void VCDFileParser::error(const VCDParser::location &l, const std::string &m)

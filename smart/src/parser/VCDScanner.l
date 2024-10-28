@@ -11,6 +11,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include <iostream>
 
 #include "VCDFileParser.hpp"
 #include "VCDParser.hpp"
@@ -398,5 +399,4 @@ void VCDFileParser::scan_begin() {
 
 void VCDFileParser::scan_end() {
     fclose(yyin);
-    yypop_buffer_state();
 }

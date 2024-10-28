@@ -15,18 +15,17 @@ SyGuSGenerater::~SyGuSGenerater()
     std::cout<<"SyGuSGenerater Destructor called"<<std::endl;
 }
 
-void SyGuSGenerater::setSignals(std::vector<Signal*> signals)
+void SyGuSGenerater::setSignals(std::vector<Signal> signals)
 {
-    for(auto &signal : signals){
-        
-        SignalType signalType = signal->type;
-        int signalWidth = signal->lindex - signal->rindex + 1;
+    for(auto signal : signals){
+        SignalType signalType = signal.type;
+        int signalWidth = signal.lindex - signal.rindex + 1;
         std::pair<SignalType,int> signalKey = std::make_pair(signalType,signalWidth);
         
         //add the Signal to the sameTypeSignals map
         //then we have the relation ship between the signal type and the signal
         if(sameTypeSignals.find(signalKey) == sameTypeSignals.end()){
-            sameTypeSignals[signalKey] = std::vector<Signal*>();
+            sameTypeSignals[signalKey] = std::vector<Signal>();
             sameTypeSignals[signalKey].push_back(signal);
         }
         else{
@@ -86,16 +85,28 @@ void SyGuSGenerater::printSysgusPath(std::string path)
     file.open(path);
     if(file.is_open()){
         file<<"(set-logic BV)\n";
-        file<<makeSyntheisFunction(signals);
-        //print out  the constraints
-        for(int i =0;i<constraints[0].size();i++){
-            file<<createConstraint(true,i);
-        }
-        //print out the false constraints
-        for(int i =0;i<falseConstraints[0].size();i++){
-            file<<createConstraint(false,i);
+        
+        //assert(false&&"finish set logic");
+
+        //print out the synthesis function, only if signals exist
+        if(signals.size()>0){
+            file<<makeSyntheisFunction(signals);
         }
         
+        //print out  the constraints, only if constraints exist
+        if(constraints.size() >0){
+            for(int i =0;i<constraints[0].size();i++){
+                file<<createConstraint(true,i);
+            }
+        }
+
+        //print out the false constraints, only if false constraints exist
+        if(falseConstraints.size() > 0){
+            for(int i =0;i<falseConstraints[0].size();i++){
+                file<<createConstraint(false,i);
+            }
+        }
+       
         file<<"(check-synth)"<<std::endl;
         file.close();
     }
@@ -105,7 +116,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
 }
 
 //TODO: add support for other signal types
-std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal*> signals)
+std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal> signals)
 {   
     std::string synthFun="";
 
@@ -120,7 +131,7 @@ std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal*> sign
     return synthFun;
 }
 
-std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal*> signals)
+std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signals)
 {
     std::string functionHeader = "synth-fun ";
 
@@ -129,14 +140,14 @@ std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal*> sign
     functionHeader += "(";
     
     //add the signals to the function header
-    for(auto &signal : signals){
-        if(signal->type == SignalType::BITS){
-            functionHeader += "("+signal->name + " ";
-            functionHeader += "(_ BitVec " + std::to_string(signal->lindex - signal->rindex + 1) + ")";
+    for(auto signal : signals){
+        if(signal.type == SignalType::BITS){
+            functionHeader += "("+signal.name + " ";
+            functionHeader += "(_ BitVec " + std::to_string(signal.lindex - signal.rindex + 1) + ")";
             functionHeader += ") ";
         }
-        if(signal->type == SignalType::BOOLEAN){
-            functionHeader += "("+signal->name + " ";
+        if(signal.type == SignalType::BOOLEAN){
+            functionHeader += "("+signal.name + " ";
             functionHeader += "Bool";
             functionHeader += ") ";
         }
@@ -147,13 +158,13 @@ std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal*> sign
     return functionHeader;
 }
 
-std::string SyGuSGenerater::createBvGrammar(const std::vector<Signal*> signals, int bitWidth)
+std::string SyGuSGenerater::createBvGrammar(const std::vector<Signal> signals, int bitWidth)
 {   
 
     std::string signalsName="";
     for(auto &signal : signals){
-        if(signal->type == SignalType::BITS)
-            signalsName += signal->name + " ";
+        if(signal.type == SignalType::BITS)
+            signalsName += signal.name + " ";
     }
     signalsName +="\n";
 
@@ -205,4 +216,25 @@ std::string SyGuSGenerater::createConstraint(bool constraintValue,int index)
     constraintLine += constraintValue ? "true" : "false";
     constraintLine += "))\n";
     return constraintLine;
+}
+
+void SyGuSGenerater::debugPrint()
+{
+    std::cout<<"The signals are: "<<std::endl;
+    for(auto &signal : signals){
+        std::cout<<signal.name<<std::endl;
+    }
+    std::cout<<"The constraints are: "<<std::endl;
+    for(auto &constraint : constraints){
+        for(auto &value : constraint){
+            std::cout<<value->toString()<<" ";
+        }
+        std::cout<<std::endl;
+    }
+    std::cout<<"The false constraints are: "<<std::endl;
+    for(auto &constraint : falseConstraints){
+        for(auto &value : constraint){
+            std::cout<<value->toString()<<std::endl;
+        }
+    }
 }

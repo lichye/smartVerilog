@@ -32,6 +32,8 @@ int main(){
   //assert(false&&"finish count the vcd files");
 
   //Loop over the trace file system to get the traces from VCD files
+  std::cout<<"List of the VCD files input:\n";
+
   for(auto &vcdFile : vcdFiles){
     std::cout<<vcdFile<<std::endl;
     Trace* trace = new Trace(TraceType::VCD, vcdFile);
@@ -40,31 +42,31 @@ int main(){
     std::cout<<"trace object inserted into the traces vector"<<std::endl;
   }
 
-  //assert(false&&"should stop here");
-  //The signalGather will handle up all the signals from differernt inputs
+  //defualt sg will read from config.ini file
   SignalGather sg;
 
   Signal s1 =sg.getOneSignal(0);
   Signal s2 =sg.getOneSignal(1);
 
   //get the constrains from the traces
-  std::vector<std::vector<Value*>>* trueConstraints = traces[0]->getConstraints({s1,s2});
-  
-  std::vector<std::vector<Value*>>* falseConstraints;
+  //traces[0]->printDebug();
 
-  //when we put the signals and the constraints into the sygus generator
+  std::vector<Signal> signals = {s1,s2};
+
   SyGuSGenerater sygus;
-  sygus.setSignals(*sg.getAllSignals());
-  sygus.addConstraints(*trueConstraints);
 
-  //we do not have false constraints now
-  //sygus.addFalseConstraints(*falseConstraints);
+  sygus.setSignals(signals);
 
+  for(auto &trace : traces){
+    std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
+    sygus.addConstraints(*constraints);
+  }
+
+  //sygus.debugPrint();
   sygus.printSysgusPath("sygus.sl");
 
   //read back from the sygus files
-  
-  
+    
   //delete the traces
   for(auto &trace : traces){
     delete trace;
