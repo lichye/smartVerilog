@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <memory>
 #include <vector>
+#include <cassert>
 #include "Trace.h"
 #include "SyGuSGenerater.h"
 namespace fs = std::filesystem;
@@ -23,18 +24,23 @@ int main(){
             }
         }
         
-        std::cout << "Number of .vcd files: " << vcdFileCount << std::endl;
+        std::cout << "Number of VCD files: " << vcdFileCount << std::endl;
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Error: " << e.what() << std::endl;
   }
+
+  //assert(false&&"finish count the vcd files");
 
   //Loop over the trace file system to get the traces from VCD files
   for(auto &vcdFile : vcdFiles){
     std::cout<<vcdFile<<std::endl;
     Trace* trace = new Trace(TraceType::VCD, vcdFile);
+    std::cout<<"Created new trace object"<<std::endl;
     traces.push_back(trace);
+    std::cout<<"trace object inserted into the traces vector"<<std::endl;
   }
 
+  //assert(false&&"should stop here");
   //The signalGather will handle up all the signals from differernt inputs
   SignalGather sg;
 

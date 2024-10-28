@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cassert>
 
 SyGuSGenerater::SyGuSGenerater()
 {
@@ -58,7 +59,7 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
     
 }
 
-void SyGusGenerater::addFalseConstraints(std::vector<std::vector<Value*>> inputConstraints)
+void SyGuSGenerater::addFalseConstraints(std::vector<std::vector<Value*>> inputConstraints)
 {
     assert(inputConstraints.size() == this->signals.size());
 
