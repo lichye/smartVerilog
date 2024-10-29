@@ -113,18 +113,11 @@ void SyGuSGenerater::printSysgusPath(std::string path)
     }
 }
 
-//TODO: add support for other signal types
 std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal> signals)
 {   
     std::string synthFun="";
-
-    //create the function header
     std::string functionheader = createFunctionHeader(signals);
-
-    //start the grammar parts
     std::string functionGrammar = createFunctionGrammar();
-    
-
     synthFun = "( "+ functionheader + functionGrammar+")\n";
     return synthFun;
 }
@@ -132,8 +125,6 @@ std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal> signa
 std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signals)
 {
     std::string functionHeader = "synth-fun ";
-
-    //set the function name
     functionHeader += "inv ";
     functionHeader += "(";
     
@@ -255,12 +246,6 @@ std::string SyGuSGenerater::createBoolGrammar()
             boolGra += "\t(bvsge "+bvName+" "+bvName+")\n";
         }
     }
-
-    // std::string("(bvult StartBv StartBv)\n")+
-    // std::string("(bvslt StartBv StartBv)\n")+
-    // std::string("(bvuge StartBv StartBv)\n")+
-    // std::string("(bvsge StartBv StartBv)\n")+
-    //std::string("(not (= Start (_ bv0 8)))\n")+
     boolGra += std::string("\t)\n")+ std::string(")\n");
     return boolGra;
 }

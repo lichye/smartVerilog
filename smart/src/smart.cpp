@@ -29,8 +29,6 @@ int main(){
         std::cerr << "Error: " << e.what() << std::endl;
   }
 
-  //assert(false&&"finish count the vcd files");
-
   //Loop over the trace file system to get the traces from VCD files
   std::cout<<"List of the VCD files input:\n";
 
@@ -60,11 +58,8 @@ int main(){
     sygus.addConstraints(*constraints);
   }
 
-  //sygus.debugPrint();
   sygus.printSysgusPath("sygus.sl");
 
-  //read back from the sygus files
-    
   //delete the traces
   for(auto &trace : traces){
     delete trace;
