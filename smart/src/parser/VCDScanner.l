@@ -74,7 +74,7 @@ SCALAR_NUM          0|1|x|X|z|Z
 BIN_NUM             (b|B)(0|1|x|X|z|Z)+
 REAL_NUM            (r|r)[0-9]+(\.[0-9]+)?
 IDENTIFIER_CODE     [a-zA-Z_0-9!/\,\.@':~#\*\(\)\+\{\}\$\%\[\]`\"&;<>=\?\-\^\(\)\|\\]+
-SCOPE_IDENTIFIER    [a-zA-Z_][a-zA-Z_0-9\(\)]*
+SCOPE_IDENTIFIER    [a-zA-Z_\$][a-zA-Z_0-9\(\)\.@':~#\*\(\)\+\{\}\$\%`\"&;<>=\?\-\^\(\)\|\\]*
 
 DECIMAL_NUM         [0-9]+
 
@@ -201,7 +201,7 @@ VERSION_TEXT        {COMMENT_TEXT}
 }
 
 <IN_SCOPE>{KW_MODULE} {
-    //std::cout << yytext << ", ";
+    //std::cout << yytext << "\n";
     return VCDParser::parser::make_TOK_KW_MODULE(VCD_SCOPE_MODULE, loc);
 }
 
@@ -211,7 +211,7 @@ VERSION_TEXT        {COMMENT_TEXT}
 }
 
 <IN_SCOPE>{SCOPE_IDENTIFIER} {
-    //std::cout << yytext << ", ";
+    std::cout <<"In scope identifier: "<<yytext << "\n";
     return VCDParser::parser::make_TOK_IDENTIFIER(std::string(yytext),loc);
 }
 
@@ -258,12 +258,12 @@ VERSION_TEXT        {COMMENT_TEXT}
 
 <IN_VAR_PSIZE>{IDENTIFIER_CODE} {
     BEGIN(IN_VAR_PID);
-    //std::cout << yytext << ", ";
+    //std::cout <<"in var declaration identifier code "<<yytext << "\n";
     return VCDParser::parser::make_TOK_IDENTIFIER(std::string(yytext),loc);
 }
 
 <IN_VAR_PID>{SCOPE_IDENTIFIER} {
-    //std::cout << yytext << ", ";
+    //std::cout <<"In var declaration identifier "<<yytext << "\n";
     return VCDParser::parser::make_TOK_IDENTIFIER(std::string(yytext),loc);
 }
 

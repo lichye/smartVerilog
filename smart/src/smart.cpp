@@ -43,13 +43,13 @@ int main(){
   //defualt sg will read from config.ini file
   SignalGather sg;
 
-  std::vector<Signal> signals;
-
-  for(int i = 0; i<sg.getSignalSize(); i++){
-    signals.push_back(sg.getOneSignal(i));
-  }
-
   SyGuSGenerater sygus;
+
+  // for(int i = 0; i<sg.getSignalSize(); i++){
+  //   signals.push_back(sg.getOneSignal(i));
+  // }
+
+  std::vector<Signal>* signals = sg.getAllSignals();
 
   sygus.setSignals(signals);
 

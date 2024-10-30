@@ -36,6 +36,26 @@ void SyGuSGenerater::setSignals(std::vector<Signal> signals)
 
 }
 
+void SyGuSGenerater::setSignals(std::vector<Signal>* signals)
+{
+    for(auto signal : *signals){
+        SignalType signalType = signal.type;
+        int signalWidth = signal.lindex - signal.rindex + 1;
+        std::pair<SignalType,int> signalKey = std::make_pair(signalType,signalWidth);
+        
+        //add the Signal to the sameTypeSignals map
+        //then we have the relation ship between the signal type and the signal
+        if(sameTypeSignals.find(signalKey) == sameTypeSignals.end()){
+            sameTypeSignals[signalKey] = std::vector<Signal>();
+            sameTypeSignals[signalKey].push_back(signal);
+        }
+        else{
+            sameTypeSignals[signalKey].push_back(signal);
+        }
+        this->signals.push_back(signal);
+    }
+}
+
 void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstraints)
 {   
     assert(inputConstraints.size() == this->signals.size());
@@ -136,7 +156,7 @@ std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signa
             functionHeader += ") ";
         }
         if(signal.type == SignalType::BOOLEAN){
-            functionHeader += "("+signal.name + " ";
+            functionHeader += "("+signal.toSygusName() + " ";
             functionHeader += "Bool";
             functionHeader += ") ";
         }
@@ -201,7 +221,7 @@ std::string SyGuSGenerater::createBvGrammar(const std::vector<Signal> signals, i
     std::string signalsName="\t";
     std::string startName = "StartBv" + std::to_string(bitWidth);
     for(auto signal : signals){
-        if(signal.type == SignalType::BITS)
+        if(signal.type == SignalType::BITS && signal.getWidth() == bitWidth)
             signalsName += signal.toSygusName() + " ";
     }
 
@@ -240,10 +260,11 @@ std::string SyGuSGenerater::createBoolGrammar()
         int width = it->first.second;
         if(type == SignalType::BITS){
             std::string bvName = "StartBv" + std::to_string(width);
-            boolGra += "\t(bvult "+bvName+" "+bvName+")\n";
-            boolGra += "\t(bvslt "+bvName+" "+bvName+")\n";
-            boolGra += "\t(bvuge "+bvName+" "+bvName+")\n";
-            boolGra += "\t(bvsge "+bvName+" "+bvName+")\n";
+            boolGra += "\t(= "+bvName+" "+bvName+")\n";
+            // boolGra += "\t(bvult "+bvName+" "+bvName+")\n";
+            // boolGra += "\t(bvslt "+bvName+" "+bvName+")\n";
+            // boolGra += "\t(bvuge "+bvName+" "+bvName+")\n";
+            // boolGra += "\t(bvsge "+bvName+" "+bvName+")\n";
         }
     }
     boolGra += std::string("\t)\n")+ std::string(")\n");

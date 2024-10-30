@@ -16,6 +16,7 @@ class SyGuSGenerater
         ~SyGuSGenerater();
         
         void setSignals(std::vector<Signal>);
+        void setSignals(std::vector<Signal>*);
         //void setSignals(std::string);
         void addConstraints(std::vector<std::vector<Value*>>);
         void addFalseConstraints(std::vector<std::vector<Value*>>);

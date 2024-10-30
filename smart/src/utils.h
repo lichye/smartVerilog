@@ -30,12 +30,30 @@ struct Signal{
                rindex < rhs.rindex;
     }
     std::string toSygusName()
-    {
-        return name + "_" + std::to_string(lindex) + "_" + std::to_string(rindex);
+    {   
+        //TODO:
+        //this is for debug purpose
+        if(true)
+            return name;
+            
+        if(type == SignalType::BOOLEAN)
+            return name + "_" + cleanName();
+        else
+            return name + "_" + std::to_string(lindex) + "_" + std::to_string(rindex) + "_" + cleanName();
     }
     int getWidth()
     {
         return lindex - rindex + 1;
+    }
+    std::string cleanName()
+    {
+        std::string result="";
+        for (char& ch : moduleName) {
+            if (std::isalnum(static_cast<unsigned char>(ch))) {
+                result+=ch;
+            }
+        }
+        return result;
     }
 };
 

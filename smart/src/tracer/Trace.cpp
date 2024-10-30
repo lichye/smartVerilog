@@ -52,6 +52,7 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
         return signals_map[s];
     }
     else{
+        std::cout<<"Signal not found: "<<s.name<<std::endl;
         assert(false&&"Signal not found");
     }
 }
@@ -64,6 +65,15 @@ std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal> sign
     }
     return constraints;
 
+}
+
+std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal>* signals){
+    std::vector<std::vector<Value*>>* constraints = new std::vector<std::vector<Value*>>();
+    for(Signal s : *signals){
+        std::vector<Value*>* values = getSignalValue(s);
+        constraints->push_back(*values);
+    }
+    return constraints;
 }
 
 void Trace::readVCDFile(VCDFile* vcdFile){
@@ -116,4 +126,13 @@ SignalType Trace::translateSignalType(VCDSignal* vcdSignal){
             return SignalType::BITS;
         }
     }
+}
+
+std::vector<Signal>* Trace::getAllSignals(){
+    std::vector<Signal>* signals = new std::vector<Signal>();
+    for(auto &signal : signals_map){
+        Signal signalCopy = signal.first;
+        signals->push_back(signalCopy);
+    }
+    return signals;
 }

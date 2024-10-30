@@ -26,9 +26,12 @@ class Trace{
         
         //get the constraints from the trace
         std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>);
+        std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>*);
         
         //get the signal values from the trace
         std::vector<Value*>* getSignalValue(Signal);
+
+        std::vector<Signal>* getAllSignals();
 
         void printDebug();
     private:
