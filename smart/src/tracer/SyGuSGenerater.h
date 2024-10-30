@@ -38,12 +38,22 @@ class SyGuSGenerater
 
         std::map<Signal,std::vector<Value*>> signalValuesMap;
 
+        std::map<std::string, std::string> bitSignalGrammerMap; 
+
         std::string makeSyntheisFunction(const std::vector<Signal>);
         std::string createFunctionHeader(const std::vector<Signal>);
+        
         std::string createFunctionGrammar();
-        std::string createBvGrammar(const std::vector<Signal>,int);
+        
+        
         std::string createBoolGrammar();
+        std::string createSingleBvGrammar(Signal);
+        std::string createMixBvGrammar(const std::vector<Signal>);
+        
+        
         std::string createConstraint(bool,int);
+
+        
 
 };
 #endif // SyGuSGenerater_H

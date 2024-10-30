@@ -22,11 +22,12 @@ async def my_first_test(dut):
         dut.clk.value = 1
         await Timer(1, units="ns")
 
-        dut.dataa.value = random.randint(0,255)
-        dut.datab.value = random.randint(0,255)
-        dut.add_sub.value = random.randint(0,1)
+        dut.dataa.value = random.randint(0,100)
+        dut.datab.value = random.randint(0,100)
+        dut.add_sub.value = 1
 
         print(f"a={int(dut.dataa.value)}, add_sub={dut.add_sub.value}, b={int(dut.datab.value)}, result={int(dut.result.value)}")
+        assert(dut.result.value == dut.dataa.value + dut.datab.value)
         # print(f"Cycle:{cycle}")
 
         #clk falling edge

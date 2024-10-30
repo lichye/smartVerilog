@@ -169,66 +169,57 @@ std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signa
 
 std::string SyGuSGenerater::createFunctionGrammar()
 {
-    std::string functionGrammar = "(";
+    std::string functionGrammar = "(\n";
     
-    for(auto it=sameTypeSignals.begin();it!=sameTypeSignals.end();it++){
-        
-        SignalType type = it->first.first;
-        int width = it->first.second;
-
-        if(type == SignalType::BOOLEAN){
-            functionGrammar += "(";
-            functionGrammar += "Start ";
-            functionGrammar += " Bool";
-            functionGrammar += ") ";
-        }
-        if(type == SignalType::BITS){
-            functionGrammar += "(";
-            functionGrammar += "StartBv";
-            functionGrammar += std::to_string(width);
-            functionGrammar += " (_ ";
-            functionGrammar += "BitVec ";
-            functionGrammar += std::to_string(width);
-            functionGrammar += "))";
-        }
-    }
-
+    functionGrammar += "(";
+    functionGrammar += "Start ";
+    functionGrammar += " Bool";
     functionGrammar += ")\n";
 
-    functionGrammar += "(\n";
+    std::string functionGrammarDetail = "";
 
-    //we must add the boolean grammar
-    functionGrammar += createBoolGrammar();
+    // for(auto signal:signals){
+    //     if(signal.type == SignalType::BITS){
+    //         functionGrammar += "(";
+    //         functionGrammar += "Single_"+signal.toSygusName()+" ";
+    //         functionGrammar += " (_ ";
+    //         functionGrammar += "BitVec ";
+    //         functionGrammar += std::to_string(signal.lindex - signal.rindex + 1);
+    //         functionGrammar += "))\n";
 
-    for(auto it=sameTypeSignals.begin();it!=sameTypeSignals.end();it++){
-        SignalType type = it->first.first;
-        int width = it->first.second;
-        if(type == SignalType::BITS){
-            functionGrammar += createBvGrammar(signals,width);
-        }
+    //         functionGrammarDetail += createSingleBvGrammar(signal);
+    //     }
+    // }
+
+    functionGrammarDetail += createBoolGrammar();
+
+    for(auto signals : sameTypeSignals){
+        if(signals.first.first == SignalType::BITS){
+            //assert(signals.second.size() > 1);
+            functionGrammarDetail += createMixBvGrammar(signals.second);
+            functionGrammar += "(";
+            functionGrammar += "MixBv"+std::to_string(signals.first.second)+" ";
+            functionGrammar += " (_ ";
+            functionGrammar += "BitVec ";
+            functionGrammar += std::to_string(signals.first.second);
+            functionGrammar += "))\n";
+        }   
     }
-
-    
-    
+    //add the details for each grammar in the functionGrammar
+    functionGrammar += ")\n";
+    functionGrammar += "(\n";
+    functionGrammar += functionGrammarDetail;
     functionGrammar += ")\n";
 
     return functionGrammar;
 }
 
-std::string SyGuSGenerater::createBvGrammar(const std::vector<Signal> signals, int bitWidth)
+std::string SyGuSGenerater::createSingleBvGrammar(Signal signal)
 {   
+    std::string startName = "Single_"+signal.toSygusName();
 
-    std::string signalsName="\t";
-    std::string startName = "StartBv" + std::to_string(bitWidth);
-    for(auto signal : signals){
-        if(signal.type == SignalType::BITS && signal.getWidth() == bitWidth)
-            signalsName += signal.toSygusName() + " ";
-    }
-
-    signalsName +="\n";
-
-    std::string bvGrammar=std::string("("+startName+" (_ BitVec " + std::to_string(bitWidth) + ") \n") +std::string("    ( \n");
-    bvGrammar += signalsName;
+    std::string bvGrammar=std::string("("+startName+" (_ BitVec " + std::to_string(signal.getWidth()) + ") \n") +std::string("    ( \n");
+    bvGrammar += std::string("\t")+signal.toSygusName()+"\n";
     bvGrammar += std::string("\t(bvneg ")+ startName + ")\n";
     bvGrammar += std::string("\t(bvnot ")+ startName + ")\n";
     bvGrammar += std::string("\t(bvand ")+ startName + " " + startName + ")\n";
@@ -237,12 +228,35 @@ std::string SyGuSGenerater::createBvGrammar(const std::vector<Signal> signals, i
     bvGrammar += std::string("\t(bvadd ")+ startName + " " + startName + ")\n";
     bvGrammar += std::string("\t(bvsub ")+ startName + " " + startName + ")\n";
     bvGrammar += std::string("\t(bvmul ")+ startName + " " + startName + ")\n";
-    bvGrammar += std::string("\t(bvudiv ")+ startName + " " + startName + ")\n";
-    bvGrammar += std::string("\t(bvlshr ")+ startName + " " + startName + ")\n";
-    bvGrammar += std::string("\t(bvshl ")+ startName + " " + startName + ")\n";
+    // bvGrammar += std::string("\t(bvudiv ")+ startName + " " + startName + ")\n";
+    // bvGrammar += std::string("\t(bvlshr ")+ startName + " " + startName + ")\n";
+    // bvGrammar += std::string("\t(bvshl ")+ startName + " " + startName + ")\n";
     bvGrammar += std::string("\t)\n")+
     std::string(")\n");
     return bvGrammar;
+}
+
+std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals){
+    std::string mixBvGrammar = "";
+    std::string startName = "MixBv"+std::to_string(signals[0].getWidth());
+    mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ") \n") +std::string("    ( \n");
+    for(auto signal : signals){
+        mixBvGrammar += std::string("\t")+signal.toSygusName()+"\n";
+    }
+    mixBvGrammar += std::string("\t(bvneg ")+ startName + ")\n";
+    mixBvGrammar += std::string("\t(bvnot ")+ startName + ")\n";
+    mixBvGrammar += std::string("\t(bvand ")+ startName + " " + startName + ")\n";
+    mixBvGrammar += std::string("\t(bvor ")+ startName + " " + startName + ")\n";
+    //mixBvGrammar += std::string("\t(bvxor ")+ startName + " " + startName + ")\n";
+    mixBvGrammar += std::string("\t(bvadd ")+ startName + " " + startName + ")\n";
+    mixBvGrammar += std::string("\t(bvsub ")+ startName + " " + startName + ")\n";
+    mixBvGrammar += std::string("\t(bvmul ")+ startName + " " + startName + ")\n";
+    // mixBvGrammar += std::string("\t(bvudiv ")+ startName + " " + startName + ")\n";
+    // mixBvGrammar += std::string("\t(bvlshr ")+ startName + " " + startName + ")\n";
+    // mixBvGrammar += std::string("\t(bvshl ")+ startName + " " + startName + ")\n";
+    mixBvGrammar += std::string("\t)\n")+
+    std::string(")\n");
+    return mixBvGrammar;
 }
 
 std::string SyGuSGenerater::createBoolGrammar()
@@ -254,19 +268,8 @@ std::string SyGuSGenerater::createBoolGrammar()
     std::string("\t(not Start) \n")+
     std::string("\t(and Start Start) \n")+
     std::string("\t(or Start Start)\n");
-
-    for(auto it=sameTypeSignals.begin();it!=sameTypeSignals.end();it++){
-        SignalType type = it->first.first;
-        int width = it->first.second;
-        if(type == SignalType::BITS){
-            std::string bvName = "StartBv" + std::to_string(width);
-            boolGra += "\t(= "+bvName+" "+bvName+")\n";
-            // boolGra += "\t(bvult "+bvName+" "+bvName+")\n";
-            // boolGra += "\t(bvslt "+bvName+" "+bvName+")\n";
-            // boolGra += "\t(bvuge "+bvName+" "+bvName+")\n";
-            // boolGra += "\t(bvsge "+bvName+" "+bvName+")\n";
-        }
-    }
+    
+    //wait for add bv compare grammar
     boolGra += std::string("\t)\n")+ std::string(")\n");
     return boolGra;
 }
