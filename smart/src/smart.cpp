@@ -7,21 +7,17 @@
 #include "SyGuSGenerater.h"
 namespace fs = std::filesystem;
 
-int main(){
-  //make the path to the vcd files containing directory
-  std::string vcd_path = "tests/vcd_files";
-  std::string smt_path = "tests/smt_files";
-  std::string config_path = "tests/config.ini";
 
-  std::vector<std::string> vcdFiles;
-  std::vector<Trace*> traces;
+std::vector<Trace*> traces;
 
+void readSimVcdFiles(std::string sim_path){
   int vcdFileCount = 0;
+  std::vector<std::string> simVcdFiles;
   try {
-        for (const auto& entry : fs::directory_iterator(vcd_path)) {
+        for (const auto& entry : fs::directory_iterator(sim_path)) {
             if (entry.is_regular_file() && entry.path().extension() == ".vcd") {
                 ++vcdFileCount;
-                vcdFiles.push_back(entry.path().string());
+                simVcdFiles.push_back(entry.path().string());
             }
         }
         
@@ -33,16 +29,54 @@ int main(){
   //Loop over the trace file system to get the traces from VCD files
   std::cout<<"List of the VCD files input:\n";
 
-  for(auto &vcdFile : vcdFiles){
+  for(auto &vcdFile : simVcdFiles){
     std::cout<<vcdFile<<std::endl;
-    Trace* trace = new Trace(TraceType::VCD, vcdFile);
+    Trace* trace = new Trace(TraceType::SIM, vcdFile);
     std::cout<<"Created new trace object"<<std::endl;
     traces.push_back(trace);
-    std::cout<<"trace object inserted into the traces vector"<<std::endl;
+    std::cout<<"SIM trace object inserted into the traces vector"<<std::endl;
+  }
+}
+
+void readSmtVcdFiles(std::string smt_path){
+  int vcdFileCount = 0;
+  std::vector<std::string> smtVcdFiles;
+  try {
+        for (const auto& entry : fs::directory_iterator(smt_path)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".vcd") {
+                ++vcdFileCount;
+                smtVcdFiles.push_back(entry.path().string());
+            }
+        }
+        
+        std::cout << "Number of VCD files: " << vcdFileCount << std::endl;
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
   }
 
+  //Loop over the trace file system to get the traces from VCD files
+  std::cout<<"List of the VCD files input:\n";
+
+  for(auto &vcdFile : smtVcdFiles){
+    std::cout<<vcdFile<<std::endl;
+    Trace* trace = new Trace(TraceType::SMT, vcdFile);
+    traces.push_back(trace);
+    std::cout<<"SMT trace object inserted into the traces vector"<<std::endl;
+  }
+}
+int main(){
+  //make the path to the vcd files containing directory
+  std::string sim_path = "tests/sim_files";
+  std::string smt_path = "tests/smt_files";
+  std::string config_path = "tests/config.ini";
+
+  
+  readSimVcdFiles(sim_path);
+
+  readSmtVcdFiles(smt_path);  
+
   //defualt sg will read from config.ini file
-  SignalGather sg;
+  SignalGather sg(config_path);
 
   SyGuSGenerater sygus;
 
@@ -54,6 +88,8 @@ int main(){
 
   sygus.setSignals(signals);
 
+  std::cout<<"Signals set"<<std::endl;
+  
   for(auto &trace : traces){
     std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
     sygus.addConstraints(*constraints);
@@ -61,7 +97,7 @@ int main(){
 
   sygus.printSysgusPath("sygus.sl");
 
-  //delete the traces
+
   for(auto &trace : traces){
     delete trace;
   } 

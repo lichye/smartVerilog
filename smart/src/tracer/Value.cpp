@@ -106,3 +106,21 @@ char Value::Bit2Char(BitType bit){
             return 'U';
     }
 }
+
+Value* Value::makeRandomValue(SignalType type){
+    Value* value = new Value();
+    value->type = type;
+    if(type == SignalType::BOOLEAN){
+        value->value.bitValue = BitType::X;
+    }
+    else if(type == SignalType::BITS){
+        value->value.bitVector = new std::vector<BitType>();
+        for(int i = 0; i < 8; i++){
+            value->value.bitVector->push_back(BitType::X);
+        }
+    }
+    else if(type == SignalType::DOUBLE){
+        value->value.realValue = 0.0;
+    }
+    return value;
+}

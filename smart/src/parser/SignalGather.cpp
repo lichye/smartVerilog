@@ -19,7 +19,17 @@ SignalGather::SignalGather(){
 }
 
 SignalGather::SignalGather(std::string path){
-    
+    inih::INIReader reader(path);
+    std::set<std::string> sectionList = reader.Sections();
+    for(auto &section : sectionList){
+        Signal signal;
+        signal.moduleName = reader.Get(section,"moduleName");
+        signal.name = reader.Get(section,"signalName");
+        signal.lindex = std::stoi(reader.Get(section,"lindex"));
+        signal.rindex = std::stoi(reader.Get(section,"rindex"));
+        signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signalType")));
+        signals.push_back(signal);
+    }
 }
 
 SignalGather::SignalGather(std::vector<VCDSignal>){

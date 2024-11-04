@@ -7,10 +7,13 @@
 
 class Value{
     public:
+        static Value* makeRandomValue(SignalType);
+        
         Value(VCDValue* value);
         Value();
         ~Value();
         std::string toString();
+        
     private:
         SignalType type;
         union valstore{

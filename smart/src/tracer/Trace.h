@@ -12,7 +12,7 @@
 #ifndef TRACE_H
 #define TRACE_H
 enum TraceType{
-    VCD,
+    SIM,
     SMT,
     UNKNOWN
 };
@@ -50,6 +50,8 @@ class Trace{
         //use this function to set the signals_map
         void readVCDFile(VCDFile*);
         SignalType translateSignalType(VCDSignal*);
+
+        Value* createValue(VCDSignal*);
 
 };
 

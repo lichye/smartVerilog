@@ -11,20 +11,15 @@ Trace::Trace()
 
 Trace::Trace(TraceType ctype, std::string path){
     traceType = ctype;
-    if(ctype == TraceType::VCD){
-         //lock the mutex of the parser
-        std::lock_guard<std::mutex> lock(VCDFileParserMutex);
+
+    //lock the file parser mutex
+    std::lock_guard<std::mutex> lock(VCDFileParserMutex);
+    if(ctype == TraceType::SIM){
         vcdPath = path;
         if(vcdPath != ""){
-            std::cout<<"try to parse the vcd file: "<<vcdPath<<std::endl; 
+            std::cout<<"try to parse the vcd file in: "<<vcdPath<<std::endl; 
             VCDFileParser vcdParser;
-
-            std::cout<<"Create new VCDParser"<<std::endl; 
-
             VCDFile* vcdFile = vcdParser.parse_file(vcdPath);
-            
-            std::cout<<"Try to read the vcdfile"<<std::endl;
-
             assert(vcdFile != nullptr && "VCD file should not be null");
 
             readVCDFile(vcdFile);
@@ -33,6 +28,17 @@ Trace::Trace(TraceType ctype, std::string path){
         }
     }else if(ctype == TraceType::SMT){ 
         smtPath = path;
+        if(smtPath != ""){
+            std::cout<<"try to parse the vcd file in: "<<smtPath<<std::endl; 
+            VCDFileParser vcdParser;
+            VCDFile* vcdFile = vcdParser.parse_file(smtPath);  
+            assert(vcdFile != nullptr && "VCD file should not be null");
+            
+            readVCDFile(vcdFile);
+            delete vcdFile;
+            std::cout<<"Trace Gathered\n"<<std::endl;
+        }
+        
     }
 }
 
@@ -99,10 +105,16 @@ void Trace::readVCDFile(VCDFile* vcdFile){
             for(VCDTime time : *timestamps){
                 VCDValue* val = vcdFile -> get_signal_value_at(signal -> hash, time);
                 
-                //if there is no value for the signal
+                //if there is no value for the signal, then we make a good value for that
                 if(val == nullptr){
-                    std::cout<<"No value found for signal: "<<signal->reference<<std::endl;
-                    exit(1);
+                    if(traceType==TraceType::SMT){
+                        Value* value = Value::makeRandomValue(s.type);
+                        values->push_back(value);
+                    }
+                    else{
+                        std::cout<<"Simulation trace should not have null value"<<std::endl;
+                        exit(1);
+                    }
                 }
                 else{
                     Value* value = new Value(val);

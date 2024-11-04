@@ -1,9 +1,7 @@
 TODO:
+# add support for X in sygus Gather
 
-# make false states
-    # Make the SMART to take SMT output VCD file
-
-    # Use the EMBC to make non-exist states
+# Use the EMBC to make non-exist states
 
 
 
