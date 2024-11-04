@@ -40,8 +40,6 @@ class Trace{
 
         TraceType traceType;
 
-        
-
         std::string vcdPath;
 
         //if trace type is SMT

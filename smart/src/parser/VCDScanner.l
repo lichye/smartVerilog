@@ -211,7 +211,6 @@ VERSION_TEXT        {COMMENT_TEXT}
 }
 
 <IN_SCOPE>{SCOPE_IDENTIFIER} {
-    std::cout <<"In scope identifier: "<<yytext << "\n";
     return VCDParser::parser::make_TOK_IDENTIFIER(std::string(yytext),loc);
 }
 
@@ -399,4 +398,5 @@ void VCDFileParser::scan_begin() {
 
 void VCDFileParser::scan_end() {
     fclose(yyin);
+    std::cout <<"Bison finish parsing "<<filepath.c_str()<< "\n";
 }

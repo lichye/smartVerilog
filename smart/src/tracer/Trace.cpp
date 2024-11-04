@@ -23,11 +23,13 @@ Trace::Trace(TraceType ctype, std::string path){
 
             VCDFile* vcdFile = vcdParser.parse_file(vcdPath);
             
+            std::cout<<"Try to read the vcdfile"<<std::endl;
+
             assert(vcdFile != nullptr && "VCD file should not be null");
 
             readVCDFile(vcdFile);
             delete vcdFile;
-            std::cout<<"VCD file parsed\n"<<std::endl;
+            std::cout<<"Trace Gathered\n"<<std::endl;
         }
     }else if(ctype == TraceType::SMT){ 
         smtPath = path;
@@ -93,10 +95,19 @@ void Trace::readVCDFile(VCDFile* vcdFile){
 
             std::vector<Value*>* values = new std::vector<Value*>();
             std::vector<VCDTime>* timestamps = vcdFile -> get_timestamps();
+            //if there exists timestamps, means there is change in the signal
             for(VCDTime time : *timestamps){
                 VCDValue* val = vcdFile -> get_signal_value_at(signal -> hash, time);
-                Value* value = new Value(val);
-                values->push_back(value);
+                
+                //if there is no value for the signal
+                if(val == nullptr){
+                    std::cout<<"No value found for signal: "<<signal->reference<<std::endl;
+                    exit(1);
+                }
+                else{
+                    Value* value = new Value(val);
+                    values->push_back(value);
+                }
             }
             signals_map[s] = values;
         }

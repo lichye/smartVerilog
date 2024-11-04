@@ -264,11 +264,15 @@ std::string SyGuSGenerater::createBoolGrammar()
     std::string boolGra =
     std::string("(Start Bool \n")+
     std::string("\t(\n")+
+
     //std::string("; true false\n")+
     std::string("\t(not Start) \n")+
     std::string("\t(and Start Start) \n")+
     std::string("\t(or Start Start)\n");
     
+    //add the important checker for True return
+    boolGra += createKeyGrammar();
+
     //wait for add bv compare grammar
     boolGra += std::string("\t)\n")+ std::string(")\n");
     return boolGra;
@@ -305,4 +309,27 @@ void SyGuSGenerater::debugPrint()
             std::cout<<value->toString()<<std::endl;
         }
     }
+}
+
+std::string SyGuSGenerater::createKeyGrammar()
+{   
+    std::string trueGrammar = "";
+    //add true checker for each signal
+    for(auto typeSignals : sameTypeSignals){
+        
+        SignalType signalType = typeSignals.first.first;
+        int signalWidth = typeSignals.first.second;
+
+
+        if(signalType == SignalType::BOOLEAN){
+            for(auto signal : typeSignals.second){
+                trueGrammar += "\t" + signal.toSygusName() + "\n";
+            }
+        }
+        else if(signalType == SignalType::BITS){
+            trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
+        }    
+    }
+
+    return trueGrammar;
 }

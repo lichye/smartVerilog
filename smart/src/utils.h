@@ -1,5 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
+#define DEBUG 1
+
 enum SignalType{
     BOOLEAN = 0,
     BITS = 1,

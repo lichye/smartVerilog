@@ -1,7 +1,8 @@
 TODO:
-# debug of why false constrains in the sygus file
 
 # make false states
+    # Make the SMART to take SMT output VCD file
+
     # Use the EMBC to make non-exist states
 
 

@@ -10,6 +10,7 @@ namespace fs = std::filesystem;
 int main(){
   //make the path to the vcd files containing directory
   std::string vcd_path = "tests/vcd_files";
+  std::string smt_path = "tests/smt_files";
   std::string config_path = "tests/config.ini";
 
   std::vector<std::string> vcdFiles;
