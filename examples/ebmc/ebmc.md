@@ -1,3 +1,9 @@
+#property Specification 
+
+ebmc example1.sv --top main -p "a+b==result"
+
+ebmc addsub.sv --top addsub --bound 3
+
 # bound checking
 
 ebmc example3.sv --module counter --bound 10 --vcd example3.vcd

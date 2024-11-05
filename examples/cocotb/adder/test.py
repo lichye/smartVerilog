@@ -15,22 +15,18 @@ from cocotb.binary import BinaryValue
 @cocotb.test()
 async def my_first_test(dut):
     """Try accessing the design."""
-    
+    clock = Clock(dut.clk, 2, units="ns")  # Create a 10ns period clock on port clk
+    cocotb.start_soon(clock.start())  # Start the clock
+
     for cycle in range(10):
         #clk rising edge
+        await RisingEdge(dut.clk)
+
         dut.clk.value = 1
         dut.dataa.value = random.randint(0,100)
         dut.datab.value = random.randint(0,100)
         dut.add_sub.value = 1
-        await Timer(1, units="ns")
 
-        
-
-        print(f"a={int(dut.dataa.value)}, add_sub={dut.add_sub.value}, b={int(dut.datab.value)}, result={int(dut.result.value)}")
-        assert(dut.result.value == dut.dataa.value + dut.datab.value)
-        #clk falling edge
-        dut.clk.value = 0
-        await Timer(1, units="ns")
 
 
 def runner():

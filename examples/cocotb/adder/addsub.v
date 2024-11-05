@@ -6,7 +6,7 @@ module addsub
 	input [7:0] datab,
 	input add_sub,	  // if this is 1, add; else subtract
 	input clk,
-	output reg [8:0] result
+	output reg [7:0] result
 );
 
 	always @ (posedge clk)
