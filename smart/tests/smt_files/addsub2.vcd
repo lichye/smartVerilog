@@ -1,0 +1,18 @@
+$date
+  Tue Nov  5 13:50:49 2024
+$end
+$timescale
+  1ns
+$end
+$scope module addsub $end
+  $var wire 8 addsub.dataa dataa [7:0] $end
+  $var wire 8 addsub.datab datab [7:0] $end
+  $var wire 1 addsub.add_sub add_sub $end
+  $var wire 1 addsub.clk clk $end
+  $var reg 8 addsub.result result [7:0] $end
+$upscope $end
+$enddefinitions $end
+#0
+b00000000 addsub.dataa
+b00000000 addsub.datab
+0addsub.add_sub
