@@ -282,7 +282,7 @@ std::string SyGuSGenerater::createConstraint(bool constraintValue,int index)
 {
     std::string constraintLine = "(constraint (=(inv ";
     for(auto constraint : constraints){
-        constraintLine += constraint[index]->toString() + " ";
+        constraintLine += constraint[index]->toSyGusString() + " ";
     }
     constraintLine += ") ";
     constraintLine += constraintValue ? "true" : "false";
@@ -299,14 +299,14 @@ void SyGuSGenerater::debugPrint()
     std::cout<<"The constraints are: "<<std::endl;
     for(auto &constraint : constraints){
         for(auto &value : constraint){
-            std::cout<<value->toString()<<" ";
+            std::cout<<value->toSyGusString()<<" ";
         }
         std::cout<<std::endl;
     }
     std::cout<<"The false constraints are: "<<std::endl;
     for(auto &constraint : falseConstraints){
         for(auto &value : constraint){
-            std::cout<<value->toString()<<std::endl;
+            std::cout<<value->toSyGusString()<<std::endl;
         }
     }
 }

@@ -1,6 +1,11 @@
 #include "Value.h"
 #include "VCDValue.hpp"
 #include <iostream>
+#include <random>
+
+std::random_device Value::rd;
+std::mt19937 Value::gen(rd());
+std::uniform_int_distribution<> Value::dis(0, 1);
 
 Value::Value(){
     type = SignalType::UNKNOWNSINGALTYPES;
@@ -92,6 +97,47 @@ std::string Value::toString(){
     }   
 }
 
+std::string Value::toSyGusString(){
+    if(type == SignalType::BOOLEAN){
+        if(value.bitValue == BitType::ZERO)
+            return "false";
+        else
+            return "true";
+    }
+    else if(type == SignalType::BITS){
+        std::string str="#b";
+        for(auto &bit : *value.bitVector){
+            switch (bit)
+            {
+            case BitType::ZERO:
+                str += "0";
+                break;
+            case BitType::ONE:
+                str += "1";
+                break;
+            case BitType::X:
+                str += std::to_string(dis(gen));
+                break;
+            case BitType::Z:
+                str += std::to_string(dis(gen));
+                break;
+            default:
+                break;
+            }
+        }
+        std::cout<<"The bit vector is: "<<str<<std::endl;
+        std::cout<<"The bit vector size is: "<<value.bitVector->size()<<std::endl;  
+        //exit(1);
+        return str;
+    }
+    else if(type == SignalType::DOUBLE){
+        return std::to_string(value.realValue);
+    }
+    else{
+        return "unknown";
+    }   
+}
+
 char Value::Bit2Char(BitType bit){
     switch(bit){
         case BitType::ZERO:
@@ -107,7 +153,7 @@ char Value::Bit2Char(BitType bit){
     }
 }
 
-Value* Value::makeRandomValue(SignalType type){
+Value* Value::makeXValue(SignalType type,int bitWidth){
     Value* value = new Value();
     value->type = type;
     if(type == SignalType::BOOLEAN){
@@ -115,8 +161,9 @@ Value* Value::makeRandomValue(SignalType type){
     }
     else if(type == SignalType::BITS){
         value->value.bitVector = new std::vector<BitType>();
-        for(int i = 0; i < 8; i++){
+        for(int i = 0; i < bitWidth; i++){
             value->value.bitVector->push_back(BitType::X);
+            //std::cout<<"The bit vector size is: "<<value->value.bitVector->size()<<std::endl;
         }
     }
     else if(type == SignalType::DOUBLE){

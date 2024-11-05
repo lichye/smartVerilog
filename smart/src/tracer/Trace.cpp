@@ -108,7 +108,8 @@ void Trace::readVCDFile(VCDFile* vcdFile){
                 //if there is no value for the signal, then we make a good value for that
                 if(val == nullptr){
                     if(traceType==TraceType::SMT){
-                        Value* value = Value::makeRandomValue(s.type);
+                        Value* value = Value::makeXValue(s.type,s.lindex - s.rindex + 1);
+                        std::cout<<"Unknown Signal: "<<s.name<<" has length: "<<s.lindex - s.rindex + 1<<std::endl;
                         values->push_back(value);
                     }
                     else{
