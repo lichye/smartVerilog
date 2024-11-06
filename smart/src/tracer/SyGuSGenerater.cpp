@@ -178,6 +178,8 @@ std::string SyGuSGenerater::createFunctionGrammar()
 
     std::string functionGrammarDetail = "";
 
+    functionGrammarDetail += createBoolGrammar();
+
     // for(auto signal:signals){
     //     if(signal.type == SignalType::BITS){
     //         functionGrammar += "(";
@@ -191,7 +193,7 @@ std::string SyGuSGenerater::createFunctionGrammar()
     //     }
     // }
 
-    functionGrammarDetail += createBoolGrammar();
+    
 
     for(auto signals : sameTypeSignals){
         if(signals.first.first == SignalType::BITS){
@@ -328,6 +330,7 @@ std::string SyGuSGenerater::createKeyGrammar()
         }
         else if(signalType == SignalType::BITS){
             trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
+            trueGrammar += "\t(= MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
         }    
     }
 

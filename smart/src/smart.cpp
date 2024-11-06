@@ -66,9 +66,9 @@ void readSmtVcdFiles(std::string smt_path){
 }
 int main(){
   //make the path to the vcd files containing directory
-  std::string sim_path = "tests/sim_files";
-  std::string smt_path = "tests/smt_files";
-  std::string config_path = "tests/config.ini";
+  std::string sim_path = "runtime/sim_files";
+  std::string smt_path = "runtime/smt_files";
+  std::string config_path = "User/config.ini";
 
   
   readSimVcdFiles(sim_path);
@@ -76,15 +76,17 @@ int main(){
   readSmtVcdFiles(smt_path);  
 
   //defualt sg will read from config.ini file
-  SignalGather sg(config_path);
+  
 
+  SignalGather sg(config_path);
   SyGuSGenerater sygus;
 
-  // for(int i = 0; i<sg.getSignalSize(); i++){
-  //   signals.push_back(sg.getOneSignal(i));
-  // }
 
+  //read from SignalGather
   std::vector<Signal>* signals = sg.getAllSignals();
+
+  //read from the tracer
+  //std::vector<Signal>* signals = traces[0]->getAllSignals("addsub");
 
   sygus.setSignals(signals);
 

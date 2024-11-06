@@ -125,9 +125,6 @@ std::string Value::toSyGusString(){
                 break;
             }
         }
-        std::cout<<"The bit vector is: "<<str<<std::endl;
-        std::cout<<"The bit vector size is: "<<value.bitVector->size()<<std::endl;  
-        //exit(1);
         return str;
     }
     else if(type == SignalType::DOUBLE){

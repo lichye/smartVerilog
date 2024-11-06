@@ -160,3 +160,14 @@ std::vector<Signal>* Trace::getAllSignals(){
     }
     return signals;
 }
+
+std::vector<Signal>* Trace::getAllSignals(std::string moduleName){
+    std::vector<Signal>* signals = new std::vector<Signal>();
+    for(auto &signal : signals_map){
+        if(signal.first.moduleName == moduleName){
+            Signal signalCopy = signal.first;
+            signals->push_back(signalCopy);
+        }
+    }
+    return signals;
+}
