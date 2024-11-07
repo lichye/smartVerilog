@@ -26,10 +26,10 @@ module addsub
 	end
 
 	//This the property that we want to verify
-	p1: assert property (@(posedge clk) clk|->##1!(dataa_copy== 8'b00000001 && datab_copy== 8'b00000001 && result == 8'b00000100));
+	unreachableState: assert property (@(posedge clk) clk|->##1!(dataa_copy== 8'b00000001 && datab_copy== 8'b00000001 && result == 8'b00000100));
 
-	//this will be refuted
-	//p2: assert property (@(posedge clk) !(dataa_copy== 8'b00000001 && datab_copy== 8'b00000001 && result == 8'b00000000));
+	// //this will be refuted
+	// p2: assert property (@(posedge clk) !(dataa_copy== 8'b00000001 && datab_copy== 8'b00000001 && result == 8'b00000000));
 
 	addproperty: assert property (@(posedge clk) add_sub |-> ##1 result == dataa_copy + datab_copy);
 
