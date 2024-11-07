@@ -6,6 +6,7 @@ LDFLAGS         = -L./lib
 # Source and build directories
 SRC_DIR         ?= ./src
 BUILD_DIR       ?= ./build
+RUNTIME_DIR     ?= ./runtime
 
 # Ensure subdirectories exist
 BUILD_SUBDIRS   = $(BUILD_DIR)/parser $(BUILD_DIR)/tracer
@@ -65,4 +66,5 @@ clean:
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
+
 	mkdir $(BUILD_DIR)

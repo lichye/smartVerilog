@@ -13,4 +13,4 @@ c2:
 	ebmc addsub.sv --module addsub --bound 10 --vcd smt.vcd -p "datab!=0"
 
 state:
-	ebmc add_sub2.sv --module add_sub --bound 10 --trace
+	ebmc addsub2.sv --module addsub --bound 10 --trace
