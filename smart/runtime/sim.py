@@ -1,8 +1,6 @@
 import random
-
 import os
-import random
-from pathlib import Path
+import sys
 
 import cocotb
 from cocotb.clock import Clock
@@ -10,6 +8,8 @@ from cocotb.runner import get_runner
 from cocotb.triggers import FallingEdge
 from cocotb.triggers import RisingEdge, Timer
 from cocotb.binary import BinaryValue
+from pathlib import Path
+
 
 
 @cocotb.test()
@@ -29,9 +29,9 @@ async def my_first_test(dut):
 
 
 
-def runner():
+def runner(verilog_path):
     sim = os.getenv("SIM", "verilator")
-    verilog_sources = ["addsub.sv"]
+    verilog_sources = verilog_path
 
     # set parameters
     extra_args = []
@@ -48,8 +48,14 @@ def runner():
         build_args=extra_args,
     )
 
-    runner.test(hdl_toplevel="addsub", test_module="test")
+    runner.test(hdl_toplevel="addsub", test_module="sim")
 
 
 if __name__ == "__main__":
-    runner()
+    if(len(sys.argv) !=2):
+        print("Should give verilog design path")
+        exit(1)
+    else:
+        verilog_sources = [sys.argv[1]]
+        print(verilog_sources)
+        runner(verilog_sources)
