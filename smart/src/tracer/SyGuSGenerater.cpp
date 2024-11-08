@@ -322,14 +322,19 @@ std::string SyGuSGenerater::createBoolGrammar()
     return boolGra;
 }
 
-std::string SyGuSGenerater::createConstraint(bool constraintValue,int index)
+std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
 {
-    std::string constraintLine = "(constraint (=(inv ";
+    std::string constraintLine;
+    if(!checkConstraintsDefined(index,constraintType)){
+        constraintLine+="; ";
+    }
+    
+    constraintLine += "(constraint (=(inv ";
     for(auto constraint : constraints){
         constraintLine += constraint[index]->toSyGusString() + " ";
     }
     constraintLine += ") ";
-    constraintLine += constraintValue ? "true" : "false";
+    constraintLine += constraintType ? "true" : "false";
     constraintLine += "))\n";
     return constraintLine;
 }
@@ -358,13 +363,30 @@ std::string SyGuSGenerater::createKeyGrammar()
     return trueGrammar;
 }
 
-bool SyGuSGenerater::checkConstraintsDefined(std::vector<Value*> constraint)
-{
-    for(auto &value : constraint){
-        if(value->isUndefined()){
-            return false;
+bool SyGuSGenerater::checkConstraintsDefined(int index,bool trueConstrains)
+{   
+    if(trueConstrains){
+        for(auto &constraint : constraints){
+            if(constraint.size() <= index){
+                return false;
+            }
+            if(constraint[index]->isUndefined()){
+                return false;
+            }
         }
+        return true;
     }
-    return true;
+    else{
+        for(auto &constraint : falseConstraints){
+            if(constraint.size() <= index){
+                return false;
+            }
+            if(constraint[index]->isUndefined()){
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
 

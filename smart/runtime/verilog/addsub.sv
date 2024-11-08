@@ -25,5 +25,5 @@ module addsub
 			result <= dataa - datab;
 	end
 
-	//p1: assert property (@(posedge clk) clk|->##1(~(-result)!=0));
+	// add_sub2: assert property (@(posedge clk) clk |-> ##1 add_sub);
 endmodule

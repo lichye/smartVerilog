@@ -54,7 +54,7 @@ class SyGuSGenerater
         std::string createKeyGrammar();
         std::string createConstraint(bool,int);
 
-        bool checkConstraintsDefined(std::vector<Value*>);
+        bool checkConstraintsDefined(int,bool);
 
         
 

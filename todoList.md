@@ -1,16 +1,19 @@
-TO_Talk:
-# SMT trace
-## should not influence the property
+TO_TALK:
+# EBMC does not take cmdline of sv assertions
+# TIME problem
 
+TODO:
 # make program that can make verilog assertions
+
 ## parse the smt function back
+### https://github.com/polgreen/oracles/blob/master/image_oracles/define_fun_parser.h
+
+## Merge verilog code with the assertion
+
 ## translate smt function to verilog assertions
 ## translate a state into verilog assertions
 
-# Run.py
-
-TODO:
-
+Future:
 
 # mutate the verilog circut and check the assertion is violate ????
 
@@ -18,13 +21,10 @@ TODO:
 ## constrainst the varibales
 ## huristic
 
-
-# one-botton to run all
-
 # Make more test file (?)
 ## use the open-source benchmark
 
-To_do_Late: 
 
+Sideway Work: 
 ## there is possible way to adjust to K-induction prove
 

@@ -67,5 +67,6 @@ def runner():
             print("Invalid Command")
     
 if __name__ == "__main__":
-    # compile()
+    compile()
+    sim()
     runner()

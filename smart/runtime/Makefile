@@ -9,8 +9,8 @@ SMT_RESULTS = smt_results
 
 clean:
 	rm -rf $(SIM_BUILD)
-	rm -rf $(SMT_RESULTS)/*.vcd
-	rm -rf $(SIM_RESULTS)/*.vcd
+	rm -rf $(SMT_RESULTS)/*
+	rm -rf $(SIM_RESULTS)/*
 	rm -rf __pycache__
 	
 sim:
@@ -18,4 +18,4 @@ sim:
 	mv $(SIM_BUILD)/dump.vcd $(SIM_RESULTS)/sim.vcd
 
 smt:
-	ebmc $(VERILOG_SRC) --module addsub --bound 10 --vcd $(SMT_RESULTS)/smt.vcd -p "add_sub==1"
+	ebmc $(VERILOG_SRC) --module addsub --bound 10 --vcd $(SMT_RESULTS)/smt.vcd
