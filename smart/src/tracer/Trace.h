@@ -35,6 +35,8 @@ class Trace{
 
         std::vector<Signal>* getAllSignals(std::string);
 
+        std::string getPath();
+
         void printDebug();
     private:
 

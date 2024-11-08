@@ -171,3 +171,15 @@ std::vector<Signal>* Trace::getAllSignals(std::string moduleName){
     }
     return signals;
 }
+
+std::string Trace::getPath(){
+    if(traceType == TraceType::SIM){
+        return vcdPath;
+    }
+    else if(traceType == TraceType::SMT){
+        return smtPath;
+    }
+    else{
+        return "";
+    }
+}

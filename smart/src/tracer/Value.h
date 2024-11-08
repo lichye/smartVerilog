@@ -15,6 +15,7 @@ class Value{
         ~Value();
         std::string toString();
         std::string toSyGusString();
+        bool isUndefined();
         
     private:
         static std::random_device rd;
@@ -28,6 +29,7 @@ class Value{
             double realValue;
         }value;
         char Bit2Char(BitType bit);
+        
 };
 #endif // VALUE_H
 

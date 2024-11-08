@@ -116,10 +116,10 @@ std::string Value::toSyGusString(){
                 str += "1";
                 break;
             case BitType::X:
-                str += std::to_string(dis(gen));
+                str += "X";
                 break;
             case BitType::Z:
-                str += std::to_string(dis(gen));
+                str += "Z";
                 break;
             default:
                 break;
@@ -167,4 +167,21 @@ Value* Value::makeXValue(SignalType type,int bitWidth){
         value->value.realValue = 0.0;
     }
     return value;
+}
+
+bool Value::isUndefined(){
+    if(type == SignalType::BOOLEAN){
+        return value.bitValue == BitType::X;
+    }
+    else if(type == SignalType::BITS){
+        for(auto &bit : *value.bitVector){
+            if(bit == BitType::X){
+                return true;
+            }
+        }
+        return false;
+    }
+    else{
+        return true;
+    }
 }

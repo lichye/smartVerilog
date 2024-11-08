@@ -56,45 +56,60 @@ void SyGuSGenerater::setSignals(std::vector<Signal>* signals)
     }
 }
 
-void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstraints)
-{   
+void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstraints,bool trueConstrains){
     assert(inputConstraints.size() == this->signals.size());
     //if the constraints are empty then we add the inputConstraints one by one
-    if(constraints.size() == 0){
-        for(auto &constraint : inputConstraints){
-            this->constraints.push_back(constraint);
-        }
-    }
-    else{
-        if(inputConstraints.size() == this->constraints.size()){
-            for(int i = 0;i<constraints.size();i++){
-                this->constraints[i].insert(this->constraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
+    if(trueConstrains){
+        if(constraints.size() == 0){
+            for(auto &constraint : inputConstraints){
+                this->constraints.push_back(constraint);
             }
         }
         else{
-            std::cout<<"The constraints size is not the same"<<std::endl;
+            if(inputConstraints.size() == this->constraints.size()){
+                for(int i = 0;i<constraints.size();i++){
+                    this->constraints[i].insert(this->constraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
+                }
+            }
+            else{
+                std::cout<<"The constraints size is not the same"<<std::endl;
+            }
         }
     }
-    
+    else{
+        if(falseConstraints.size() == 0){
+            for(auto &constraint : inputConstraints){
+                this->falseConstraints.push_back(constraint);
+            }
+        }
+        else{
+            if(inputConstraints.size() == this->falseConstraints.size()){
+                for(int i = 0;i<falseConstraints.size();i++){
+                    this->falseConstraints[i].insert(this->falseConstraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
+                }
+            }
+            else{
+                std::cout<<"The false constraints size is not the same length with the signals"<<std::endl;
+            }
+        }
+    }
 }
 
-void SyGuSGenerater::addFalseConstraints(std::vector<std::vector<Value*>> inputConstraints)
-{
-    assert(inputConstraints.size() == this->signals.size());
-
-    if(falseConstraints.size() == 0){
-        for(auto &constraint : inputConstraints){
-            this->falseConstraints.push_back(constraint);
+void SyGuSGenerater::addConstrainComments(std::string comment,bool isTrueConstrains){
+    if(isTrueConstrains){
+        if(constraints.size() == 0){
+            comments[0] = comment;
+        }
+        else{
+            comments[constraints[0].size()] = comment;
         }
     }
     else{
-        if(inputConstraints.size() == this->falseConstraints.size()){
-            for(int i = 0;i<falseConstraints.size();i++){
-                this->falseConstraints[i].insert(this->falseConstraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
-            }
+        if(falseConstraints.size() == 0){
+            falseComments[0] = comment;
         }
         else{
-            std::cout<<"The false constraints size is not the same length with the signals"<<std::endl;
+            falseComments[falseConstraints[0].size()] = comment;
         }
     }
 }
@@ -108,12 +123,15 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         
         //print out the synthesis function, only if signals exist
         if(signals.size()>0){
-            file<<makeSyntheisFunction(signals);
+            file<<createSyntheisFunction(signals);
         }
         
         //print out  the constraints, only if constraints exist
         if(constraints.size() >0){
             for(int i =0;i<constraints[0].size();i++){
+                if(comments.find(i) != comments.end()){
+                    file<<"; "<<comments[i]<<std::endl;
+                }
                 file<<createConstraint(true,i);
             }
         }
@@ -121,6 +139,9 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         //print out the false constraints, only if false constraints exist
         if(falseConstraints.size() > 0){
             for(int i =0;i<falseConstraints[0].size();i++){
+                if(falseComments.find(i) != falseComments.end()){
+                    file<<"; "<<falseComments[i]<<std::endl;
+                }
                 file<<createConstraint(false,i);
             }
         }
@@ -133,7 +154,28 @@ void SyGuSGenerater::printSysgusPath(std::string path)
     }
 }
 
-std::string SyGuSGenerater::makeSyntheisFunction(const std::vector<Signal> signals)
+void SyGuSGenerater::debugPrint()
+{
+    std::cout<<"The signals are: "<<std::endl;
+    for(auto &signal : signals){
+        std::cout<<signal.name<<std::endl;
+    }
+    std::cout<<"The constraints are: "<<std::endl;
+    for(auto &constraint : constraints){
+        for(auto &value : constraint){
+            std::cout<<value->toSyGusString()<<" ";
+        }
+        std::cout<<std::endl;
+    }
+    std::cout<<"The false constraints are: "<<std::endl;
+    for(auto &constraint : falseConstraints){
+        for(auto &value : constraint){
+            std::cout<<value->toSyGusString()<<std::endl;
+        }
+    }
+}
+
+std::string SyGuSGenerater::createSyntheisFunction(const std::vector<Signal> signals)
 {   
     std::string synthFun="";
     std::string functionheader = createFunctionHeader(signals);
@@ -292,27 +334,6 @@ std::string SyGuSGenerater::createConstraint(bool constraintValue,int index)
     return constraintLine;
 }
 
-void SyGuSGenerater::debugPrint()
-{
-    std::cout<<"The signals are: "<<std::endl;
-    for(auto &signal : signals){
-        std::cout<<signal.name<<std::endl;
-    }
-    std::cout<<"The constraints are: "<<std::endl;
-    for(auto &constraint : constraints){
-        for(auto &value : constraint){
-            std::cout<<value->toSyGusString()<<" ";
-        }
-        std::cout<<std::endl;
-    }
-    std::cout<<"The false constraints are: "<<std::endl;
-    for(auto &constraint : falseConstraints){
-        for(auto &value : constraint){
-            std::cout<<value->toSyGusString()<<std::endl;
-        }
-    }
-}
-
 std::string SyGuSGenerater::createKeyGrammar()
 {   
     std::string trueGrammar = "";
@@ -336,3 +357,14 @@ std::string SyGuSGenerater::createKeyGrammar()
 
     return trueGrammar;
 }
+
+bool SyGuSGenerater::checkConstraintsDefined(std::vector<Value*> constraint)
+{
+    for(auto &value : constraint){
+        if(value->isUndefined()){
+            return false;
+        }
+    }
+    return true;
+}
+

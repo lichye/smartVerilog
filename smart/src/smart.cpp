@@ -94,7 +94,10 @@ int main(){
   
   for(auto &trace : traces){
     std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
-    sygus.addConstraints(*constraints);
+    //std::cout<<"Constraints from trace: "<<trace->getPath()<<" has size of "<<constraints.size()<<std::endl;
+    sygus.addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
+    //sygus.addComments("test of the coments",true);
+    sygus.addConstraints(*constraints,true);
   }
 
   sygus.printSysgusPath("sygus.sl");

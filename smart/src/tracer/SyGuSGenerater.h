@@ -18,10 +18,10 @@ class SyGuSGenerater
         void setSignals(std::vector<Signal>);
         void setSignals(std::vector<Signal>*);
         //void setSignals(std::string);
-        void addConstraints(std::vector<std::vector<Value*>>);
-        void addFalseConstraints(std::vector<std::vector<Value*>>);
-        //the signals and value should be in the same order
-        //void addSignalsAndConstraints(std::vector<Signal*>,std::vector<std::vector<Value*>>);
+
+        void addConstraints(std::vector<std::vector<Value*>>,bool);
+        void addConstrainComments(std::string,bool);
+
         void printSysgusPath(std::string);
         void debugPrint();
 
@@ -29,6 +29,11 @@ class SyGuSGenerater
         
         //this corelates the signal and its values
         std::vector<Signal> signals;
+
+
+        std::map<int,std::string> comments;
+        std::map<int,std::string> falseComments;
+
         std::vector<std::vector<Value*>> constraints;
         std::vector<std::vector<Value*>> falseConstraints;
         
@@ -40,18 +45,16 @@ class SyGuSGenerater
 
         std::map<std::string, std::string> bitSignalGrammerMap; 
 
-        std::string makeSyntheisFunction(const std::vector<Signal>);
+        std::string createSyntheisFunction(const std::vector<Signal>);
         std::string createFunctionHeader(const std::vector<Signal>);
         std::string createFunctionGrammar();
-        
-        
         std::string createBoolGrammar();
         std::string createSingleBvGrammar(Signal);
         std::string createMixBvGrammar(const std::vector<Signal>);
-        
         std::string createKeyGrammar();
-
         std::string createConstraint(bool,int);
+
+        bool checkConstraintsDefined(std::vector<Value*>);
 
         
 
