@@ -12,7 +12,7 @@ clean:
 	rm -rf $(SMT_RESULTS)/*.vcd
 	rm -rf $(SIM_RESULTS)/*.vcd
 	rm -rf __pycache__
-
+	
 sim:
 	python sim.py $(VERILOG_SRC)
 	mv $(SIM_BUILD)/dump.vcd $(SIM_RESULTS)/sim.vcd

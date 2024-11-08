@@ -66,8 +66,8 @@ void readSmtVcdFiles(std::string smt_path){
 }
 int main(){
   //make the path to the vcd files containing directory
-  std::string sim_path = "runtime/sim_files";
-  std::string smt_path = "runtime/smt_files";
+  std::string sim_path = "runtime/sim_results";
+  std::string smt_path = "runtime/smt_results";
   std::string config_path = "User/config.ini";
 
   

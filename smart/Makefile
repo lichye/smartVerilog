@@ -60,11 +60,18 @@ run:
 	./$(SMART_TARGET)
 	cvc5 --sygus sygus.sl
 
+sim:
+	python $(RUNTIME_DIR)/sim.py $(RUNTIME_DIR)/verilog/addsub.sv
+	mv sim_build/dump.vcd $(RUNTIME_DIR)/sim_results/sim.vcd
+
 # Clean rule to remove output files
 clean:
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
-
+	rm -rf sim_build
+	rm -rf runtime/__pycache__
+	rm -rf $(RUNTIME_DIR)/sim_results/*.vcd
+	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
 	mkdir $(BUILD_DIR)
