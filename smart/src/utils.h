@@ -1,6 +1,27 @@
 #ifndef UTILS_H
 #define UTILS_H
-#define DEBUG 1
+
+#include <iostream>
+#include <string>
+
+#define smartVerbose 9
+// Verbose level 0: No debug information
+// Verbose level 1: module calls - level
+// Verbose level 2: function calls - level
+// Verbose level 3: data flow - level
+
+inline void print(std::string message)
+{
+   std::cout<<message<<std::endl;
+}
+
+inline void printDebug(std::string message, int level)
+{
+    if (smartVerbose <= level)
+    {
+        std::cout << message << std::endl;
+    }
+}
 
 enum SignalType{
     BOOLEAN = 0,

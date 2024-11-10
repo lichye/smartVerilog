@@ -169,6 +169,24 @@ Value* Value::makeXValue(SignalType type,int bitWidth){
     return value;
 }
 
+Value* Value::makeRandomValue(SignalType type,int bitWidth){
+    Value* value = new Value();
+    value->type = type;
+    if(type == SignalType::BOOLEAN){
+        value->value.bitValue = dis(gen) == 0 ? BitType::ZERO : BitType::ONE;
+    }
+    else if(type == SignalType::BITS){
+        value->value.bitVector = new std::vector<BitType>();
+        for(int i = 0; i < bitWidth; i++){
+            value->value.bitVector->push_back(dis(gen) == 0 ? BitType::ZERO : BitType::ONE);
+        }
+    }
+    else if(type == SignalType::DOUBLE){
+        value->value.realValue = dis(gen);
+    }
+    return value;
+}
+
 bool Value::isUndefined(){
     if(type == SignalType::BOOLEAN){
         return value.bitValue == BitType::X;

@@ -8,6 +8,10 @@ compiled = False
 
 current_path = os.getcwd()
 
+sim_target_dir = current_path+"/runtime/sim_results"
+
+smt_target_dir = current_path+"/runtime/smt_results"
+
 def compile():
     print("Compiling")
     subprocess.run(["make", "compile"])
@@ -22,15 +26,15 @@ def sim():
     subprocess.run(["python", simPython, verilogDesign])
 
     sourceVcdFile = current_path+"/sim_build/dump.vcd"
-    target_dir = "runtime/sim_results"
+    
 
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
+    if not os.path.exists(sim_target_dir):
+        os.makedirs(sim_target_dir)
     
     file_index = 1
 
     while True:
-        target_file = os.path.join(target_dir, f"sim{file_index}.vcd")
+        target_file = os.path.join(sim_target_dir, f"sim{file_index}.vcd")
         if not os.path.exists(target_file):
             break
         file_index += 1

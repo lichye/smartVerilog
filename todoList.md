@@ -1,30 +1,41 @@
-TO_TALK:
-# EBMC does not take cmdline of sv assertions
-# TIME problem
+Have_done:
+# Make one botton run shell
 
-TODO:
-# make program that can make verilog assertions
+Wokring_On:
+# Make Unreachable state from Traces
+# Make Verilog Expr
+# Merge Assertion and verilog design and feed to the EBMC
 
-## parse the smt function back
+To_Be_Dis:
+#   EBMC does not take cmdline of sv assertions
+### merging assertions files with verilog files
+#   TIME problem
+
+To_Do:
+#   Make program that can make verilog assertions
+
+## input: smt results in smt format
+### requires all type system of SMT
 ### https://github.com/polgreen/oracles/blob/master/image_oracles/define_fun_parser.h
 
-## Merge verilog code with the assertion
+## input: identifer, value type???
 
-## translate smt function to verilog assertions
-## translate a state into verilog assertions
+## output: system verilog assertions-- Verilog - Expr
+### requires all type system of Verilog
+
+##  Merge verilog code with the assertion
+##  Translate smt function to verilog assertions
+##  Translate a state into verilog assertions
 
 Future:
+#   Mutate the verilog circut and check the assertion is violate
 
-# mutate the verilog circut and check the assertion is violate ????
+#   Automatic variables poicker for sygus
+##  Constrainst the variables
+##  Huristic
 
-# automatic variables poicker for sygus
-## constrainst the varibales
-## huristic
+#   Make more test file (?)
+##  Use the open-source benchmark
 
-# Make more test file (?)
-## use the open-source benchmark
-
-
-Sideway Work: 
-## there is possible way to adjust to K-induction prove
-
+Sideway_Work: 
+##  There is possible way to adjust to K-induction prove

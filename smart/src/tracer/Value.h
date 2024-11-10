@@ -8,7 +8,7 @@
 class Value{
     public:
         static Value* makeXValue(SignalType,int);
-        
+        static Value* makeRandomValue(SignalType,int);
 
         Value(VCDValue* value);
         Value();
