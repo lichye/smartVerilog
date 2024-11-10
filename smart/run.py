@@ -61,6 +61,8 @@ def runner():
             clean()
         elif cmd == "sim":
             sim()
+        elif cmd == "smt":
+            print("Have not implemented the smt command")
         elif cmd == "smart":
             smart()
         else:

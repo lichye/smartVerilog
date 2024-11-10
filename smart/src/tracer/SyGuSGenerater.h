@@ -10,9 +10,6 @@ class SyGuSGenerater
 {
     public:
         SyGuSGenerater();
-        // SyGuSGenerater(std::string);
-        // SyGuSGenerater(std::vector<VCDSignal>);
-
         ~SyGuSGenerater();
         
         void setSignals(std::vector<Signal>);
@@ -40,9 +37,7 @@ class SyGuSGenerater
         
         //This map contains the same signal type signals
         std::map<std::pair<SignalType,int>,std::vector<Signal>> sameTypeSignals;
-
         std::map<Signal,std::vector<Value*>> signalValuesMap;
-
         std::map<std::string, std::string> bitSignalGrammerMap; 
 
         std::string createSyntheisFunction(const std::vector<Signal>);

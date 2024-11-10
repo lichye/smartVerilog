@@ -1,4 +1,3 @@
-
 #include <string>
 #include <vector>
 #include <map>
@@ -11,21 +10,22 @@
 
 #ifndef TRACE_H
 #define TRACE_H
-enum TraceType{
-    SIM,
-    SMT,
-    UNKNOWN
+enum    TraceType{
+        SIM,
+        SMT,
+        UNKNOWN
 };
 
-class Trace{
+class   Trace{
     public:
         Trace();
+        
         Trace(TraceType type, std::string path);
+        
         ~Trace();
-        
-        
-        //get the constraints from the trace
+
         std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>);
+        
         std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>*);
         
         //get the signal values from the trace
@@ -38,6 +38,7 @@ class Trace{
         std::string getPath();
 
         void printDebug();
+    
     private:
 
         static std::mutex VCDFileParserMutex;
@@ -46,13 +47,12 @@ class Trace{
 
         std::string vcdPath;
 
-        //if trace type is SMT
         std::string smtPath;
 
         std::map<Signal, std::vector<Value*>*> signals_map;
         
-        //use this function to set the signals_map
         void readVCDFile(VCDFile*);
+        
         SignalType translateSignalType(VCDSignal*);
 
         Value* createValue(VCDSignal*);

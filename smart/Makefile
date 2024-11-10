@@ -25,7 +25,12 @@ VCD_SRC         ?= $(SRC_DIR)/VCDFile.cpp \
                    $(SRC_DIR)/VCDFileParser.cpp
 
 SMART_TARGET	= smart.out
+
+ASSERTION_TARGET = assertion.out
+
 SMART_SRC      	= ./src/smart.cpp
+
+ASSERTION_SRC   = ./src/assertion.cpp
 
 SRC_DIRS        = ./src/parser ./src/tracer
 
@@ -52,11 +57,17 @@ $(YAC_OUT): $(YAC_SRC) | $(BUILD_SUBDIRS)
 $(LEX_OUT): $(LEX_SRC) $(YAC_OUT) | $(BUILD_SUBDIRS)
 	flex  -P VCDParser --header-file=$(LEX_HEADER) -o $(LEX_OUT) $(LEX_SRC)
 
+compile: smart_compile assertion_compile
+
 # Main compilation rule for smart.out
-compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(SMART_SRC)
+smart_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(SMART_SRC)
 	$(CXX) $(CXXFLAGS) -o $(SMART_TARGET) $^
 
-run:
+# Main compilation rule for assertion.out
+assertion_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(ASSERTION_SRC)
+	$(CXX) $(CXXFLAGS) -o $(ASSERTION_TARGET) $^
+
+smart:
 	./$(SMART_TARGET)
 	cvc5 --sygus sygus.sl
 
@@ -65,13 +76,22 @@ sim:
 	mv sim_build/dump.vcd $(RUNTIME_DIR)/sim_results/sim.vcd
 
 # Clean rule to remove output files
-clean:
+clean: sim_clean assertion_clean
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
+	mkdir $(BUILD_DIR)
+
+sim_clean:
 	rm -rf sim_build
 	rm -rf runtime/__pycache__
 	rm -rf $(RUNTIME_DIR)/sim_results/*.vcd
 	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
-	mkdir $(BUILD_DIR)
+	mkdir sim_build
+
+smart_clean:
+	rm -rf sygus.sl
+
+assertion_clean:
+	rm -rf $(ASSERTION_TARGET)

@@ -37,7 +37,6 @@ void readSimVcdFiles(std::string sim_path){
     std::cout<<"SIM trace object inserted into the traces vector"<<std::endl;
   }
 }
-
 void readSmtVcdFiles(std::string smt_path){
   int vcdFileCount = 0;
   std::vector<std::string> smtVcdFiles;
@@ -64,48 +63,43 @@ void readSmtVcdFiles(std::string smt_path){
     std::cout<<"SMT trace object inserted into the traces vector"<<std::endl;
   }
 }
-int main(){
-  //make the path to the vcd files containing directory
-  std::string sim_path = "runtime/sim_results";
-  std::string smt_path = "runtime/smt_results";
-  std::string config_path = "User/config.ini";
-
+void makeSyGusFile(std::string configPath, std::string resultPath){
   
-  readSimVcdFiles(sim_path);
+  SignalGather sg(configPath);
 
-  readSmtVcdFiles(smt_path);  
-
-  //defualt sg will read from config.ini file
-  
-
-  SignalGather sg(config_path);
   SyGuSGenerater sygus;
 
-
-  //read from SignalGather
   std::vector<Signal>* signals = sg.getAllSignals();
-
-  //read from the tracer
-  //std::vector<Signal>* signals = traces[0]->getAllSignals("addsub");
-
+  
   sygus.setSignals(signals);
 
-  std::cout<<"Signals set"<<std::endl;
-  
   for(auto &trace : traces){
     std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
-    //std::cout<<"Constraints from trace: "<<trace->getPath()<<" has size of "<<constraints.size()<<std::endl;
     sygus.addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
-    //sygus.addComments("test of the coments",true);
     sygus.addConstraints(*constraints,true);
   }
 
-  sygus.printSysgusPath("sygus.sl");
+  sygus.printSysgusPath(resultPath);
+}
 
+int main(int argc, char* argv[]){
+  if(argc==1){
+    std::string sim_path = "runtime/sim_results";
+    std::string smt_path = "runtime/smt_results";
+    std::string config_path = "User/config.ini";
 
-  for(auto &trace : traces){
-    delete trace;
-  } 
+    readSimVcdFiles(sim_path);
+
+    readSmtVcdFiles(smt_path);  
+
+    makeSyGusFile(config_path,"sygus.sl");
+
+    for(auto &trace : traces){
+      delete trace;
+    }
+    std::cout<<"\nThe default paths are used\n"; 
+  }
+ 
 
   return 0;  
 }
