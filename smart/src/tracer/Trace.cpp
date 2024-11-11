@@ -2,6 +2,8 @@
 #include <string>
 #include <iostream>
 
+std::mutex Trace::VCDFileParserMutex;
+
 Trace::Trace() 
 {
     traceType = TraceType::UNKNOWN;
@@ -17,42 +19,43 @@ Trace::Trace(TraceType ctype, std::string path){
     if(ctype == TraceType::SIM){
         vcdPath = path;
         if(vcdPath != ""){
-            std::cout<<"try to parse the vcd file in: "<<vcdPath<<std::endl; 
+            printDebug("Start to parse the vcd file in: "+vcdPath+"\n",1);
             VCDFileParser vcdParser;
             VCDFile* vcdFile = vcdParser.parse_file(vcdPath);
             assert(vcdFile != nullptr && "VCD file should not be null");
 
             readVCDFile(vcdFile);
             delete vcdFile;
-            std::cout<<"Trace Gathered\n"<<std::endl;
+            printDebug("Trace Gathered Successfully\n",1);
         }
     }else if(ctype == TraceType::SMT){ 
         smtPath = path;
         if(smtPath != ""){
-            std::cout<<"try to parse the vcd file in: "<<smtPath<<std::endl; 
+            printDebug("Start to parse the vcd file in: "+smtPath+"\n",1);
             VCDFileParser vcdParser;
             VCDFile* vcdFile = vcdParser.parse_file(smtPath);  
             assert(vcdFile != nullptr && "VCD file should not be null");
             
             readVCDFile(vcdFile);
             delete vcdFile;
-            std::cout<<"Trace Gathered\n"<<std::endl;
+            printDebug("Trace Gathered Successfully\n",1);
         }
         
     }
 }
 
 Trace::~Trace(){
-    std::cout<<"Trace Destructor called"<<std::endl;
+    printDebug("Trace Destructor called\n",1);
     for(auto &signal : signals_map){
         for(auto &value : *signal.second){
             delete value;
         }
         delete signal.second;
     }
+    for(auto &state : states){
+        delete state;
+    }
 }
-
-std::mutex Trace::VCDFileParserMutex;
 
 std::vector<Value*>* Trace::getSignalValue(Signal s){
     
@@ -60,19 +63,9 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
         return signals_map[s];
     }
     else{
-        std::cout<<"Signal not found: "<<s.name<<std::endl;
+        printDebug("Signal not found: "+s.name,1);
         assert(false&&"Signal not found");
     }
-}
-
-std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal> signals){
-    std::vector<std::vector<Value*>>* constraints = new std::vector<std::vector<Value*>>();
-    for(Signal s : signals){
-        std::vector<Value*>* values = getSignalValue(s);
-        constraints->push_back(*values);
-    }
-    return constraints;
-
 }
 
 std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal>* signals){
@@ -82,74 +75,6 @@ std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal>* sig
         constraints->push_back(*values);
     }
     return constraints;
-}
-
-void Trace::readVCDFile(VCDFile* vcdFile){
-    if(vcdFile == nullptr){
-        std::cout<<"No VCD file to read"<<std::endl;
-        return;
-    }
-    //loop the signals and the time to make the map
-    for(VCDScope* scope : *vcdFile -> get_scopes()){
-        for(VCDSignal* signal : scope -> signals){
-            Signal s;
-            s.moduleName = scope -> name;
-            s.type = translateSignalType(signal);
-            s.name = signal -> reference;
-            s.lindex = signal -> lindex;
-            s.rindex = signal -> rindex;
-
-            std::vector<Value*>* values = new std::vector<Value*>();
-            std::vector<VCDTime>* timestamps = vcdFile -> get_timestamps();
-            //if there exists timestamps, means there is change in the signal
-            for(VCDTime time : *timestamps){
-                VCDValue* val = vcdFile -> get_signal_value_at(signal -> hash, time);
-                
-                //if there is no value for the signal, then we make a good value for that
-                if(val == nullptr){
-                    if(traceType==TraceType::SMT){
-                        Value* value = Value::makeXValue(s.type,s.lindex - s.rindex + 1);
-                        std::cout<<"Unknown Signal: "<<s.name<<" has length: "<<s.lindex - s.rindex + 1<<std::endl;
-                        values->push_back(value);
-                    }
-                    else{
-                        std::cout<<"Simulation trace should not have null value"<<std::endl;
-                        exit(1);
-                    }
-                }
-                else{
-                    Value* value = new Value(val);
-                    values->push_back(value);
-                }
-            }
-            signals_map[s] = values;
-        }
-    }
-}
-
-void Trace::printDebug(){
-    for(auto &signal : signals_map){
-        std::cout<<"\n";
-        std::cout<<"Signal: "<<signal.first.name<<std::endl;
-        std::cout<<"Signal Module name: "<<signal.first.moduleName<<std::endl;
-        std::cout<<"Signal type: "<<signal.first.type<<std::endl;
-        std::cout<<"Signal lindex: "<<signal.first.lindex<<std::endl;
-        std::cout<<"Signal rindex: "<<signal.first.rindex<<std::endl;
-    }
-}
-
-SignalType Trace::translateSignalType(VCDSignal* vcdSignal){
-    if(vcdSignal->type == VCD_VAR_REAL){
-        return SignalType::DOUBLE;
-    }
-    else{
-        if(vcdSignal->size==1){
-            return SignalType::BOOLEAN;
-        }
-        else{
-            return SignalType::BITS;
-        }
-    }
 }
 
 std::vector<Signal>* Trace::getAllSignals(){
@@ -181,5 +106,106 @@ std::string Trace::getPath(){
     }
     else{
         return "";
+    }
+}
+
+bool Trace::checkStateExist(State* state){
+    for(auto &s : states){
+        if(s->toString() == state->toString()){
+            return true;
+        }
+    }
+    return false;
+}
+
+void Trace::readVCDFile(VCDFile* vcdFile){
+    if(vcdFile == nullptr){
+        std::cout<<"No VCD file to read"<<std::endl;
+        return;
+    }
+
+    std::vector<VCDTime>* timestamps = vcdFile -> get_timestamps();
+
+    //loop the signals and the time to make the map
+    for(VCDScope* scope : *vcdFile -> get_scopes()){
+        for(VCDSignal* signal : scope -> signals){
+            
+            Signal s = createSignal(signal,scope->name);
+
+            std::vector<Value*>* values = new std::vector<Value*>();
+            
+            //if there exists timestamps, means there is change in the signal
+            for(VCDTime time : *timestamps){
+                VCDValue* val = vcdFile -> get_signal_value_at(signal -> hash, time);
+                //if there is no value for the signal, then we make a X value for that
+                if(val == nullptr){
+                    if(traceType==TraceType::SMT){
+                        Value* value = Value::makeXValue(s.type,s.lindex - s.rindex + 1);
+                        std::cout<<"Unknown Signal: "<<s.name<<" has length: "<<s.lindex - s.rindex + 1<<std::endl;
+                        values->push_back(value);
+                    }
+                    else{
+                        printError("Simulation trace should not have unknown value\n");
+                    }
+                }
+                else{
+                    Value* value = new Value(val);
+                    values->push_back(value);
+                }
+            }
+            signals_map[s] = values;
+        }
+    }
+
+    for(VCDTime time: *timestamps){
+        printDebug("VCD Time: "+std::to_string(time),3);
+        //Each time, there is a state
+        State* state = new State();
+        for(VCDScope* scope: *vcdFile->get_scopes()){
+            for(VCDSignal* signal: scope->signals){
+                Signal s = createSignal(signal,scope->name);
+                VCDValue* val = vcdFile->get_signal_value_at(signal->hash,time);
+                if(val == nullptr){
+                    if(traceType == TraceType::SMT){
+                        Value* value = Value::makeXValue(s.type,s.lindex - s.rindex + 1);
+                        state->addValue(s,value);
+                    }
+                    else{
+                        printError("Simulation trace should not have unknown value\n");
+                    }
+                }
+                else{
+                    Value* value = new Value(val);
+                    state->addValue(s,value);
+                }
+            }
+        }
+        states.push_back(state);
+    }
+}
+
+Signal Trace::createSignal(VCDSignal* vcdSignal,std::string moduleName){
+    Signal s;
+    assert(vcdSignal!=nullptr);
+    //assert(vcdSignal->scope != nullptr);
+    s.moduleName = moduleName;//189
+    s.type = translateSignalType(vcdSignal);
+    s.name = vcdSignal -> reference;
+    s.lindex = vcdSignal -> lindex;
+    s.rindex = vcdSignal -> rindex;
+    return s;
+}
+
+SignalType Trace::translateSignalType(VCDSignal* vcdSignal){
+    if(vcdSignal->type == VCD_VAR_REAL){
+        return SignalType::DOUBLE;
+    }
+    else{
+        if(vcdSignal->size==1){
+            return SignalType::BOOLEAN;
+        }
+        else{
+            return SignalType::BITS;
+        }
     }
 }

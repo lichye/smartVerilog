@@ -1,9 +1,9 @@
 Have_done:
 # Make one botton run shell
 # Make Unreachable state from Traces
+# rebuild Traces and Sygus gather with states
 
 Wokring_On:
-# rebuild Traces and Sygus gather with states
 
 # Make Verilog Expr
 # Merge Assertion and verilog design and feed to the EBMC

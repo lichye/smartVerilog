@@ -6,6 +6,7 @@
 #include "Trace.h"
 #include "SyGuSGenerater.h"
 #include "State.h"
+#include "StateMaker.h"
 namespace fs = std::filesystem;
 
 
@@ -22,20 +23,19 @@ void readSimVcdFiles(std::string sim_path){
             }
         }
         
-        std::cout << "Number of VCD files: " << vcdFileCount << std::endl;
+        std::cout << "Number of Simulation VCD files: " << vcdFileCount << std::endl;
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Error: " << e.what() << std::endl;
   }
 
-  //Loop over the trace file system to get the traces from VCD files
-  std::cout<<"List of the VCD files input:\n";
+  if(vcdFileCount > 0){
+    print("List of Simulation VCD files: \n");
+  }
 
   for(auto &vcdFile : simVcdFiles){
     std::cout<<vcdFile<<std::endl;
     Trace* trace = new Trace(TraceType::SIM, vcdFile);
-    std::cout<<"Created new trace object"<<std::endl;
     traces.push_back(trace);
-    std::cout<<"SIM trace object inserted into the traces vector"<<std::endl;
   }
 }
 void readSmtVcdFiles(std::string smt_path){
@@ -48,14 +48,14 @@ void readSmtVcdFiles(std::string smt_path){
                 smtVcdFiles.push_back(entry.path().string());
             }
         }
-        
-        std::cout << "Number of VCD files: " << vcdFileCount << std::endl;
+        print("SMT's Number of VCD files: " + std::to_string(vcdFileCount)+"\n");
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Error: " << e.what() << std::endl;
   }
 
-  //Loop over the trace file system to get the traces from VCD files
-  std::cout<<"List of the VCD files input:\n";
+  if(vcdFileCount > 0){
+    print("Number of VCD files: " + std::to_string(vcdFileCount)+"\n");
+  }
 
   for(auto &vcdFile : smtVcdFiles){
     std::cout<<vcdFile<<std::endl;
@@ -82,9 +82,7 @@ void makeSyGusFile(std::string configPath, std::string resultPath){
 
   sygus.printSysgusPath(resultPath);
   
-  delete signals;
 }
-
 void getUnreachableState(std::string configPath){
   SignalGather sg(configPath);
   std::vector<Signal>* signals = sg.getAllSignals();
@@ -92,8 +90,6 @@ void getUnreachableState(std::string configPath){
   State* state = sm.makeRandomState();
   
   print(state->toString());
-  
-  delete signals;
 }
 
 int main(int argc, char* argv[]){
@@ -122,7 +118,7 @@ int main(int argc, char* argv[]){
     if(std::string(argv[1])=="--unreachable"||std::string(argv[1])=="-u"){
       runSygus = false;
       runGetUnreachableState = true;
-      print("Running get unreachable state");
+      print("Getting the unreachbale state of module\n");
     }
   }
   

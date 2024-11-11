@@ -1,11 +1,11 @@
-#ifndef STATEMAKER_H
-#define STATEMAKER_H
+#ifndef STATE_H
+#define STATE_H
 
 #include <vector>
 #include <string>
 #include <utility>
-#include "Trace.h"
 #include "utils.h"
+#include "Value.h"  
 
 
 class State
@@ -28,26 +28,4 @@ class State
         std::vector<Signal>* signals;
         std::vector<Value*> values;
 };
-
-class StateMaker
-{
-    public:
-        StateMaker();
-        StateMaker(std::vector<Signal>*);
-        StateMaker(std::vector<Trace*>*,std::vector<Signal>*);
-        ~StateMaker();
-        State* makeRandomState();
-        
-    private:
-        std::vector<Trace*> traces;
-        std::vector<Signal>* signals;
-        std::vector<State*> states;
-
-        //this is random values gathered
-        std::vector<Value*> randomValues;
-        void checkState();
-};
-
-
-
 #endif // STATEMAKER_H

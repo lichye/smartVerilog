@@ -7,6 +7,7 @@
 #include "Value.h"
 #include "SignalGather.h"
 #include "VCDFileParser.hpp"
+#include "State.h"
 
 #ifndef TRACE_H
 #define TRACE_H
@@ -23,8 +24,6 @@ class   Trace{
         Trace(TraceType type, std::string path);
         
         ~Trace();
-
-        std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>);
         
         std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>*);
         
@@ -37,10 +36,10 @@ class   Trace{
 
         std::string getPath();
 
-        void printDebug();
-    
-    private:
+        bool checkStateExist(State*);
 
+    private:
+        //variables:
         static std::mutex VCDFileParserMutex;
 
         TraceType traceType;
@@ -49,13 +48,18 @@ class   Trace{
 
         std::string smtPath;
 
+        //major data structure to store the signal values
         std::map<Signal, std::vector<Value*>*> signals_map;
         
+        //another data structure to store the signal values
+        std::vector<State*> states;
+        
+        //private functions:
         void readVCDFile(VCDFile*);
         
         SignalType translateSignalType(VCDSignal*);
 
-        Value* createValue(VCDSignal*);
+        Signal createSignal(VCDSignal*,std::string);
 
 };
 

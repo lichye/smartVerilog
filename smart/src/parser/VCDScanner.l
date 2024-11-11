@@ -398,5 +398,5 @@ void VCDFileParser::scan_begin() {
 
 void VCDFileParser::scan_end() {
     fclose(yyin);
-    std::cout <<"Bison finish parsing "<<filepath.c_str()<< "\n";
+    //std::cout <<"Bison finish parsing "<<filepath.c_str()<< "\n";
 }

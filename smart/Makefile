@@ -95,3 +95,7 @@ smart_clean:
 
 assertion_clean:
 	rm -rf $(ASSERTION_TARGET)
+
+compile_clean:
+	rm -rf $(BUILD_DIR)
+	mkdir $(BUILD_DIR)

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#define smartVerbose 9
+#define smartVerbose 0
 // Verbose level 0: No debug information
 // Verbose level 1: module calls - level
 // Verbose level 2: function calls - level
@@ -17,10 +17,15 @@ inline void print(std::string message)
 
 inline void printDebug(std::string message, int level)
 {
-    if (smartVerbose <= level)
+    if (smartVerbose >= level)
     {
         std::cout << message << std::endl;
     }
+}
+
+inline void printError(std::string message)
+{
+    std::cerr << message << std::endl;
 }
 
 enum SignalType{
