@@ -82,9 +82,9 @@ void makeSyGusFile(std::string configPath, std::string resultPath){
   }
 
   sygus.printSysgusPath(resultPath);
-  
+  print("SyGuS file is stored in "+resultPath+"\n");
 }
-void getUnreachableState(std::string configPath){
+void getUnreachableState(std::string configPath,std::string verilogPath,std::string resultPath){
   print("Getting the unreachable state of the module\n");
   SignalGather sg(configPath);
   std::vector<Signal>* signals = sg.getAllSignals();
@@ -92,7 +92,8 @@ void getUnreachableState(std::string configPath){
   State* state = sm.makeRandomState();
   VerilogMaker vm;
   vm.storeExpr(state,ExprType::UNREACHABLE_STATE);
-  vm.addExprToVerilog("/home/magna/smartVerilog/smart/runtime/verilog/addsub.sv","/home/magna/smartVerilog/smart/verilog_assert.sv");
+  vm.addExprToVerilog(verilogPath,resultPath);
+  print("Try below states\n");
   print(state->toString());
 }
 
@@ -103,13 +104,15 @@ int main(int argc, char* argv[]){
   std::string sim_path = "runtime/sim_results";
   std::string smt_path = "runtime/smt_results";
   std::string config_path = "User/config.ini";
+  std::string verilogPath = "/home/magna/smartVerilog/smart/runtime/verilog/addsub.sv";
+  std::string resultPath = "/home/magna/smartVerilog/smart/runtime/ebmc/verilog_assert.sv";
 
   if(argc==1){
     std::cout<<"No arguments provided, using default paths\n";
     runSygus = true; 
   }
   //when there is two arguments
-  else if(argc==2){
+  else if(argc>=2){
     //requires of help
     if(std::string(argv[1])=="-h"){
       print("Usage: ./smart sygus/state [sim_path] [smt_path] [config_path] [result_path]");
@@ -119,26 +122,34 @@ int main(int argc, char* argv[]){
     if(std::string(argv[1])=="--sygus"||std::string(argv[1])=="-s"){
       runSygus = true;
     }
+    //we hope the usage of smart --unreachable [config_path] [verilogPath] [resultPath]
     if(std::string(argv[1])=="--unreachable"||std::string(argv[1])=="-u"){
       runSygus = false;
       runGetUnreachableState = true;
+      if(argc>=3){
+        config_path = std::string(argv[2]);
+      }
+      if(argc>=4){
+        verilogPath = std::string(argv[3]);
+      }
+      if(argc>=5){
+        resultPath = std::string(argv[4]);
+      }
       print("Getting the unreachbale state of module\n");
     }
   }
 
-  else if(argc==4){
-    //wait for implementation
-  }
-  
   readSimVcdFiles(sim_path);
 
   readSmtVcdFiles(smt_path);  
+
+  
 
   if(runSygus)
     makeSyGusFile(config_path,"sygus.sl");
   
   if(runGetUnreachableState)
-    getUnreachableState(config_path);
+    getUnreachableState(config_path,verilogPath,resultPath);
 
   for(auto &trace : traces){
     delete trace;
