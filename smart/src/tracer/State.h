@@ -15,10 +15,12 @@ class State
         State(bool);
         ~State();
         std::string toString();
+        std::string toVerilogExpr();
         //std::string toSyGusString();
         //std::string toVerilogExpr();
-        void addValue(Signal,Value*);
         void addValue(Value*);
+        void addValue(Signal,Value*);
+        
 
         bool isUndefined();
         void setSignals(std::vector<Signal>*);

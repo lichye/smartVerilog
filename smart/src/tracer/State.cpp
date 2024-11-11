@@ -20,14 +20,35 @@ State::State(bool reachable){
     this->reachable = reachable;
 }
 
-bool State::isUndefined(){
-    for(auto value : values){
-        if(value->isUndefined()){
-            return true;
-        }
+std::string State::toString(){
+    std::string str = "";
+    assert(signals->size() == values.size());
+
+    for(int i=0;i<signals->size();i++){
+        str += (*signals)[i].name + " : " + values[i]->toString() + "\n";
     }
-    return false;
+    return str;
 }
+
+std::string State::toVerilogExpr(){
+    std::string str ="(";
+    assert(signals->size() == values.size());
+    for(int i=0;i<signals->size()-1;i++){
+        str += (*signals)[i].name + "==" + values[i]->toVerilogString() + " && ";
+    }
+    str += (*signals)[signals->size()-1].name + "==" + values[signals->size()-1]->toVerilogString();
+    str += ")";
+    return str;
+}
+void State::addValue(Value* value){
+    if(!signalAllExist){
+        printDebug("Signal does not exist",1);
+        exit(1);
+    }
+
+    values.push_back(value);
+}
+
 
 void State::addValue(Signal signal, Value* value){
     if(signalAllExist){
@@ -39,13 +60,13 @@ void State::addValue(Signal signal, Value* value){
     values.push_back(value);
 }
 
-void State::addValue(Value* value){
-    if(!signalAllExist){
-        printDebug("Signal does not exist",1);
-        exit(1);
+bool State::isUndefined(){
+    for(auto value : values){
+        if(value->isUndefined()){
+            return true;
+        }
     }
-
-    values.push_back(value);
+    return false;
 }
 
 void State::setSignals(std::vector<Signal>* inputSignals){
@@ -55,12 +76,4 @@ void State::setSignals(std::vector<Signal>* inputSignals){
     signalAllExist = true;
 } 
 
-std::string State::toString(){
-    std::string str = "";
-    assert(signals->size() == values.size());
 
-    for(int i=0;i<signals->size();i++){
-        str += (*signals)[i].name + " : " + values[i]->toString() + "\n";
-    }
-    return str;
-}

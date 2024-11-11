@@ -2,11 +2,12 @@ Have_done:
 # Make one botton run shell
 # Make Unreachable state from Traces
 # rebuild Traces and Sygus gather with states
+# Merge Assertion and verilog design and feed to the EBMC
 
 Wokring_On:
 
 # Make Verilog Expr
-# Merge Assertion and verilog design and feed to the EBMC
+
 
 To_Be_Dis:
 #   EBMC does not take cmdline of sv assertions

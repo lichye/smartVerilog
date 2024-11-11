@@ -135,6 +135,28 @@ std::string Value::toSyGusString(){
     }   
 }
 
+std::string Value::toVerilogString(){
+    if(type == SignalType::BOOLEAN){
+        if(value.bitValue == BitType::ZERO)
+            return "0";
+        else
+            return "1";
+    }
+    else if(type == SignalType::BITS){
+        std::string str = std::to_string(value.bitVector->size()) + "'b";
+        for(auto &bit : *value.bitVector){
+            str += Bit2Char(bit);
+        }
+        return str;
+    }
+    else if(type == SignalType::DOUBLE){
+        return std::to_string(value.realValue);
+    }
+    else{
+        return "unknown";
+    }   
+}
+
 char Value::Bit2Char(BitType bit){
     switch(bit){
         case BitType::ZERO:

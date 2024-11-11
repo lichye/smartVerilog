@@ -15,6 +15,7 @@ class Value{
         ~Value();
         std::string toString();
         std::string toSyGusString();
+        std::string toVerilogString();
         bool isUndefined();
         
     private:

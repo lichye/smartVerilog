@@ -11,8 +11,9 @@ SyGuSGenerater::SyGuSGenerater()
 }
 
 SyGuSGenerater::~SyGuSGenerater()
-{
-    std::cout<<"SyGuSGenerater Destructor called"<<std::endl;
+{   
+    printDebug("SyGuSGenerater Destructor called",2);
+    //std::cout<<"SyGuSGenerater Destructor called"<<std::endl;
 }
 
 void SyGuSGenerater::setSignals(std::vector<Signal> signals)

@@ -7,6 +7,7 @@
 #include "SyGuSGenerater.h"
 #include "State.h"
 #include "StateMaker.h"
+#include "VerilogMaker.h"
 namespace fs = std::filesystem;
 
 
@@ -84,11 +85,14 @@ void makeSyGusFile(std::string configPath, std::string resultPath){
   
 }
 void getUnreachableState(std::string configPath){
+  print("Getting the unreachable state of the module\n");
   SignalGather sg(configPath);
   std::vector<Signal>* signals = sg.getAllSignals();
   StateMaker sm(&traces,signals);
   State* state = sm.makeRandomState();
-  
+  VerilogMaker vm;
+  vm.storeExpr(state,ExprType::UNREACHABLE_STATE);
+  vm.addExprToVerilog("/home/magna/smartVerilog/smart/runtime/verilog/addsub.sv","/home/magna/smartVerilog/smart/verilog_assert.sv");
   print(state->toString());
 }
 
@@ -120,6 +124,10 @@ int main(int argc, char* argv[]){
       runGetUnreachableState = true;
       print("Getting the unreachbale state of module\n");
     }
+  }
+
+  else if(argc==4){
+    //wait for implementation
   }
   
   readSimVcdFiles(sim_path);
