@@ -57,7 +57,7 @@ $(YAC_OUT): $(YAC_SRC) | $(BUILD_SUBDIRS)
 $(LEX_OUT): $(LEX_SRC) $(YAC_OUT) | $(BUILD_SUBDIRS)
 	flex  -P VCDParser --header-file=$(LEX_HEADER) -o $(LEX_OUT) $(LEX_SRC)
 
-compile: smart_compile assertion_compile
+compile: smart_compile
 
 # Main compilation rule for smart.out
 smart_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(SMART_SRC)
@@ -82,6 +82,7 @@ clean: sim_clean assertion_clean smart_clean compile_clean
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
 	rm -rf $(RUNTIME_DIR)/verilog/*.sv
+	rm -rf $(RUNTIME_DIR)/ebmc/*.sv
 	mkdir $(BUILD_DIR)
 	mkdir $(RUNTIME_DIR)/sim_results
 	mkdir $(RUNTIME_DIR)/smt_results

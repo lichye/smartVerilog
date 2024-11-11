@@ -5,30 +5,22 @@ Have_done:
 # Merge Assertion and verilog design and feed to the EBMC
 
 Wokring_On:
+# How  to get un original status
 
-# Make Verilog Expr
 
-
-To_Be_Dis:
-#   EBMC does not take cmdline of sv assertions
-### merging assertions files with verilog files
-#   TIME problem
-
-To_Do:
-#   Make program that can make verilog assertions
-
+TO_Be_Discussed:
 ## input: smt results in smt format
 ### requires all type system of SMT
 ### https://github.com/polgreen/oracles/blob/master/image_oracles/define_fun_parser.h
+
+To_Do:
 
 ## input: identifer, value type???
 
 ## output: system verilog assertions-- Verilog - Expr
 ### requires all type system of Verilog
 
-##  Merge verilog code with the assertion
 ##  Translate smt function to verilog assertions
-##  Translate a state into verilog assertions
 
 Future:
 #   Mutate the verilog circut and check the assertion is violate
