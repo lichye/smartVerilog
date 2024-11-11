@@ -88,7 +88,7 @@ def runner():
     print("This file path is "+current_path)
     while True:
         cmd = input("")
-        if cmd == "exit" or cmd == "quit":
+        if cmd == "exit" or cmd == "quit" or cmd == "q" or cmd == "e": 
             return
         elif cmd == "compile":
             compile()
@@ -106,6 +106,12 @@ def runner():
             smart("unreachable")
         elif cmd == "prep":
             VerilogPrep()
+        elif cmd == "all":
+            VerilogPrep()
+            compile()
+            sim()
+            smart("sygus")
+            smart("unreachable")
         else:
             print("Invalid Command")
     

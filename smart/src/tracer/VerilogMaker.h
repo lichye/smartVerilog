@@ -15,8 +15,8 @@ class VerilogMaker {
         void addExprToVerilog(std::string,std::string);
         void storeExpr(State*,ExprType);
     private:
-        std::vector<std::string> Exprs;
-
+        std::vector<std::string> exprs;
+        std::vector<ExprType> exprTypes;
 };
 
 #endif

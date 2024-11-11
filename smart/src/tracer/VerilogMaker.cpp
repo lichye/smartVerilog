@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <cassert>
 
 VerilogMaker::VerilogMaker() {
 }
@@ -23,10 +24,12 @@ void VerilogMaker::addExprToVerilog(std::string inputFilePath, std::string outpu
     while (std::getline(inputFile, line)) {
         lines.push_back(line);
         if(line.find("endmodule") != std::string::npos) {
-            for(auto &expr : Exprs) {
-                lines.insert(lines.end() - 1, "    assert(" + expr + ");\n");
+            assert(exprs.size() == exprTypes.size());
+            for(int i=0;i<exprs.size();i++) {
+                if(exprTypes[i] == ExprType::UNREACHABLE_STATE) {
+                    lines.insert(lines.end() - 1, "    assert property (" + exprs[i] + ");\n");
+                }
             }
-            
         }
     }
     inputFile.close();
@@ -45,7 +48,8 @@ void VerilogMaker::addExprToVerilog(std::string inputFilePath, std::string outpu
 
 void VerilogMaker::storeExpr(State* state,ExprType type) {
     if(type == ExprType::UNREACHABLE_STATE) {
-        Exprs.push_back("(!"+state->toVerilogExpr()+")");
+        exprs.push_back("(!"+state->toVerilogExpr()+")");
+        exprTypes.push_back(type);
     }
 
 }
