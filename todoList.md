@@ -1,12 +1,11 @@
 Have_done:
 # Make one botton run shell
 # Make Unreachable state from Traces
-# rebuild Traces and Sygus gather with states
-# Merge Assertion and verilog design and feed to the EBMC
+# Make state assertions in Verilog code
 
 Wokring_On:
-# How  to get un original status
-
+# Make different property assertion in Verilog
+# Read back from EBMC result
 
 TO_Be_Discussed:
 ## input: smt results in smt format
@@ -14,13 +13,8 @@ TO_Be_Discussed:
 ### https://github.com/polgreen/oracles/blob/master/image_oracles/define_fun_parser.h
 
 To_Do:
+# make SMT result a verilog assertions
 
-## input: identifer, value type???
-
-## output: system verilog assertions-- Verilog - Expr
-### requires all type system of Verilog
-
-##  Translate smt function to verilog assertions
 
 Future:
 #   Mutate the verilog circut and check the assertion is violate
