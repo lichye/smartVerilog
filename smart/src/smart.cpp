@@ -10,8 +10,114 @@
 #include "VerilogMaker.h"
 namespace fs = std::filesystem;
 
-
+//globak variables
 std::vector<Trace*> traces;
+std::vector<Signal>* signals;
+
+SyGuSGenerater sygus;
+
+std::string sim_path    = "runtime/sim_results";
+std::string smt_path    = "runtime/smt_results";
+std::string config_path = "User/config.ini";
+
+
+State* getUnreachableState(std::string,std::string);
+void readSimVcdFiles(std::string);
+void readSmtVcdFiles(std::string);
+void addConstraintsfromTrace();
+
+bool runEbmc(std::string);
+
+int main(int argc, char* argv[]){
+  bool useTraces = false;
+  bool testGetUnreachable = false;
+
+  SignalGather sg(config_path);
+  signals = sg.getAllSignals();
+  sygus.setSignals(signals);
+  
+
+  if(argc==1){
+    print("No arguments provided, run default paths\n");
+    useTraces = true; 
+  }
+  //when there is two arguments
+  else if(argc>=2){
+    if(std::string(argv[1])=="--trace"||std::string(argv[1])=="-t")
+      useTraces = true;
+    //we hope the usage of smart --unreachable [config_path] [verilogSrcPath] [resultPath]
+    if(std::string(argv[1])=="--unreachable"||std::string(argv[1])=="-u"){
+      testGetUnreachable = true;
+      print("Try to find a unreachable state\n");
+    }
+  }
+
+  readSimVcdFiles(sim_path);
+  readSmtVcdFiles(smt_path);
+
+  if(useTraces){
+    addConstraintsfromTrace();
+  }
+  
+  if(testGetUnreachable){
+    std::string verilogSrcPath = "runtime/verilog/addsub.sv";
+    std::string resultPath  = "runtime/ebmc/addsub.sv";
+
+    State* state = getUnreachableState(verilogSrcPath,resultPath);
+    if(state!=nullptr){
+      print("Find a unreachable state\n");
+      print(state->toString());
+    }
+    else{
+      print("Find a reachable state\n");
+      print(state->toString());
+    }
+    return 0;
+  }
+
+      
+  sygus.printSysgusPath("sygus.sl");
+  for(auto &trace : traces){
+    delete trace;
+  }
+
+  return 0;  
+}
+
+//input: verilog code to be verified
+//output: true : the state is unreachable
+//        false: the state is reachable
+bool runEbmc(std::string verilogSrcPath){
+  std::string command = "ebmc "+verilogSrcPath+" --bound 10 > /dev/null 2>&1";
+  printDebug("Running EBMC with command: "+command+"\n",1);
+  int status = system(command.c_str());
+  return status==0;
+}
+
+State* getUnreachableState(std::string verilogSrcPath,std::string resultPath){
+  StateMaker sm(&traces,signals);
+  VerilogMaker vm;
+
+  
+  State* state = sm.makeRandomState();
+  
+  vm.addProperty(state,PropertyType::REACHABILITY_PROPERTY);
+  vm.writeVerilogFile(verilogSrcPath,resultPath);
+  
+  
+  printDebug("Try below states",3);
+  printDebug(state->toString(),3);
+
+  //then we should the ebmc to verify the state
+  if(runEbmc(resultPath)){
+    printDebug("The state is unreachable",3);
+    return state;
+  }
+  else{
+    printDebug("The random state is reachable",3);
+    return nullptr;
+  }
+}
 
 void readSimVcdFiles(std::string sim_path){
   int vcdFileCount = 0;
@@ -39,6 +145,7 @@ void readSimVcdFiles(std::string sim_path){
     traces.push_back(trace);
   }
 }
+
 void readSmtVcdFiles(std::string smt_path){
   int vcdFileCount = 0;
   std::vector<std::string> smtVcdFiles;
@@ -65,99 +172,14 @@ void readSmtVcdFiles(std::string smt_path){
     std::cout<<"SMT trace object inserted into the traces vector"<<std::endl;
   }
 }
-void makeSyGusFile(std::string configPath, std::string resultPath){
-  
-  SignalGather sg(configPath);
 
-  SyGuSGenerater sygus;
-
-  std::vector<Signal>* signals = sg.getAllSignals();
-  
-  sygus.setSignals(signals);
-
+void addConstraintsfromTrace(){
   for(auto &trace : traces){
     std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
     sygus.addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
     sygus.addConstraints(*constraints,true);
   }
 
-  sygus.printSysgusPath(resultPath);
-  print("SyGuS file is stored in "+resultPath+"\n");
-}
-void getUnreachableState(std::string configPath,std::string verilogPath,std::string resultPath){
-  print("Getting the unreachable state of the module\n");
-  SignalGather sg(configPath);
-  std::vector<Signal>* signals = sg.getAllSignals();
-  StateMaker sm(&traces,signals);
-  State* state = sm.makeRandomState();
-  VerilogMaker vm;
-  vm.addProperty(state,PropertyType::REACHABILITY_PROPERTY);
-  vm.writeVerilogFile(verilogPath,resultPath);
-  print("Try below states\n");
-  print(state->toString());
-
-  //then we should the ebmc to verify the state
-  
 }
 
-int main(int argc, char* argv[]){
-  bool runSygus = false;
-  bool runGetUnreachableState = false;
 
-  std::string sim_path = "runtime/sim_results";
-  std::string smt_path = "runtime/smt_results";
-  std::string config_path = "User/config.ini";
-  std::string verilogPath = "/home/magna/smartVerilog/smart/runtime/verilog/addsub.sv";
-  std::string resultPath = "/home/magna/smartVerilog/smart/runtime/ebmc/addsub.sv";
-
-  if(argc==1){
-    std::cout<<"No arguments provided, using default paths\n";
-    runSygus = true; 
-  }
-  //when there is two arguments
-  else if(argc>=2){
-    //requires of help
-    if(std::string(argv[1])=="-h"){
-      print("Usage: ./smart sygus/state [sim_path] [smt_path] [config_path] [result_path]");
-      print("Default paths are used if no arguments are provided");
-      return 0;
-    }
-    if(std::string(argv[1])=="--sygus"||std::string(argv[1])=="-s"){
-      runSygus = true;
-    }
-    //we hope the usage of smart --unreachable [config_path] [verilogPath] [resultPath]
-    if(std::string(argv[1])=="--unreachable"||std::string(argv[1])=="-u"){
-      runSygus = false;
-      runGetUnreachableState = true;
-      if(argc>=3){
-        config_path = std::string(argv[2]);
-      }
-      if(argc>=4){
-        verilogPath = std::string(argv[3]);
-      }
-      if(argc>=5){
-        resultPath = std::string(argv[4]);
-      }
-      print("Getting the unreachbale state of module\n");
-    }
-  }
-
-  readSimVcdFiles(sim_path);
-
-  readSmtVcdFiles(smt_path);  
-
-  
-
-  if(runSygus)
-    makeSyGusFile(config_path,"sygus.sl");
-  
-  if(runGetUnreachableState)
-    getUnreachableState(config_path,verilogPath,resultPath);
-
-  for(auto &trace : traces){
-    delete trace;
-  }
-  //std::cout<<"\nThe default paths are used\n"; 
-
-  return 0;  
-}

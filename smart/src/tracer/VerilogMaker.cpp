@@ -41,7 +41,7 @@ void VerilogMaker::writeVerilogFile(std::string inputFilePath, std::string outpu
         outputFile << line << std::endl;
     }
     outputFile.close();
-    print("Modified Verilog file is stored in " + outputFilePath + "\n");
+    printDebug("Modified Verilog file is stored in " + outputFilePath,3);
 }
 
 //TODO:

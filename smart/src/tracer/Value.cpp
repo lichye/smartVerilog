@@ -75,6 +75,23 @@ Value::~Value(){
     }
 }
 
+Value* Value::clone(){
+    Value* value = new Value();
+    value->type = type;
+    if(type == SignalType::BOOLEAN){
+        value->value.bitValue = this->value.bitValue;
+    }
+    else if(type == SignalType::BITS){
+        value->value.bitVector = new std::vector<BitType>();
+        for(auto &bit : *this->value.bitVector){
+            value->value.bitVector->push_back(bit);
+        }
+    }
+    else if(type == SignalType::DOUBLE){
+        value->value.realValue = this->value.realValue;
+    }
+    return value;
+}
 std::string Value::toString(){
     if(type == SignalType::BOOLEAN){
         if(value.bitValue == BitType::ZERO)
@@ -157,6 +174,23 @@ std::string Value::toVerilogString(){
     }   
 }
 
+bool Value::isUndefined(){
+    if(type == SignalType::BOOLEAN){
+        return value.bitValue == BitType::X;
+    }
+    else if(type == SignalType::BITS){
+        for(auto &bit : *value.bitVector){
+            if(bit == BitType::X){
+                return true;
+            }
+        }
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
 char Value::Bit2Char(BitType bit){
     switch(bit){
         case BitType::ZERO:
@@ -207,21 +241,4 @@ Value* Value::makeRandomValue(SignalType type,int bitWidth){
         value->value.realValue = dis(gen);
     }
     return value;
-}
-
-bool Value::isUndefined(){
-    if(type == SignalType::BOOLEAN){
-        return value.bitValue == BitType::X;
-    }
-    else if(type == SignalType::BITS){
-        for(auto &bit : *value.bitVector){
-            if(bit == BitType::X){
-                return true;
-            }
-        }
-        return false;
-    }
-    else{
-        return true;
-    }
 }

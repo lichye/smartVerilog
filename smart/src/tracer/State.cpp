@@ -11,8 +11,9 @@ State::State(){
 }
 
 State::~State(){
-    
-    //delete signals;
+    for(auto value : values){
+        delete value;
+    }
     printDebug("State Destructor called",10);
 }
 
@@ -45,12 +46,13 @@ void State::addValue(Value* value){
         printDebug("Signal does not exist",1);
         exit(1);
     }
-
-    values.push_back(value);
+    Value* newValue = value->clone();
+    values.push_back(newValue);
 }
 
 
 void State::addValue(Signal signal, Value* value){
+    Value* newValue = value->clone();
     if(signalAllExist){
         printDebug("Signal already exists",1);
         exit(1);

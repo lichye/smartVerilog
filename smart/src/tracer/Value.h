@@ -13,10 +13,12 @@ class Value{
         Value(VCDValue* value);
         Value();
         ~Value();
+        Value* clone();
         std::string toString();
         std::string toSyGusString();
         std::string toVerilogString();
         bool isUndefined();
+        
         
     private:
         static std::random_device rd;

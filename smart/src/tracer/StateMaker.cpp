@@ -20,14 +20,6 @@ StateMaker::StateMaker(std::vector<Trace*>* traces,std::vector<Signal>* signals)
 }
 
 StateMaker::~StateMaker(){
-    for(auto state : states){
-        delete state;
-    }
-    
-    for(auto value: randomValues){
-        delete value;
-    }
-
     printDebug("StateMaker Destructor called",10);
 }
 
@@ -41,11 +33,11 @@ State* StateMaker::makeRandomState(){
     State* state = new State();
     state->setSignals(signals);
     for(auto signal : *signals){
-        Value* value = Value::makeRandomValue(signal.type,signal.lindex - signal.rindex + 1);
+        Value *value = Value::makeRandomValue(signal.type,signal.lindex - signal.rindex + 1);
         state->addValue(value);
-        randomValues.push_back(value);
+        delete value;
     }
-    states.push_back(state);
+
     //TODO:
     //this might loop forever, need to fix
     for(auto trace : traces){

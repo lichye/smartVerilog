@@ -72,13 +72,13 @@ def clean():
     print("Finish Cleaning")
 
 
-def sygusFileGen():
+def trace():
     global compiled
     if(not compiled):
         print("Has not compiled, run compile first")
         compile()
     print("Running Sygus File Generation")
-    subprocess.run(["./smart.out","--sygus"])
+    subprocess.run(["./smart.out","--trace"])
 
 def unreachableGen():
     global compiled
@@ -101,20 +101,6 @@ def VerilogPrep():
 
     print("Finished Verilog Code Preprocessing")
 
-def ebmc():
-    # call EBMC and get results from CMDLINE?
-    print("Running EBMC")
-    result = subprocess.run(["ebmc", runtime_ebmc_path,"--bound", "10"],
-    capture_output=True,
-    text=True)
-
-    if result.returncode == 0:
-        print("EBMC ran successfully.")
-        print("Output:", result.stdout)
-    else:
-        print("EBMC encountered an error.")
-        print("Error:", result.stderr)
-
 def runner():
     print("This file path is "+current_path)
     while True:
@@ -129,16 +115,14 @@ def runner():
             clean()
         elif cmd == "sim":
             sim()
-        elif cmd == "smt":
-            print("Have not implemented the smt command")
-        elif cmd == "sygus":
-            sygusFileGen()
+        elif cmd == "smart":
+            subprocess.run(["./smart.out"])
+        elif cmd == "trace" or cmd == "t":
+            trace()
         elif cmd == "unreachable" or cmd == "u":
             unreachableGen()
         elif cmd == "prep":
             VerilogPrep()
-        elif cmd == "ebmc":
-            ebmc()
         elif cmd == "all":
             VerilogPrep()
             compile()

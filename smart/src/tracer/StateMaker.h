@@ -16,7 +16,6 @@ class StateMaker
     private:
         std::vector<Trace*> traces;
         std::vector<Signal>* signals;
-        std::vector<State*> states;
 
         //this is random values gathered
         std::vector<Value*> randomValues;

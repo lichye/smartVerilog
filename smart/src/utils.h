@@ -4,11 +4,11 @@
 #include <iostream>
 #include <string>
 
-#define smartVerbose 0
+#define smartVerbose 3
 // Verbose level 0: No debug information
 // Verbose level 1: module calls - level
 // Verbose level 2: function calls - level
-// Verbose level 3: data flow - level
+// Verbose level 3: function details and data flows - level
 
 inline void print(std::string message)
 {
