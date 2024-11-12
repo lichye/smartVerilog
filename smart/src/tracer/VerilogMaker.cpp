@@ -12,7 +12,7 @@ VerilogMaker::VerilogMaker() {
 VerilogMaker::~VerilogMaker() {
 }
 
-void VerilogMaker::addExprToVerilog(std::string inputFilePath, std::string outputFilePath) {
+void VerilogMaker::writeVerilogFile(std::string inputFilePath, std::string outputFilePath) {
     std::ifstream inputFile(inputFilePath);
     if(!inputFile.is_open()) {
         printError("Error: Unable to open input file "+inputFilePath+"\n");
@@ -24,11 +24,9 @@ void VerilogMaker::addExprToVerilog(std::string inputFilePath, std::string outpu
     while (std::getline(inputFile, line)) {
         lines.push_back(line);
         if(line.find("endmodule") != std::string::npos) {
-            assert(exprs.size() == exprTypes.size());
-            for(int i=0;i<exprs.size();i++) {
-                if(exprTypes[i] == ExprType::UNREACHABLE_STATE) {
-                    lines.insert(lines.end() - 1, "    assert property (" + exprs[i] + ");\n");
-                }
+            assert(properties.size() == propertyTypes.size());
+            for(int i=0;i<properties.size();i++) {
+                lines.insert(lines.end() - 1, "    assert property (" + properties[i] + ");\n");
             }
         }
     }
@@ -46,10 +44,17 @@ void VerilogMaker::addExprToVerilog(std::string inputFilePath, std::string outpu
     print("Modified Verilog file is stored in " + outputFilePath + "\n");
 }
 
-void VerilogMaker::storeExpr(State* state,ExprType type) {
-    if(type == ExprType::UNREACHABLE_STATE) {
-        exprs.push_back("(!"+state->toVerilogExpr()+")");
-        exprTypes.push_back(type);
-    }
+//TODO:
+//we do not care about the initial state now
+void VerilogMaker::addProperty(State* state,PropertyType type) {
+    propertyTypes.push_back(type);
 
+    //if we want to verifiy that a state is reachable
+    //we should make !state as the property
+    //if there is verified, then the state is unreachable otherwise it is reachable
+    if(type == PropertyType::REACHABILITY_PROPERTY) {
+        assert(!state->isUndefined());//only defined states can be verified
+
+        properties.push_back("##[0:$] (!"+state->toVerilogExpr()+")");
+    }
 }

@@ -91,10 +91,13 @@ void getUnreachableState(std::string configPath,std::string verilogPath,std::str
   StateMaker sm(&traces,signals);
   State* state = sm.makeRandomState();
   VerilogMaker vm;
-  vm.storeExpr(state,ExprType::UNREACHABLE_STATE);
-  vm.addExprToVerilog(verilogPath,resultPath);
+  vm.addProperty(state,PropertyType::REACHABILITY_PROPERTY);
+  vm.writeVerilogFile(verilogPath,resultPath);
   print("Try below states\n");
   print(state->toString());
+
+  //then we should the ebmc to verify the state
+  
 }
 
 int main(int argc, char* argv[]){
@@ -105,7 +108,7 @@ int main(int argc, char* argv[]){
   std::string smt_path = "runtime/smt_results";
   std::string config_path = "User/config.ini";
   std::string verilogPath = "/home/magna/smartVerilog/smart/runtime/verilog/addsub.sv";
-  std::string resultPath = "/home/magna/smartVerilog/smart/runtime/ebmc/verilog_assert.sv";
+  std::string resultPath = "/home/magna/smartVerilog/smart/runtime/ebmc/addsub.sv";
 
   if(argc==1){
     std::cout<<"No arguments provided, using default paths\n";

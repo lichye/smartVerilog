@@ -14,7 +14,7 @@ user_config_path = current_path+"/User/config.ini"
 
 user_verilog_path = current_path+"/User/addsub.sv"
 
-runtime_ebmc_path = current_path+"runtime/ebmc/addsub.sv"
+runtime_ebmc_path = current_path+"/runtime/ebmc/addsub.sv"
 
 runtime_verilog_path = current_path+"/runtime/verilog/addsub.sv"
 
@@ -95,8 +95,25 @@ def unreachableGen():
 
 def VerilogPrep():
     print("Running Verilog Code Preprocessing")
-    subprocess.run(["python", "src/VerilogPrep.py", user_verilog_path, runtime_verilog_path])
+    result = subprocess.run(["python", "src/VerilogPrep.py", user_verilog_path, runtime_verilog_path],
+    capture_output=True,
+    text=True)
+
     print("Finished Verilog Code Preprocessing")
+
+def ebmc():
+    # call EBMC and get results from CMDLINE?
+    print("Running EBMC")
+    result = subprocess.run(["ebmc", runtime_ebmc_path,"--bound", "10"],
+    capture_output=True,
+    text=True)
+
+    if result.returncode == 0:
+        print("EBMC ran successfully.")
+        print("Output:", result.stdout)
+    else:
+        print("EBMC encountered an error.")
+        print("Error:", result.stderr)
 
 def runner():
     print("This file path is "+current_path)
@@ -120,6 +137,8 @@ def runner():
             unreachableGen()
         elif cmd == "prep":
             VerilogPrep()
+        elif cmd == "ebmc":
+            ebmc()
         elif cmd == "all":
             VerilogPrep()
             compile()
@@ -128,6 +147,8 @@ def runner():
             print("Invalid Command")
     
 if __name__ == "__main__":
+    compiled = False
+    prep = False
     # compile()
     # modify()
     # sim()
