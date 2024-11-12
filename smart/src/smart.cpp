@@ -84,9 +84,6 @@ int main(int argc, char* argv[]){
   return 0;  
 }
 
-//input: verilog code to be verified
-//output: true : the state is unreachable
-//        false: the state is reachable
 bool runEbmc(std::string verilogSrcPath){
   std::string command = "ebmc "+verilogSrcPath+" --bound 10 > /dev/null 2>&1";
   printDebug("Running EBMC with command: "+command+"\n",1);

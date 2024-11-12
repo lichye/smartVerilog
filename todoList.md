@@ -2,10 +2,10 @@ Have_done:
 # Make one botton run shell
 # Make Unreachable state from Traces
 # Make state assertions in Verilog code
+# Read back from EBMC result
 
 Wokring_On:
 # Make different property assertion in Verilog
-# Read back from EBMC result
 
 TO_Be_Discussed:
 ## input: smt results in smt format
