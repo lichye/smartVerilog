@@ -115,6 +115,52 @@ void SyGuSGenerater::addConstrainComments(std::string comment,bool isTrueConstra
     }
 }
 
+void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
+{   
+    printDebug("Adding constraints from the state",2);
+    printDebug("The state is "+state->toString(),2);
+    assert(state->signalSize() == this->signals.size());
+    std::vector<Value*> values = state->getValues();
+    assert(values.size() == this->signals.size()); 
+    //we suppose the signal order is correct
+    addConstrainComments("This constrainsts are added from the state",trueConstrains);
+    if(trueConstrains){
+       if(constraints.size()==0){
+            for(auto value : values){
+                std::vector<Value*> constraint;
+                constraint.push_back(value);
+                constraints.push_back(constraint);
+            }
+       }
+       else{
+            for(auto value: values){
+                for(auto &constraint : constraints){
+                    printDebug("Adding value "+value->toSyGusString(),3);
+                    constraint.push_back(value);
+                }
+            }
+       }
+    }
+    else{
+        printDebug("Adding false constraints\n",3);
+        if(falseConstraints.size()==0){
+            printDebug("FalseConstraints does not exists\n",3);
+            for(auto value : values){
+                std::vector<Value*> constraint;
+                constraint.push_back(value);
+                falseConstraints.push_back(constraint);
+            }
+        }
+        else{
+            for(auto value: values){
+                for(auto &constraint : falseConstraints){
+                    constraint.push_back(value);
+                }
+            }
+        }
+    }
+}
+
 void SyGuSGenerater::printSysgusPath(std::string path)
 {
     std::ofstream file;
@@ -331,9 +377,18 @@ std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
     }
     
     constraintLine += "(constraint (=(inv ";
-    for(auto constraint : constraints){
-        constraintLine += constraint[index]->toSyGusString() + " ";
+
+    if(constraintType){
+        for(auto constraint : constraints){
+            constraintLine += constraint[index]->toSyGusString() + " ";
+        }
     }
+    else{
+        for(auto constraint : falseConstraints){
+            constraintLine += constraint[index]->toSyGusString() + " ";
+        }
+    }
+    
     constraintLine += ") ";
     constraintLine += constraintType ? "true" : "false";
     constraintLine += "))\n";

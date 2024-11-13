@@ -101,6 +101,13 @@ def VerilogPrep():
 
     print("Finished Verilog Code Preprocessing")
 
+def smart():
+    VerilogPrep()
+    sim()
+    compile()
+    subprocess.run(["./smart.out"])
+    subprocess.run(["cvc5","--sygus","sygus.sl"])
+
 def runner():
     print("This file path is "+current_path)
     while True:
@@ -116,7 +123,7 @@ def runner():
         elif cmd == "sim":
             sim()
         elif cmd == "smart":
-            subprocess.run(["./smart.out"])
+            smart()
         elif cmd == "trace" or cmd == "t":
             trace()
         elif cmd == "unreachable" or cmd == "u":

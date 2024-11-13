@@ -24,6 +24,8 @@ class State
 
         bool isUndefined();
         void setSignals(std::vector<Signal>*);
+        unsigned int signalSize();
+        std::vector<Value*> getValues();
     private:
         bool signalAllExist;
         bool reachable;//if the state is reachable from model

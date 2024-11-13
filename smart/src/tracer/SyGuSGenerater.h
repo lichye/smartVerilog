@@ -6,6 +6,7 @@
 #include <utility>
 #include "utils.h"
 #include "Value.h"
+#include "State.h"
 class SyGuSGenerater
 {
     public:
@@ -17,6 +18,7 @@ class SyGuSGenerater
         //void setSignals(std::string);
 
         void addConstraints(std::vector<std::vector<Value*>>,bool);
+        void addConstraints(State*,bool);
         void addConstrainComments(std::string,bool);
 
         void printSysgusPath(std::string);

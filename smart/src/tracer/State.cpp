@@ -78,4 +78,13 @@ void State::setSignals(std::vector<Signal>* inputSignals){
     signalAllExist = true;
 } 
 
+unsigned int State::signalSize(){
+    if(signals!=nullptr)
+        return signals->size();
+    else
+        return 0;
+}
 
+std::vector<Value*> State::getValues(){
+    return values;
+}

@@ -29,6 +29,9 @@ void addConstraintsfromTrace();
 bool runEbmc(std::string);
 
 int main(int argc, char* argv[]){
+  std::string verilogSrcPath = "runtime/verilog/addsub.sv";
+  std::string resultPath  = "runtime/ebmc/addsub.sv";
+
   bool useTraces = false;
   bool testGetUnreachable = false;
 
@@ -60,9 +63,6 @@ int main(int argc, char* argv[]){
   }
   
   if(testGetUnreachable){
-    std::string verilogSrcPath = "runtime/verilog/addsub.sv";
-    std::string resultPath  = "runtime/ebmc/addsub.sv";
-
     State* state = getUnreachableState(verilogSrcPath,resultPath);
     if(state!=nullptr){
       print("Find a unreachable state\n");
@@ -75,12 +75,16 @@ int main(int argc, char* argv[]){
     return 0;
   }
 
-      
+  State* state = getUnreachableState(verilogSrcPath,resultPath);
+  print("Try one state\n");
+  printDebug("Find a state\n",1);
+  printDebug(state->toString(),1);
+  sygus.addConstraints(state,false);
   sygus.printSysgusPath("sygus.sl");
   for(auto &trace : traces){
     delete trace;
   }
-
+  print("Sygus file generated to "+std::string("sygus.sl")+"\n");
   return 0;  
 }
 

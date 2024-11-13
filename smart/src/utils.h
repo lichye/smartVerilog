@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#define smartVerbose 3
+#define smartVerbose 0
 // Verbose level 0: No debug information
 // Verbose level 1: module calls - level
 // Verbose level 2: function calls - level
