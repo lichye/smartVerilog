@@ -9,6 +9,7 @@ enum PropertyType{
     SAFT_PROPERTY,
     //  Ensures that the system always meets certain safety conditions and does not enter illegal states. 
     //  @(posedge clk) enable |-> (output_signal == expected_value);
+
     
     LIVENESS_PROPERTY,
     // When a signal is asserted, the system must respond within a specific number of cycles.
