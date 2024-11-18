@@ -8,6 +8,7 @@
 #include "State.h"
 #include "StateMaker.h"
 #include "VerilogMaker.h"
+#include "SmtFunctionParser.h"
 namespace fs = std::filesystem;
 
 //globak variables
@@ -26,7 +27,9 @@ void readSimVcdFiles(std::string);
 void readSmtVcdFiles(std::string);
 void addConstraintsfromTrace();
 
-bool runEbmc(std::string);
+bool runEMBC(std::string);
+
+std::string runCVC5Sygus(std::string);
 
 int main(int argc, char* argv[]){
   std::string verilogSrcPath = "runtime/verilog/addsub.sv";
@@ -85,15 +88,17 @@ int main(int argc, char* argv[]){
     delete trace;
   }
   print("Sygus file generated to "+std::string("sygus.sl")+"\n");
+  std::string result = runCVC5Sygus("sygus.sl");
+  print("the cvc5 result is: \n"+result);
+  SmtFunctionParser smtParser;
+  SygusExpr* expr = smtParser.parseSmtFunction(result);
+
+  print("Sygus Expr's to String is: \n");
+  expr->toString();
+
   return 0;  
 }
 
-bool runEbmc(std::string verilogSrcPath){
-  std::string command = "ebmc "+verilogSrcPath+" --bound 10 > /dev/null 2>&1";
-  printDebug("Running EBMC with command: "+command+"\n",1);
-  int status = system(command.c_str());
-  return status==0;
-}
 
 State* getUnreachableState(std::string verilogSrcPath,std::string resultPath){
   StateMaker sm(&traces,signals);
@@ -110,7 +115,7 @@ State* getUnreachableState(std::string verilogSrcPath,std::string resultPath){
   printDebug(state->toString(),3);
 
   //then we should the ebmc to verify the state
-  if(runEbmc(resultPath)){
+  if(runEMBC(resultPath)){
     printDebug("The state is unreachable",3);
     return state;
   }
@@ -183,4 +188,35 @@ void addConstraintsfromTrace(){
 
 }
 
+bool runEMBC(std::string verilogSrcPath){
+  std::string command = "ebmc "+verilogSrcPath+" --bound 10 > /dev/null 2>&1";
+  printDebug("Running EBMC with command: "+command+"\n",1);
+  int status = system(command.c_str());
+  return status==0;
+}
 
+std::string runCVC5Sygus(std::string sygusPath){
+  std::string command = "cvc5 --lang=sygus2 "+sygusPath;
+  std::string result;
+  char buffer[128];
+  FILE* pipe = popen(command.c_str(), "r");
+  if(!pipe){
+    print("Error: popen failed\n");
+    return "";
+  }
+  try{
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+            result += buffer;
+    }
+  }
+  catch(...){
+    pclose(pipe);
+    throw;
+  }
+  int exitCode = pclose(pipe);
+  if(exitCode!=0){
+    print("Error: cvc5 failed\n");
+    return "";
+  }
+  return result;
+}
