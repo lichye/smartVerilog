@@ -25,6 +25,7 @@ SygusExpr* SmtFunctionParser::parseSmtFunction(std::string function) {
     std::string body = function.substr(bodyStart, bodyEnd - bodyStart);
 
     // Parse the function body
+    printDebug("We parse the function: " + body + "\n",2);
     std::istringstream stream(body);
     return parseExpression(stream);
 }
@@ -36,22 +37,20 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
 
     std::string parsedChar(1, ch);
 
-    printDebug("ParseExpression is called",3);
-    printDebug("we parsed to ch: " + parsedChar + "\n",3);
-
     if (ch == '(') {
         stream.get();
         std::string opToken = parseToken(stream);
         SygusExprType exprType = getExprType(opToken);
 
         if (exprType == FUNCTION) {
-            SygusExpr* id = parseExpression(stream);
-            SygusExpr* parameter_list = parseExpression(stream);
+            SygusIdentifier* id = (SygusIdentifier*)parseExpression(stream);
+            SygusVariableList* parameter_list = (SygusVariableList*)parseExpression(stream);
             SygusExpr* return_type = parseExpression(stream);
             SygusExpr* body = parseExpression(stream);
+            SygusFunction* function = new SygusFunction(id, parameter_list, body);
             stream.get(); // Consume ')'
-            print("We parse a function : " + id->toString() + "\n");
-            return nullptr;
+            print("We parse a function : \n" + function->toString() + "\n");
+            return function;
         }
         else if(exprType == LIST){
             printDebug("We meet a list expression\n",3);
@@ -65,7 +64,6 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
             }
             stream.get(); // Consume ')'
             printDebug("We parsed a list expression: "+list->toString()+"\n",2);
-            exit(0);
             return list;
         }
         else if(exprType == IDENTIFIER){
@@ -84,6 +82,30 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
             
             stream.get(); // Consume ')' of the bits type
             return bitsType;
+        }
+        else if(exprType == COMPLEXEXPR){
+            printDebug("We meet a complex expression\n",3);
+            SygusOperatorType opType = getOperatorType(opToken);
+
+            SygusOperator* op = new SygusOperator(opType);
+            SygusComplexExpr* complexExpr = new SygusComplexExpr(op);
+            int operands = op->getOperandsNumber();
+            if(operands==1){
+                SygusExpr* operand = parseExpression(stream);
+                complexExpr->addOperand(operand);
+            }
+            else if(operands==2){
+                SygusExpr* operand1 = parseExpression(stream);
+                complexExpr->addOperand(operand1);
+                SygusExpr* operand2 = parseExpression(stream);
+                complexExpr->addOperand(operand2);
+            }
+            else{
+                throw std::invalid_argument("Unknown operator type: " + opToken);
+            }
+            stream.get(); // Consume ')'
+            print("We parsed a complex expression: "+complexExpr->toString()+"\n");
+            return complexExpr;
         }
         else{
             throw std::invalid_argument("Unknown Mixed type: " + opToken);

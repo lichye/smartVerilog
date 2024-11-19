@@ -7,9 +7,17 @@
 
 SygusOperatorType getOperatorType(std::string op)
 {
-   
-    throw std::invalid_argument("Unknown operator type: " + op);
-    //return UNKNOWN;
+    if(op=="="){
+        return EQUAL;
+    }
+    else if(op=="bvadd"){
+        return BVADD;
+    }
+    else if(op=="bvsub"){
+        return BVSUB;
+    }
+    else
+        return UNKNOWOPERATOR;
 }
 
 SygusExprType getExprType(std::string expr)
@@ -17,6 +25,10 @@ SygusExprType getExprType(std::string expr)
     if (expr == "define-fun")
     {
         return FUNCTION; 
+    }
+    else if (getOperatorType(expr)!=-1)
+    {
+        return COMPLEXEXPR;
     }
     else if (expr == "")
     {
@@ -69,14 +81,34 @@ std::string SygusOperator::toString()
 {
     switch (this->op)
     {
-    case DEFINE_FUN:
-        return "define-fun";
-    default:
-        return "Unknown Operator";
+        case EQUAL:
+            return "==";
+        case BVADD:
+            return "+";
+        case BVSUB:
+            return "-";
+        default:
+            return "Unknown Operator";
     }
 }
 
-SygusComplexExpr::SygusComplexExpr(SygusOperator* op, std::vector<SygusExpr*> operands)
+int SygusOperator::getOperandsNumber()
+{
+    switch (this->op)
+    {
+        case EQUAL:
+            return 2;
+        case BVADD:
+            return 2;
+        case BVSUB:
+            return 2;
+        
+        default:
+            throw std::invalid_argument("Unknown operator type: " + std::to_string(op));
+    }
+}
+
+SygusComplexExpr::SygusComplexExpr(SygusOperator* op)
 {
     this->op = op;
     this->operands = operands;
@@ -98,7 +130,7 @@ std::string SygusComplexExpr::toString()
     else{
         for (int i =0;i<operands.size();i++){
             result += operands[i]->toString();
-            if(i == 1){
+            if(i == 0){
                 result += " " + op->toString() + " ";
             }
         }
@@ -108,7 +140,7 @@ std::string SygusComplexExpr::toString()
     return result;
 }
 
-SygusFunction::SygusFunction(SygusIdentifier* name, std::vector<SygusExpr*> parameters, SygusExpr* body)
+SygusFunction::SygusFunction(SygusIdentifier* name, SygusVariableList* parameters, SygusExpr* body)
 {
     this->name = name;
     this->parameters = parameters;
@@ -117,24 +149,12 @@ SygusFunction::SygusFunction(SygusIdentifier* name, std::vector<SygusExpr*> para
 
 std::string SygusFunction::toString()
 {
-    std::string result = "(define-fun " + name->toString() + " (";
-    for (int i = 0; i < parameters.size(); i++)
-    {
-        result += parameters[i]->toString();
-        if (i != parameters.size() - 1)
-        {
-            result += " ";
-        }
-    }
-    result += ") " + body->toString() + ")";
+    std::string result;
+    result+="function id : " + name->toString() + "\n";
+    result+="parameters : " + parameters->toString() + "\n";
+    result+="body : " + body->toString() + "\n";
     return result;
 }
-
-void SygusFunction::addParameter(SygusExpr *parameter)
-{
-    this->parameters.push_back(parameter);
-}
-
 
 //SygusBitsVariables
 SygusBitsType::SygusBitsType(int bitlength)
@@ -144,7 +164,7 @@ SygusBitsType::SygusBitsType(int bitlength)
 
 std::string SygusBitsType::toString()
 {
-    return "_ " + std::to_string(bitlength);
+    return " Bits " + std::to_string(bitlength);
 }
 
 SygusBitsType::~SygusBitsType()

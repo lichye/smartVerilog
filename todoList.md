@@ -1,6 +1,10 @@
+Finish:
+# basic of smt parser
+
 To_Do:
 
-# add delete to the Expr
+# add support for more operands
+# recycle memory
 
 
 # make SMT result a verilog assertions

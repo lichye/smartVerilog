@@ -5,10 +5,11 @@
 
 enum SygusOperatorType
 {   
-    UNKNOWN_SygusOperatorType = 0,
-    DEFINE_FUN = 1,
-    PARAMETER_LIST_OP = 2,
-    SYGUS_IDENTIFIER = 3,
+    UNKNOWOPERATOR = -1,
+    EQUAL = 0,
+    BVADD = 1,
+    BVSUB = 2,
+
 };
 
 enum SygusExprType
@@ -50,7 +51,7 @@ class SygusOperator: public SygusExpr
         SygusOperator(SygusOperatorType);
         ~SygusOperator();
         std::string toString();
-    
+        int getOperandsNumber();
     private:
         SygusOperatorType op;
 
@@ -59,7 +60,7 @@ class SygusOperator: public SygusExpr
 class SygusComplexExpr: public SygusExpr
 {
     public:
-        SygusComplexExpr(SygusOperator*,std::vector<SygusExpr*>);
+        SygusComplexExpr(SygusOperator*);
         ~SygusComplexExpr();
         std::string toString();
         void addOperand(SygusExpr* operand);
@@ -67,20 +68,6 @@ class SygusComplexExpr: public SygusExpr
     private:
         SygusOperator *op;
         std::vector<SygusExpr*> operands;
-};
-
-class SygusFunction: public SygusExpr
-{
-    public:
-        SygusFunction(SygusIdentifier*,std::vector<SygusExpr*>,SygusExpr*);
-        ~SygusFunction();
-        std::string toString();
-        void addParameter(SygusExpr* parameter);
-
-    private:
-        SygusIdentifier *name;
-        std::vector<SygusExpr*> parameters;
-        SygusExpr *body;
 };
 
 class SygusVariableType: public SygusExpr
@@ -154,4 +141,16 @@ class SygusBoolValue: public SygusValue
         bool value;
 };
 
+class SygusFunction: public SygusExpr
+{
+    public:
+        SygusFunction(SygusIdentifier*,SygusVariableList*,SygusExpr*);
+        ~SygusFunction();
+        std::string toString();
+
+    private:
+        SygusIdentifier *name;
+        SygusVariableList *parameters;
+        SygusExpr *body;
+};
 #endif
