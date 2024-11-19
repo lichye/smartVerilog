@@ -4,10 +4,10 @@ Finish:
 To_Do:
 
 # add support for more operands
+
 # recycle memory
 
-
-# make SMT result a verilog assertions
+# add parsed expr to Verilog
 
 # Automatic variables poicker for sygus
 
