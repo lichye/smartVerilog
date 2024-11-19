@@ -1,4 +1,8 @@
 To_Do:
+
+# add delete to the Expr
+
+
 # make SMT result a verilog assertions
 
 # Automatic variables poicker for sygus

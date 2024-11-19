@@ -36,74 +36,100 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
 
     std::string parsedChar(1, ch);
 
-    print("ParseExpression is called");
-    print("we parsed to ch: " + parsedChar + "\n");
+    printDebug("ParseExpression is called",3);
+    printDebug("we parsed to ch: " + parsedChar + "\n",3);
 
     if (ch == '(') {
-        // Complex expression (e.g., (= x (bvsub y z)))
-        stream.get(); // Consume '('
+        stream.get();
         std::string opToken = parseToken(stream);
         SygusExprType exprType = getExprType(opToken);
 
         if (exprType == FUNCTION) {
             SygusExpr* id = parseExpression(stream);
-            print("In the function, we get id as: " + id->toString() + "\n");
             SygusExpr* parameter_list = parseExpression(stream);
-            exit(0);
+            SygusExpr* return_type = parseExpression(stream);
+            SygusExpr* body = parseExpression(stream);
             stream.get(); // Consume ')'
+            print("We parse a function : " + id->toString() + "\n");
+            return nullptr;
         }
         else if(exprType == LIST){
-            print("We meet a list expression\n");
+            printDebug("We meet a list expression\n",3);
+            SygusVariableList* list = new SygusVariableList();
             while(stream.peek() != ')'){
-                SygusExpr* expr = parseExpression(stream);
-                print("We get an expression: "+expr->toString()+"\n");
+                SygusExpr* id = parseExpression(stream);
+                list->addVariable((SygusIdentifier*)id);
+                SygusExpr* type = parseExpression(stream);
+                list->addType((SygusVariableType*)type);
+                stream.get(); // Consume ')' of the identifier declaration      
             }
             stream.get(); // Consume ')'
-
-            std::string nextToken = parseToken(stream);
-            print("Next token is: "+nextToken+"\n"); 
-            
+            printDebug("We parsed a list expression: "+list->toString()+"\n",2);
             exit(0);
+            return list;
         }
         else if(exprType == IDENTIFIER){
-            print("We meet an identifier declaration: "+opToken+"\n");
-            
-            SygusExpr* idType = parseExpression(stream);
-
-            stream.get(); // Consume ')' of the identifier declaration
+            printDebug("We meet an identifier declaration: "+opToken+"\n",3);
             return new SygusIdentifier(opToken);
-        }
-        //TODO:
-        //Make correct Types
+        }    
         else if(exprType == BITS_TYPE){
-            print("We meet a bits type declaration: "+opToken+"\n");
+            printDebug("We meet a bits type\n",3);
+
             SygusExpr* bitvec = parseExpression(stream);
-            SygusExpr* bitlength = parseExpression(stream);
+            SygusIntValue* bitlength = (SygusIntValue*)parseExpression(stream);
+
+            int bitlengthValue = bitlength->getValue();
+            SygusBitsType* bitsType = new SygusBitsType(bitlengthValue);
+
+            
             stream.get(); // Consume ')' of the bits type
-            return nullptr;
+            return bitsType;
         }
         else{
             throw std::invalid_argument("Unknown Mixed type: " + opToken);
         }
         
     }
-    else if(ch == ')'){
-        stream.get(); // Consume ')'
-        return nullptr;
-    } 
     else {
         // Identifier or literal (e.g., x, y, z)
         std::string token = parseToken(stream);
         SygusExprType exprType = getExprType(token);
         if(exprType == IDENTIFIER){
-            print("We meet an identifier: "+token+"\n");
+            printDebug("the token has type of Identifier: "+token+"\n",3);
             return new SygusIdentifier(token);
         } 
-            
+        else if(exprType == BOOL_TYPE){
+            printDebug("the token has type of BoolType: "+token+"\n",3);
+            SygusBoolType* boolType = new SygusBoolType;
+            return boolType;
+        }
+        else if(exprType == BOOL_VALUE){
+            printDebug("the token has type of BoolValue: "+token+"\n",3);
+            bool tokenBool;
+            if(token=="true"){
+                tokenBool = true;
+            }
+            else if(token=="false")
+            {
+                tokenBool = false;
+            }
+            else{
+                throw std::invalid_argument("Unknown boolean value: " + token);
+            }
+            SygusBoolValue* value = new SygusBoolValue(tokenBool);
+            return value;
+        }    
+        else if (exprType == INT_VALUE){
+            printDebug("the token has type of IntValue: "+token+"\n",3);
+            int value = std::stoi(token);
+            SygusIntValue* intValue = new SygusIntValue(value);
+            return intValue;
+        }
         else{
             throw std::invalid_argument("Unknown single type: " + token);
         }
     }
+    return nullptr;
 }
 
 std::string SmtFunctionParser::parseToken(std::istringstream& stream) {
@@ -117,7 +143,7 @@ std::string SmtFunctionParser::parseToken(std::istringstream& stream) {
         }
         token += ch;
     }
-    print("we parsed token: " + token + "\n");
+    printDebug("we parsed token: " + token + "\n",3);
     return token;
 }
 
