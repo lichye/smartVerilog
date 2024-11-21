@@ -16,6 +16,8 @@ To_Do:
 #   Make more test file (?)
 ##  Use the open-source benchmark
 
+# little bugs on test machine
+
 Future:
 #   Mutate the verilog circut and check the assertion is violate
 
