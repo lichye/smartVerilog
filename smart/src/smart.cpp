@@ -91,11 +91,10 @@ int main(int argc, char* argv[]){
   std::string result = runCVC5Sygus("sygus.sl");
   print("the cvc5 result is: \n"+result);
   SmtFunctionParser smtParser;
-  SygusExpr* expr = smtParser.parseSmtFunction(result);
+  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(result);
 
-  print("Sygus Expr's to String is: \n");
-  expr->toString();
-
+  print("The relation is : \n");
+  print(func->getBodyVerilogExpr());
   return 0;  
 }
 

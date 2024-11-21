@@ -147,6 +147,8 @@ class SygusFunction: public SygusExpr
         SygusFunction(SygusIdentifier*,SygusVariableList*,SygusExpr*);
         ~SygusFunction();
         std::string toString();
+        SygusExpr* getBody();
+        std::string getBodyVerilogExpr();
 
     private:
         SygusIdentifier *name;

@@ -62,9 +62,14 @@ SygusExpr::~SygusExpr()
 {
 }
 
+//SygusIdentifier
 SygusIdentifier::SygusIdentifier(std::string name)
 {
     this->name = name;
+}
+
+SygusIdentifier::~SygusIdentifier()
+{
 }
 
 std::string SygusIdentifier::toString()
@@ -72,9 +77,14 @@ std::string SygusIdentifier::toString()
     return name;
 }
 
+//SygusOperator
 SygusOperator::SygusOperator(SygusOperatorType type)
 {
     op = type;
+}
+
+SygusOperator::~SygusOperator()
+{
 }
 
 std::string SygusOperator::toString()
@@ -108,10 +118,19 @@ int SygusOperator::getOperandsNumber()
     }
 }
 
+//SygusComplexExpr 
 SygusComplexExpr::SygusComplexExpr(SygusOperator* op)
 {
     this->op = op;
     this->operands = operands;
+}
+
+SygusComplexExpr::~SygusComplexExpr()
+{
+    delete op;
+    for(auto operand : operands){
+        delete operand;
+    }
 }
 
 void SygusComplexExpr::addOperand(SygusExpr *operand)
@@ -140,20 +159,14 @@ std::string SygusComplexExpr::toString()
     return result;
 }
 
-SygusFunction::SygusFunction(SygusIdentifier* name, SygusVariableList* parameters, SygusExpr* body)
+//SygusVariableType
+
+SygusVariableType::SygusVariableType()
 {
-    this->name = name;
-    this->parameters = parameters;
-    this->body = body;
 }
 
-std::string SygusFunction::toString()
+SygusVariableType::~SygusVariableType()
 {
-    std::string result;
-    result+="function id : " + name->toString() + "\n";
-    result+="parameters : " + parameters->toString() + "\n";
-    result+="body : " + body->toString() + "\n";
-    return result;
 }
 
 //SygusBitsVariables
@@ -172,8 +185,11 @@ SygusBitsType::~SygusBitsType()
 }
 
 //SygusBoolType
-
 SygusBoolType::SygusBoolType()
+{
+}
+
+SygusBoolType::~SygusBoolType()
 {
 }
 
@@ -182,18 +198,19 @@ std::string SygusBoolType::toString()
     return "Bool";
 }
 
-SygusBoolType::~SygusBoolType()
-{
-}
-
 //SygusVariableList
-
 SygusVariableList::SygusVariableList()
 {
 }
 
 SygusVariableList::~SygusVariableList()
 {
+    for(auto variable : variables){
+        delete variable;
+    }
+    for(auto type : types){
+        delete type;
+    }
 }
 
 std::string SygusVariableList::toString()
@@ -236,6 +253,10 @@ SygusIntValue::SygusIntValue(int value)
     this->value = value;
 }
 
+SygusIntValue::~SygusIntValue()
+{
+}
+
 std::string SygusIntValue::toString()
 {
     return std::to_string(value);
@@ -265,4 +286,38 @@ std::string SygusBoolValue::toString()
 bool SygusBoolValue::getValue()
 {
     return value;
+}
+
+//SygusFunction
+SygusFunction::SygusFunction(SygusIdentifier* name, SygusVariableList* parameters, SygusExpr* body)
+{
+    this->name = name;
+    this->parameters = parameters;
+    this->body = body;
+}
+
+SygusFunction::~SygusFunction()
+{
+    delete name;
+    delete parameters;
+    delete body;
+}
+
+std::string SygusFunction::toString()
+{
+    std::string result;
+    result+="function id : " + name->toString() + "\n";
+    result+="parameters : " + parameters->toString() + "\n";
+    result+="body : " + body->toString() + "\n";
+    return result;
+}
+
+SygusExpr* SygusFunction::getBody()
+{
+    return body;
+}
+
+std::string SygusFunction::getBodyVerilogExpr()
+{
+    return body->toString();
 }
