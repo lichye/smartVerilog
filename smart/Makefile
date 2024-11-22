@@ -75,17 +75,21 @@ sim:
 	python $(RUNTIME_DIR)/sim.py $(RUNTIME_DIR)/verilog/addsub.sv
 	mv sim_build/dump.vcd $(RUNTIME_DIR)/sim_results/sim.vcd
 
-# Clean rule to remove output files
-clean: sim_clean assertion_clean smart_clean compile_clean
+# clean is clean the compiled code
+clean: 
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
-	rm -rf $(RUNTIME_DIR)/verilog/*.sv
-	rm -rf $(RUNTIME_DIR)/ebmc/*.sv
 	mkdir $(BUILD_DIR)
 	mkdir $(RUNTIME_DIR)/sim_results
 	mkdir $(RUNTIME_DIR)/smt_results
+
+all_clean:
+	rm -rf $(RUNTIME_DIR)
+	rm -rf sim_build
+	rm -rf $(SMART_TARGET)
+	rm -rf sygus.sl
 
 sim_clean:
 	rm -rf sim_build

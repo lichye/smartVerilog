@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "State.h"
+#include "SygusExpr.h"
 enum PropertyType{
     
     SAFT_PROPERTY,
@@ -23,15 +24,33 @@ enum PropertyType{
     //  Ensures that a certain state is reachable from the initial state.
     //  (a == 0 && b == 1)
 };
-class VerilogMaker {
+class VerilogChecker {
     public:
-        VerilogMaker();
-        ~VerilogMaker();
-        void writeVerilogFile(std::string,std::string);
+        VerilogChecker();
+        VerilogChecker(std::string,std::string);
+        ~VerilogChecker();
+        
+        void setVerilogSrcPath(std::string);
+        void setEBMCPath(std::string);
+
         void addProperty(State*,PropertyType);
+        void addProperty(SygusFunction*,PropertyType);
+        void cleanProperties();
+        
+        //The check function will return true if the state is reachable
+        bool checkStateReachability(State*);
+        bool checkExprSafety(SygusFunction*);
+
     private:
+        std::string verilogSrcPath;
+        std::string ebmcPath;
+
         std::vector<std::string> properties;
         std::vector<PropertyType> propertyTypes;
+        std::vector<std::string> ebmcPaths;
+
+        void writeVerilogFile();
+        bool runEMBC();
 };
 
 #endif

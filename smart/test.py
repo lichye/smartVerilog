@@ -12,11 +12,15 @@ current_path = os.getcwd()
 
 user_config_path = current_path+"/User/config.ini"
 
-user_verilog_path = current_path+"/User/addsub.sv"
+user_verilog_path = current_path+"/User"
 
-runtime_ebmc_path = current_path+"/runtime/ebmc/addsub.sv"
+user_verilog_file = user_verilog_path+"/addsub.sv"
 
-runtime_verilog_path = current_path+"/runtime/verilog/addsub.sv"
+runtime_ebmc_path = current_path+"/runtime/ebmc/"
+
+runtime_verilog_path = current_path+"/runtime/verilog"
+
+runtime_verilog_file = runtime_verilog_path+"/addsub.sv"
 
 sim_target_dir = current_path+"/runtime/sim_results"
 
@@ -67,6 +71,7 @@ def clean():
     global prep
     print("Cleaning")
     subprocess.run(["make", "clean"])
+    subprocess.run(["make", "clean_runtime"])
     compiled = False
     prep = False
     print("Finish Cleaning")
@@ -79,22 +84,9 @@ def trace():
     print("Running Sygus File Generation")
     subprocess.run(["./smart.out","--trace"])
 
-def unreachableGen():
-    global compiled
-    global prep
-    if(not compiled):
-        print("Has not compiled, run compile first")
-        compile()
-    if(not prep):
-        print("Has not run Verilog Preprocessing, run VerilogPrep first")
-        VerilogPrep()
-
-    print("Running Unreachable Generation")
-    subprocess.run(["./smart.out", "--unreachable",user_config_path, runtime_verilog_path, runtime_ebmc_path])
-
 def VerilogPrep():
     print("Running Verilog Code Preprocessing")
-    result = subprocess.run(["python", "src/VerilogPrep.py", user_verilog_path, runtime_verilog_path],
+    result = subprocess.run(["python", "src/VerilogPrep.py", user_verilog_file, runtime_verilog_file],
     capture_output=True,
     text=True)
 
@@ -125,8 +117,6 @@ def runner():
             smart()
         elif cmd == "trace" or cmd == "t":
             trace()
-        elif cmd == "unreachable" or cmd == "u":
-            unreachableGen()
         elif cmd == "prep":
             VerilogPrep()
         elif cmd == "all":
@@ -135,8 +125,25 @@ def runner():
             sim()
         else:
             print("Invalid Command")
-    
+
+def setup():
+    if not os.path.exists(current_path+"/runtime"):
+        os.makedirs(current_path+"/runtime")
+    subprocess.run(["cp", current_path+"/src/runtime/sim.py",current_path+"/runtime/sim.py"])
+    subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
+    if not os.path.exists(sim_target_dir):
+        os.makedirs(sim_target_dir)
+    if not os.path.exists(smt_target_dir):
+        os.makedirs(smt_target_dir)
+    if not os.path.exists(runtime_verilog_path):
+        os.makedirs(runtime_verilog_path)
+    if not os.path.exists(runtime_ebmc_path):
+        os.makedirs(runtime_ebmc_path)
+    VerilogPrep()
+
+   
 if __name__ == "__main__":
+    setup()
     compiled = False
     prep = False
     # compile()

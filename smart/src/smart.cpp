@@ -7,7 +7,7 @@
 #include "SyGuSGenerater.h"
 #include "State.h"
 #include "StateMaker.h"
-#include "VerilogMaker.h"
+#include "VerilogChecker.h"
 #include "SmtFunctionParser.h"
 namespace fs = std::filesystem;
 
@@ -20,161 +20,100 @@ SyGuSGenerater sygus;
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
 std::string config_path = "User/config.ini";
+std::string verilogSrcPath = "runtime/verilog/addsub.sv";
+std::string ebmcPath = "runtime/ebmc/addsub.sv";
 
 
-State* getUnreachableState(std::string,std::string);
-void readSimVcdFiles(std::string);
-void readSmtVcdFiles(std::string);
+void generateTrace(std::string Path,TraceType type); 
 void addConstraintsfromTrace();
-
-bool runEMBC(std::string);
 
 std::string runCVC5Sygus(std::string);
 
 int main(int argc, char* argv[]){
-  std::string verilogSrcPath = "runtime/verilog/addsub.sv";
-  std::string resultPath  = "runtime/ebmc/addsub.sv";
-
+  
   bool useTraces = false;
   bool testGetUnreachable = false;
 
   SignalGather sg(config_path);
+  VerilogChecker vc(verilogSrcPath,ebmcPath);
+
   signals = sg.getAllSignals();
   sygus.setSignals(signals);
   
+  generateTrace(sim_path,TraceType::SIM);
+  generateTrace(smt_path,TraceType::SMT);
 
-  if(argc==1){
-    print("No arguments provided, run default paths\n");
-    useTraces = true; 
-  }
-  //when there is two arguments
-  else if(argc>=2){
-    if(std::string(argv[1])=="--trace"||std::string(argv[1])=="-t")
-      useTraces = true;
-    //we hope the usage of smart --unreachable [config_path] [verilogSrcPath] [resultPath]
-    if(std::string(argv[1])=="--unreachable"||std::string(argv[1])=="-u"){
-      testGetUnreachable = true;
-      print("Try to find a unreachable state\n");
-    }
-  }
+  //add the constraints from the traces to the sygus file
+  addConstraintsfromTrace();
 
-  readSimVcdFiles(sim_path);
-  readSmtVcdFiles(smt_path);
 
-  if(useTraces){
-    addConstraintsfromTrace();
+  StateMaker sm(&traces,signals);
+
+  State* state = sm.makeRandomState();
+
+  bool checkResult = vc.checkStateReachability(state);
+
+  if(!checkResult){
+    print("Find an unreachable state\n");
+    sygus.addConstraints(state,false);
   }
-  
-  if(testGetUnreachable){
-    State* state = getUnreachableState(verilogSrcPath,resultPath);
-    if(state!=nullptr){
-      print("Find a unreachable state\n");
-      print(state->toString());
-    }
-    else{
-      print("Find a reachable state\n");
-      print(state->toString());
-    }
-    return 0;
+  else{
+    print("The state is reachable\n");
+    sygus.addConstraints(state,true);
   }
 
-  State* state = getUnreachableState(verilogSrcPath,resultPath);
-  print("Try one state\n");
-  printDebug("Find a state\n",1);
-  printDebug(state->toString(),1);
-  sygus.addConstraints(state,false);
   sygus.printSysgusPath("sygus.sl");
-  for(auto &trace : traces){
-    delete trace;
-  }
+  
   print("Sygus file generated to "+std::string("sygus.sl")+"\n");
-  std::string result = runCVC5Sygus("sygus.sl");
-  print("the cvc5 result is: \n"+result);
+  
+  std::string sygusResult = runCVC5Sygus("sygus.sl");
+  print("the cvc5 result is: \n"+sygusResult);
+
   SmtFunctionParser smtParser;
-  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(result);
+  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
 
   print("The relation is : \n");
   print(func->getBodyVerilogExpr());
+
+  bool safetyResult = vc.checkExprSafety(func);
+  if(safetyResult){
+    print("The relation is safe\n");
+  }
+  else{
+    print("The relation is not safe\n");
+  }
+
+  //clean up
+  for(auto &trace : traces){
+    delete trace;
+  }
+
   return 0;  
 }
 
 
-State* getUnreachableState(std::string verilogSrcPath,std::string resultPath){
-  StateMaker sm(&traces,signals);
-  VerilogMaker vm;
-
-  
-  State* state = sm.makeRandomState();
-  
-  vm.addProperty(state,PropertyType::REACHABILITY_PROPERTY);
-  vm.writeVerilogFile(verilogSrcPath,resultPath);
-  
-  
-  printDebug("Try below states",3);
-  printDebug(state->toString(),3);
-
-  //then we should the ebmc to verify the state
-  if(runEMBC(resultPath)){
-    printDebug("The state is unreachable",3);
-    return state;
-  }
-  else{
-    printDebug("The random state is reachable",3);
-    return nullptr;
-  }
-}
-
-void readSimVcdFiles(std::string sim_path){
+void generateTrace(std::string Path,TraceType type){
   int vcdFileCount = 0;
-  std::vector<std::string> simVcdFiles;
-  try {
-        for (const auto& entry : fs::directory_iterator(sim_path)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".vcd") {
-                ++vcdFileCount;
-                simVcdFiles.push_back(entry.path().string());
-            }
-        }
-        
-        std::cout << "Number of Simulation VCD files: " << vcdFileCount << std::endl;
-    } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-  }
-
-  if(vcdFileCount > 0){
-    print("List of Simulation VCD files: \n");
-  }
-
-  for(auto &vcdFile : simVcdFiles){
-    std::cout<<vcdFile<<std::endl;
-    Trace* trace = new Trace(TraceType::SIM, vcdFile);
-    traces.push_back(trace);
-  }
-}
-
-void readSmtVcdFiles(std::string smt_path){
-  int vcdFileCount = 0;
-  std::vector<std::string> smtVcdFiles;
-  try {
-        for (const auto& entry : fs::directory_iterator(smt_path)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".vcd") {
-                ++vcdFileCount;
-                smtVcdFiles.push_back(entry.path().string());
-            }
-        }
-        print("SMT's Number of VCD files: " + std::to_string(vcdFileCount)+"\n");
-    } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-  }
-
-  if(vcdFileCount > 0){
+  std::vector<std::string> vcdFiles;
+  try{
+    for(const auto& entry : fs::directory_iterator(Path)){
+      if(entry.is_regular_file() && entry.path().extension() == ".vcd"){
+        ++vcdFileCount;
+        vcdFiles.push_back(entry.path().string());
+      }
+    }
     print("Number of VCD files: " + std::to_string(vcdFileCount)+"\n");
   }
-
-  for(auto &vcdFile : smtVcdFiles){
+  catch(const std::filesystem::filesystem_error& e){
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
+  if(vcdFileCount > 0){
+    print("List of VCD files: \n");
+  }
+  for(auto &vcdFile : vcdFiles){
     std::cout<<vcdFile<<std::endl;
-    Trace* trace = new Trace(TraceType::SMT, vcdFile);
+    Trace* trace = new Trace(type, vcdFile);
     traces.push_back(trace);
-    std::cout<<"SMT trace object inserted into the traces vector"<<std::endl;
   }
 }
 
@@ -184,15 +123,9 @@ void addConstraintsfromTrace(){
     sygus.addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
     sygus.addConstraints(*constraints,true);
   }
-
 }
 
-bool runEMBC(std::string verilogSrcPath){
-  std::string command = "ebmc "+verilogSrcPath+" --bound 10 > /dev/null 2>&1";
-  printDebug("Running EBMC with command: "+command+"\n",1);
-  int status = system(command.c_str());
-  return status==0;
-}
+
 
 std::string runCVC5Sygus(std::string sygusPath){
   std::string command = "cvc5 --lang=sygus2 "+sygusPath;
