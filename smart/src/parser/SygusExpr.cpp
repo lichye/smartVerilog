@@ -16,6 +16,33 @@ SygusOperatorType getOperatorType(std::string op)
     else if(op=="bvsub"){
         return BVSUB;
     }
+    else if(op=="bvneg"){
+        return BVNEG;
+    }
+    else if(op=="bvnot"){
+        return BVNOT;
+    }
+    else if(op=="bvand"){
+        return BVAND;
+    }
+    else if(op=="bvor"){
+        return BVOR;
+    }
+    else if(op=="bvxor"){
+        return BVXOR;
+    }
+    else if(op=="bvmul"){
+        return BVMUL;
+    }
+    else if (op=="bvudiv"){
+        return BVDIV;
+    }
+    else if(op=="not"){
+        return BOOLNOT;
+    }
+    else if(op=="or"){
+        return BOOLOR;
+    }
     else
         return UNKNOWOPERATOR;
 }
@@ -97,6 +124,24 @@ std::string SygusOperator::toString()
             return "+";
         case BVSUB:
             return "-";
+        case BVNEG:
+            return "-";
+        case BVNOT:
+            return "!";
+        case BVOR:
+            return "|";
+        case BVXOR:
+            return "^";
+        case BVAND:
+            return "&";
+        case BVMUL:
+            return "*";
+        case BVDIV:
+            return "/";
+        case BOOLNOT:
+            return "!";
+        case BOOLOR:
+            return "||";
         default:
             return "Unknown Operator";
     }
@@ -112,7 +157,24 @@ int SygusOperator::getOperandsNumber()
             return 2;
         case BVSUB:
             return 2;
-        
+        case BVNEG:
+            return 1;
+        case BVNOT:
+            return 1;
+        case BVOR:
+            return 2;
+        case BVXOR:
+            return 2;
+        case BVMUL:
+            return 2;
+        case BVAND:
+            return 2;
+        case BVDIV:
+            return 2;
+        case BOOLNOT:
+            return 1;
+        case BOOLOR:
+            return 2;
         default:
             throw std::invalid_argument("Unknown operator type: " + std::to_string(op));
     }
@@ -147,11 +209,14 @@ std::string SygusComplexExpr::toString()
         return "Empty Complex Expression";
     }
     else{
-        for (int i =0;i<operands.size();i++){
-            result += operands[i]->toString();
-            if(i == 0){
-                result += " " + op->toString() + " ";
-            }
+        if(op->getOperandsNumber() == 1){
+            result += op->toString() + " " + operands[0]->toString();
+        }
+        else if(op->getOperandsNumber() == 2){
+            result += operands[0]->toString() + " " + op->toString() + " " + operands[1]->toString();
+        }
+        else{
+            throw std::invalid_argument("Unknown operator type: " + std::to_string(op->getOperandsNumber()));
         }
     }
     

@@ -1,17 +1,11 @@
 Finish:
-# basic of smt parser
 
 To_Do:
-
-# add support for more operands
-
-# recycle memory
-
-# add parsed expr to Verilog
+# add support for bv value
 
 # Automatic variables poicker for sygus
-
 ## pick up when preprocessing time
+## use the Always block
 
 #   Make more test file (?)
 ##  Use the open-source benchmark

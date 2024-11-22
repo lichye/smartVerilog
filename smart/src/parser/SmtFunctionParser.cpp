@@ -104,7 +104,6 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
                 throw std::invalid_argument("Unknown operator type: " + opToken);
             }
             stream.get(); // Consume ')'
-            print("We parsed a complex expression: "+complexExpr->toString()+"\n");
             return complexExpr;
         }
         else{

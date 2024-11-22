@@ -9,7 +9,15 @@ enum SygusOperatorType
     EQUAL = 0,
     BVADD = 1,
     BVSUB = 2,
-
+    BVNEG = 3,
+    BVNOT = 4,
+    BVAND = 5,
+    BVOR = 6,
+    BVXOR = 7,
+    BVMUL = 8,
+    BVDIV = 9,
+    BOOLNOT = 10,
+    BOOLOR = 11,
 };
 
 enum SygusExprType
@@ -139,6 +147,17 @@ class SygusBoolValue: public SygusValue
         bool getValue();
     private:
         bool value;
+};
+
+class SygusBVValue: public SygusValue
+{
+    public:
+        SygusBVValue(std::string);
+        ~SygusBVValue();
+        std::string toString();
+        std::string getValue();
+    private:
+        
 };
 
 class SygusFunction: public SygusExpr

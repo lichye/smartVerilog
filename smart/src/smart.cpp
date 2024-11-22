@@ -128,6 +128,7 @@ void addConstraintsfromTrace(){
 
 
 std::string runCVC5Sygus(std::string sygusPath){
+  print("Start to run cvc5\n");
   std::string command = "cvc5 --lang=sygus2 "+sygusPath;
   std::string result;
   char buffer[128];
