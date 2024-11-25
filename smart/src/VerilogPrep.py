@@ -1,7 +1,7 @@
 import re
 import sys
 
-def extract_variables(file_path):
+def extract_signals(file_path):
     with open(file_path, 'r') as file:
         content = file.read()
     variable_pattern = r'\b(input|output|inout|reg|wire)(\s+reg)?\s*(\[[^\]]+\])?\s+(\w+)\s*'
@@ -64,6 +64,7 @@ def insert_copy_variables_and_always_block(file_path, copy_lines, always_block, 
 
     print(f"Generated file with copy variables and always block: {output_file_path}")
 
+
 if __name__ == "__main__":
     if(len(sys.argv) ==3):
         input_file = sys.argv[1]
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     
 
     # we get all the varibles from the input file
-    variables = extract_variables(input_file)
-    copy_lines = generate_copy_variables(variables)
-    always_block = generate_always_block(variables)
+    signals = extract_signals(input_file)
+    copy_lines = generate_copy_variables(signals)
+    always_block = generate_always_block(signals)
     insert_copy_variables_and_always_block(input_file, copy_lines, always_block, output_file)
