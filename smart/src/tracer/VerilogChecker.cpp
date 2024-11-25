@@ -7,11 +7,16 @@
 #include <cassert>
 
 VerilogChecker::VerilogChecker() {
+    verilogSrcPath = "";
+    ebmcPath = "";
+    tracePath = "";
+    bound = 10;
 }
 
 VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string ebmcPath) {
     this->verilogSrcPath = verilogSrcPath;
     this->ebmcPath = ebmcPath;
+    bound = 10;
 }
 
 VerilogChecker::~VerilogChecker() {
@@ -23,6 +28,10 @@ void VerilogChecker::setVerilogSrcPath(std::string path) {
 
 void VerilogChecker::setEBMCPath(std::string path) {
     ebmcPath = path;
+}
+
+void VerilogChecker::setTracePath(std::string path) {
+    tracePath = path;
 }
 
 void VerilogChecker::writeVerilogFile() {
@@ -74,10 +83,10 @@ void VerilogChecker::addProperty(SygusFunction* func,PropertyType type) {
     propertyTypes.push_back(type);
 
     if(type == PropertyType::REACHABILITY_PROPERTY){
-        properties.push_back("##[0:$] (!"+func->getBodyVerilogExpr()+")");
+        properties.push_back("##[0:$] "+func->getBodyVerilogExpr());
     }
     else if(type == PropertyType::SAFT_PROPERTY){
-        properties.push_back("##[0:$] (!"+func->getBodyVerilogExpr()+")");
+        properties.push_back("##[0:$] "+func->getBodyVerilogExpr());
     }
     else{
         printError("Error: Property type not supported\n");
@@ -91,27 +100,42 @@ void VerilogChecker::cleanProperties() {
     propertyTypes.clear();
 }
 
-bool VerilogChecker::runEMBC(){
-  std::string command = "ebmc "+ebmcPath+" --bound 10 > /dev/null 2>&1";
-  printDebug("Running EBMC with command: "+command+"\n",1);
-  int status = system(command.c_str());
-  return status==0;
+bool VerilogChecker::runEBMC(){
+    std::string command = "";
+    command += "ebmc "+ebmcPath;
+    command += " --bound "+std::to_string(bound);
+    command += " --vcd test.vcd";
+    command += " > /dev/null 2>&1";
+    printDebug("Running EBMC with command: "+command+"\n",1);
+    int status = system(command.c_str());
+    return status==0;
+}
+
+bool VerilogChecker::runEBMC(std::string tracePath){
+    std::string command = "";
+    command += "ebmc "+ebmcPath;
+    command += " --bound "+std::to_string(bound);
+    command += " --vcd "+tracePath;
+    command += " > /dev/null 2>&1";
+    printDebug("Running EBMC with command: "+command+"\n",1);
+    int status = system(command.c_str());
+    return status==0;
 }
 
 bool VerilogChecker::checkStateReachability(State* state) {
     cleanProperties();
     addProperty(state,PropertyType::REACHABILITY_PROPERTY);
     writeVerilogFile();
-    bool result = runEMBC();
+    bool result = runEBMC();
     //if the property is verified, then the state is unreachable
     return !result;
 }
 
-bool VerilogChecker::checkExprSafety(SygusFunction* func) {
+bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) {
     cleanProperties();
     addProperty(func,PropertyType::SAFT_PROPERTY);
     writeVerilogFile();
-    bool result = runEMBC();
+    bool result = runEBMC(tracePath);
     //if the property is verified, then the state is safe
     return result;
 }

@@ -2,6 +2,7 @@
 #include "VCDValue.hpp"
 #include <iostream>
 #include <random>
+#include <cassert>
 
 std::random_device Value::rd;
 std::mt19937 Value::gen(rd());
@@ -123,6 +124,7 @@ std::string Value::toSyGusString(){
     }
     else if(type == SignalType::BITS){
         std::string str="#b";
+        assert(value.bitVector != nullptr);
         for(auto &bit : *value.bitVector){
             switch (bit)
             {

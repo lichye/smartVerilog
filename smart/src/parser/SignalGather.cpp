@@ -41,7 +41,12 @@ SignalGather::~SignalGather(){
 }
 
 std::vector<Signal>* SignalGather::getAllSignals(){
-    return &signals;
+    std::vector<Signal>* results = new std::vector<Signal>();
+    for(auto &signal : signals){
+        Signal signalCopy = signal;
+        results->push_back(signalCopy);
+    }
+    return results;
 }
 
 Signal SignalGather::getOneSignal(int index){

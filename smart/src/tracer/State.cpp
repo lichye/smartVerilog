@@ -73,7 +73,8 @@ bool State::isUndefined(){
 
 void State::setSignals(std::vector<Signal>* inputSignals){
     for(auto signal : *inputSignals){
-        signals->push_back(signal);
+        Signal signalCopy = signal;
+        signals->push_back(signalCopy);
     }
     signalAllExist = true;
 } 

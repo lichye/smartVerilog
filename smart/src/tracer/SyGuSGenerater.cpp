@@ -58,6 +58,10 @@ void SyGuSGenerater::setSignals(std::vector<Signal>* signals)
 }
 
 void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstraints,bool trueConstrains){
+    if(inputConstraints.size()!=this->signals.size()){
+        std::cout<<"The constraints size is not the same length with the signals"<<std::endl;
+        std::cout<<"The constraints size is "<<inputConstraints.size()<<" and the signals size is "<<this->signals.size()<<std::endl;
+    }
     assert(inputConstraints.size() == this->signals.size());
     //if the constraints are empty then we add the inputConstraints one by one
     if(trueConstrains){
@@ -163,6 +167,7 @@ void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
 
 void SyGuSGenerater::printSysgusPath(std::string path)
 {
+    printDebug("Printing the SyGuS file to the path: "+path,2);
     std::ofstream file;
     file.open(path);
     if(file.is_open()){
@@ -371,6 +376,7 @@ std::string SyGuSGenerater::createBoolGrammar()
 
 std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
 {
+    assert(index < constraints[0].size());
     std::string constraintLine;
     if(!checkConstraintsDefined(index,constraintType)){
         constraintLine+="; ";
@@ -411,7 +417,7 @@ std::string SyGuSGenerater::createKeyGrammar()
             }
         }
         else if(signalType == SignalType::BITS){
-            trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
+            // trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
             trueGrammar += "\t(= MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
         }    
     }

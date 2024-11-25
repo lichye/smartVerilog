@@ -32,6 +32,7 @@ class VerilogChecker {
         
         void setVerilogSrcPath(std::string);
         void setEBMCPath(std::string);
+        void setTracePath(std::string);
 
         void addProperty(State*,PropertyType);
         void addProperty(SygusFunction*,PropertyType);
@@ -39,18 +40,22 @@ class VerilogChecker {
         
         //The check function will return true if the state is reachable
         bool checkStateReachability(State*);
-        bool checkExprSafety(SygusFunction*);
+        bool checkExprSafety(SygusFunction*,std::string);
 
     private:
+        //parameters of ebmc
         std::string verilogSrcPath;
         std::string ebmcPath;
+        std::string tracePath;
+        int bound;
 
         std::vector<std::string> properties;
         std::vector<PropertyType> propertyTypes;
         std::vector<std::string> ebmcPaths;
 
         void writeVerilogFile();
-        bool runEMBC();
+        bool runEBMC();
+        bool runEBMC(std::string);
 };
 
 #endif

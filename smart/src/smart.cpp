@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <cassert>
+#include <ctime>
 #include "Trace.h"
 #include "SyGuSGenerater.h"
 #include "State.h"
@@ -15,7 +16,7 @@ namespace fs = std::filesystem;
 std::vector<Trace*> traces;
 std::vector<Signal>* signals;
 
-SyGuSGenerater sygus;
+SyGuSGenerater* sygus;
 
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
@@ -28,67 +29,27 @@ void generateTrace(std::string Path,TraceType type);
 void addConstraintsfromTrace();
 
 std::string runCVC5Sygus(std::string);
+std::string generateSMTResultPath();
+void setUp();
+int RunSmart();
 
 int main(int argc, char* argv[]){
   
-  bool useTraces = false;
-  bool testGetUnreachable = false;
-
-  SignalGather sg(config_path);
-  VerilogChecker vc(verilogSrcPath,ebmcPath);
-
-  signals = sg.getAllSignals();
-  sygus.setSignals(signals);
-  
-  generateTrace(sim_path,TraceType::SIM);
-  generateTrace(smt_path,TraceType::SMT);
-
-  //add the constraints from the traces to the sygus file
-  addConstraintsfromTrace();
-
-
-  StateMaker sm(&traces,signals);
-
-  State* state = sm.makeRandomState();
-
-  bool checkResult = vc.checkStateReachability(state);
-
-  if(!checkResult){
-    printDebug("Find an unreachable state\n",1);
-    sygus.addConstraints(state,false);
-  }
-  else{
-    printDebug("The state is reachable\n",1);
-    sygus.addConstraints(state,true);
+  int looptime = 1;
+  while (looptime < 10)
+  { 
+    sygus = new SyGuSGenerater();
+    setUp();
+    int result = RunSmart();
+    if(result == 0)
+      break;
+    looptime++;
+    delete sygus;
   }
 
-  sygus.printSysgusPath("sygus.sl");
-  
-  printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
-  
-  std::string sygusResult = runCVC5Sygus("sygus.sl");
-  printDebug("the cvc5 result is: \n"+sygusResult,1);
-
-  SmtFunctionParser smtParser;
-  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
-
-  print("The assertion is : \n");
-  print(func->getBodyVerilogExpr());
-
-  bool safetyResult = vc.checkExprSafety(func);
-  if(safetyResult){
-    print("The assertion is safe\n");
-  }
-  else{
-    print("The assertion is not safe\n");
-  }
-
-  //clean up
-  for(auto &trace : traces){
-    delete trace;
-  }
-
-  return 0;  
+  print("Stop after loop for "+std::to_string(looptime)+" times\n");
+  delete signals;
+  return 0;
 }
 
 
@@ -118,17 +79,21 @@ void generateTrace(std::string Path,TraceType type){
 }
 
 void addConstraintsfromTrace(){
+  assert(signals != nullptr && signals->size()!=0);
+
+  printDebug("Adding constraints from the traces\n",1);
+  printDebug("Number of traces: "+std::to_string(traces.size())+"\n",1);
   for(auto &trace : traces){
+    printDebug("Adding constraints from the trace: "+trace->getPath()+"\n",1);
     std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
-    sygus.addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
-    sygus.addConstraints(*constraints,true);
+    sygus->addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
+    assert(constraints->size() !=0);
+    sygus->addConstraints(*constraints,true);
   }
 }
 
-
-
 std::string runCVC5Sygus(std::string sygusPath){
-  print("Start to run cvc5\n");
+  print("Running cvc5\n");
   std::string command = "cvc5 --lang=sygus2 "+sygusPath;
   std::string result;
   char buffer[128];
@@ -152,4 +117,90 @@ std::string runCVC5Sygus(std::string sygusPath){
     return "";
   }
   return result;
+}
+
+std::string generateSMTResultPath(){
+  auto now = std::chrono::system_clock::now();
+
+  std::time_t timeNow = std::chrono::system_clock::to_time_t(now);
+
+  auto duration = now.time_since_epoch();
+  auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() % 1000;
+
+  std::ostringstream oss;
+  oss << std::put_time(std::localtime(&timeNow), "%Y%m%d_%H%M%S") 
+      << "_" << std::setw(3) << std::setfill('0') << millis;
+
+  std::string filename="";
+  filename +=smt_path;
+  filename +="/ebmc_result_";
+  filename += oss.str();
+  filename +=".vcd";
+  return filename;
+}
+
+void setUp(){
+  printDebug("Run setUp\n",1);
+  SignalGather sg(config_path);
+  signals = sg.getAllSignals();
+  printDebug("Number of signals: "+std::to_string(signals->size())+"\n",1);
+  sygus->setSignals(signals);
+}
+
+int RunSmart(){ 
+  assert(traces.empty());
+  assert(signals != nullptr);
+
+  VerilogChecker vc(verilogSrcPath,ebmcPath);
+
+  generateTrace(sim_path,TraceType::SIM);
+  generateTrace(smt_path,TraceType::SMT);
+
+  //add the constraints from the traces to the sygus file
+  addConstraintsfromTrace();
+
+  if(runRandomState){
+    print("Running random state\n");
+    StateMaker sm(&traces,signals);
+    State* state = sm.makeRandomState();
+    bool checkResult = vc.checkStateReachability(state);
+    if(!checkResult){
+      printDebug("Find an unreachable state\n",1);
+      sygus->addConstraints(state,false);
+    }
+    else{
+      printDebug("The state is reachable\n",1);
+      sygus->addConstraints(state,true);
+    }
+  }
+
+  sygus->printSysgusPath("sygus.sl");
+  
+  printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
+  std::string sygusResult = runCVC5Sygus("sygus.sl");
+
+  print("the cvc5 result is: \n"+sygusResult);
+
+  SmtFunctionParser smtParser;
+  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
+
+  print("Found an assertion:");
+  print(func->getBodyVerilogExpr());
+
+  bool safetyResult = vc.checkExprSafety(func,generateSMTResultPath());
+
+  //clean up
+  for(auto &trace : traces){
+    delete trace;
+  }
+  traces.clear();
+
+  if(safetyResult){
+    print("The assertion is safe\n");
+    return 0;
+  }
+  else{
+    print("The assertion is not safe\n");
+    return 1;
+  }
 }

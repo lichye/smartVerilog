@@ -5,6 +5,7 @@
 #include <string>
 
 #define smartVerbose 0
+#define runRandomState true
 // Verbose level 0: No debug information
 // Verbose level 1: module calls - level
 // Verbose level 2: function calls - level

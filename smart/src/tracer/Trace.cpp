@@ -69,6 +69,8 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
 }
 
 std::vector<std::vector<Value*>>* Trace::getConstraints(std::vector<Signal>* signals){
+    printDebug("Getting constraints from the trace\n",2);
+    printDebug("The signals size: "+std::to_string(signals->size()),3);
     std::vector<std::vector<Value*>>* constraints = new std::vector<std::vector<Value*>>();
     for(Signal s : *signals){
         std::vector<Value*>* values = getSignalValue(s);

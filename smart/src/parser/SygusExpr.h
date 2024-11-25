@@ -18,6 +18,7 @@ enum SygusOperatorType
     BVDIV = 9,
     BOOLNOT = 10,
     BOOLOR = 11,
+    BOOLAND = 12,
 };
 
 enum SygusExprType
