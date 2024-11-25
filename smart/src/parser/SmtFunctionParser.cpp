@@ -49,7 +49,7 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
             SygusExpr* body = parseExpression(stream);
             SygusFunction* function = new SygusFunction(id, parameter_list, body);
             stream.get(); // Consume ')'
-            print("We parse a function : \n" + function->toString() + "\n");
+            printDebug("We parse a function : \n" + function->toString() + "\n",1);
             return function;
         }
         else if(exprType == LIST){

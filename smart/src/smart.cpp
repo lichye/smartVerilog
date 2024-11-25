@@ -54,33 +54,33 @@ int main(int argc, char* argv[]){
   bool checkResult = vc.checkStateReachability(state);
 
   if(!checkResult){
-    print("Find an unreachable state\n");
+    printDebug("Find an unreachable state\n",1);
     sygus.addConstraints(state,false);
   }
   else{
-    print("The state is reachable\n");
+    printDebug("The state is reachable\n",1);
     sygus.addConstraints(state,true);
   }
 
   sygus.printSysgusPath("sygus.sl");
   
-  print("Sygus file generated to "+std::string("sygus.sl")+"\n");
+  printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
   
   std::string sygusResult = runCVC5Sygus("sygus.sl");
-  print("the cvc5 result is: \n"+sygusResult);
+  printDebug("the cvc5 result is: \n"+sygusResult,1);
 
   SmtFunctionParser smtParser;
   SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
 
-  print("The relation is : \n");
+  print("The assertion is : \n");
   print(func->getBodyVerilogExpr());
 
   bool safetyResult = vc.checkExprSafety(func);
   if(safetyResult){
-    print("The relation is safe\n");
+    print("The assertion is safe\n");
   }
   else{
-    print("The relation is not safe\n");
+    print("The assertion is not safe\n");
   }
 
   //clean up
@@ -102,13 +102,13 @@ void generateTrace(std::string Path,TraceType type){
         vcdFiles.push_back(entry.path().string());
       }
     }
-    print("Number of VCD files: " + std::to_string(vcdFileCount)+"\n");
+    printDebug("Number of VCD files: " + std::to_string(vcdFileCount)+"\n",1);
   }
   catch(const std::filesystem::filesystem_error& e){
     std::cerr << "Error: " << e.what() << std::endl;
   }
   if(vcdFileCount > 0){
-    print("List of VCD files: \n");
+    printDebug("List of VCD files: \n",1);
   }
   for(auto &vcdFile : vcdFiles){
     std::cout<<vcdFile<<std::endl;
