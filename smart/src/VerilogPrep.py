@@ -7,7 +7,7 @@ def extract_signals(file_path):
     variable_pattern = r'\b(input|output|inout|reg|wire)(\s+reg)?\s*(\[[^\]]+\])?\s+(\w+)\s*'
     matches = re.finditer(variable_pattern, content)
 
-    parsed_variables = []
+    parsed_signals = []
 
     for match in matches:
         var_type = match.group(1)
@@ -21,7 +21,7 @@ def extract_signals(file_path):
             parsed_variables.append((full_type, bit_range, var_name))
 
     print(f"Extracted variables: {parsed_variables}") 
-    return parsed_variables
+    return parsed_signals
 
 def generate_copy_variables(variables):
     copy_lines = []
@@ -72,7 +72,8 @@ if __name__ == "__main__":
     else:
         input_file = "User/addsub.sv"
         output_file = "runtime/verilog/addsub.sv"
-    
+
+    # firstly we should parse each module???    
 
     # we get all the varibles from the input file
     signals = extract_signals(input_file)
