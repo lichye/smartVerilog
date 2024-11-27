@@ -128,7 +128,7 @@ bool VerilogChecker::checkStateReachability(State* state) {
     writeVerilogFile();
     bool result = runEBMC();
     //if the property is verified, then the state is unreachable
-    return !result;
+    return result;
 }
 
 bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) {
@@ -137,5 +137,6 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
     writeVerilogFile();
     bool result = runEBMC(tracePath);
     //if the property is verified, then the state is safe
+    printDebug("The safety result is: "+std::to_string(result),1);
     return result;
 }

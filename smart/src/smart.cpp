@@ -27,11 +27,10 @@ std::string ebmcPath = "runtime/ebmc/addsub.sv";
 
 void generateTrace(std::string Path,TraceType type); 
 void addConstraintsfromTrace();
-
 std::string runCVC5Sygus(std::string);
 std::string generateSMTResultPath();
 void setUp();
-int RunSmart();
+int RunSmart(int);
 
 int main(int argc, char* argv[]){
   
@@ -40,7 +39,7 @@ int main(int argc, char* argv[]){
   { 
     sygus = new SyGuSGenerater();
     setUp();
-    int result = RunSmart();
+    int result = RunSmart(looptime);
     if(result == 0)
       break;
     looptime++;
@@ -147,7 +146,7 @@ void setUp(){
   sygus->setSignals(signals);
 }
 
-int RunSmart(){ 
+int RunSmart(int loopTime){ 
   assert(traces.empty());
   assert(signals != nullptr);
 
@@ -160,17 +159,20 @@ int RunSmart(){
   addConstraintsfromTrace();
 
   if(runRandomState){
-    print("Running random state\n");
+    print("Try to get an unreachable state\n");
     StateMaker sm(&traces,signals);
     State* state = sm.makeRandomState();
-    bool checkResult = vc.checkStateReachability(state);
-    if(!checkResult){
-      printDebug("Find an unreachable state\n",1);
-      sygus->addConstraints(state,false);
-    }
-    else{
-      printDebug("The state is reachable\n",1);
-      sygus->addConstraints(state,true);
+    bool checkResult = false;
+    while(!checkResult){
+      checkResult = vc.checkStateReachability(state);
+      if(checkResult){
+        printDebug("Find an unreachable state\n",1);
+        sygus->addConstraints(state,false);
+      }
+      else{
+        printDebug("The state is reachable\n",1);
+        // sygus->addConstraints(state,true);
+      }
     }
   }
 
@@ -179,12 +181,12 @@ int RunSmart(){
   printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
   std::string sygusResult = runCVC5Sygus("sygus.sl");
 
-  print("the cvc5 result is: \n"+sygusResult);
+  printDebug("the cvc5 result is: \n"+sygusResult,1);
 
   SmtFunctionParser smtParser;
   SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
 
-  print("Found an assertion:");
+  print("Found an assertion in "+std::to_string(loopTime)+" times: \n");
   print(func->getBodyVerilogExpr());
 
   bool safetyResult = vc.checkExprSafety(func,generateSMTResultPath());

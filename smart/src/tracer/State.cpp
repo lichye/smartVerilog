@@ -87,5 +87,9 @@ unsigned int State::signalSize(){
 }
 
 std::vector<Value*> State::getValues(){
-    return values;
+    std::vector<Value*> values_copy;
+    for(auto value : values){
+        values_copy.push_back(value->clone());
+    }
+    return values_copy;
 }

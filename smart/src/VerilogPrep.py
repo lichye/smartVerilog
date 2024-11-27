@@ -1,13 +1,13 @@
 import re
 import sys
 
-def extract_signals(file_path):
+def extract_variables(file_path):
     with open(file_path, 'r') as file:
         content = file.read()
     variable_pattern = r'\b(input|output|inout|reg|wire)(\s+reg)?\s*(\[[^\]]+\])?\s+(\w+)\s*'
     matches = re.finditer(variable_pattern, content)
 
-    parsed_signals = []
+    parsed_variables = set()
 
     for match in matches:
         var_type = match.group(1)
@@ -18,10 +18,11 @@ def extract_signals(file_path):
         full_type = f"{var_type}{reg_type}".strip()
         var_name_list = [name.strip().rstrip(",") for name in var_names.split(",")] 
         for var_name in var_name_list:
-            parsed_variables.append((full_type, bit_range, var_name))
+            if var_name not in parsed_variables:
+                parsed_variables.add((full_type, bit_range, var_name))
 
     print(f"Extracted variables: {parsed_variables}") 
-    return parsed_signals
+    return parsed_variables
 
 def generate_copy_variables(variables):
     copy_lines = []
@@ -64,7 +65,6 @@ def insert_copy_variables_and_always_block(file_path, copy_lines, always_block, 
 
     print(f"Generated file with copy variables and always block: {output_file_path}")
 
-
 if __name__ == "__main__":
     if(len(sys.argv) ==3):
         input_file = sys.argv[1]
@@ -72,11 +72,10 @@ if __name__ == "__main__":
     else:
         input_file = "User/addsub.sv"
         output_file = "runtime/verilog/addsub.sv"
-
-    # firstly we should parse each module???    
+    
 
     # we get all the varibles from the input file
-    signals = extract_signals(input_file)
-    copy_lines = generate_copy_variables(signals)
-    always_block = generate_always_block(signals)
+    variables = extract_variables(input_file)
+    copy_lines = generate_copy_variables(variables)
+    always_block = generate_always_block(variables)
     insert_copy_variables_and_always_block(input_file, copy_lines, always_block, output_file)
