@@ -1,3 +1,6 @@
+Time_Left:
+# 8 meetings before submission
+
 Working_ON:
 # DEBUGING
 

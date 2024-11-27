@@ -29,7 +29,7 @@ void generateTrace(std::string Path,TraceType type);
 void addConstraintsfromTrace();
 std::string runCVC5Sygus(std::string);
 std::string generateSMTResultPath();
-void setUp();
+void setUpSignal();
 int RunSmart(int);
 
 int main(int argc, char* argv[]){
@@ -38,7 +38,8 @@ int main(int argc, char* argv[]){
   while (looptime < 10)
   { 
     sygus = new SyGuSGenerater();
-    setUp();
+    setUpSignal();
+    
     int result = RunSmart(looptime);
     if(result == 0)
       break;
@@ -51,6 +52,68 @@ int main(int argc, char* argv[]){
   return 0;
 }
 
+int RunSmart(int loopTime){ 
+  assert(traces.empty());
+  assert(signals != nullptr);
+
+  sygus->setSignals(signals);
+
+  VerilogChecker vc(verilogSrcPath,ebmcPath);
+
+  generateTrace(sim_path,TraceType::SIM);
+  generateTrace(smt_path,TraceType::SMT);
+
+  //add the constraints from the traces to the sygus file
+  addConstraintsfromTrace();
+
+  if(runRandomState){
+    print("Try to get an unreachable state\n");
+    StateMaker sm(&traces,signals);
+    State* state = sm.makeRandomState();
+    bool checkResult = false;
+    while(!checkResult){
+      checkResult = vc.checkStateReachability(state);
+      if(checkResult){
+        printDebug("Find an unreachable state\n",1);
+        sygus->addConstraints(state,false);
+      }
+      else{
+        printDebug("The state is reachable\n",1);
+        // sygus->addConstraints(state,true);
+      }
+    }
+  }
+
+  sygus->printSysgusPath("sygus.sl");
+  
+  printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
+  std::string sygusResult = runCVC5Sygus("sygus.sl");
+
+  printDebug("the cvc5 result is: \n"+sygusResult,1);
+
+  SmtFunctionParser smtParser;
+  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
+
+  print("Found an assertion in "+std::to_string(loopTime)+" times: \n");
+  print(func->getBodyVerilogExpr());
+
+  bool safetyResult = vc.checkExprSafety(func,generateSMTResultPath());
+
+  //clean up
+  for(auto &trace : traces){
+    delete trace;
+  }
+  traces.clear();
+
+  if(safetyResult){
+    print("The assertion is safe\n");
+    return 0;
+  }
+  else{
+    print("The assertion is not safe\n");
+    return 1;
+  }
+}
 
 void generateTrace(std::string Path,TraceType type){
   int vcdFileCount = 0;
@@ -138,71 +201,10 @@ std::string generateSMTResultPath(){
   return filename;
 }
 
-void setUp(){
+void setUpSignal(){
   printDebug("Run setUp\n",1);
   SignalGather sg(config_path);
   signals = sg.getAllSignals();
   printDebug("Number of signals: "+std::to_string(signals->size())+"\n",1);
-  sygus->setSignals(signals);
 }
 
-int RunSmart(int loopTime){ 
-  assert(traces.empty());
-  assert(signals != nullptr);
-
-  VerilogChecker vc(verilogSrcPath,ebmcPath);
-
-  generateTrace(sim_path,TraceType::SIM);
-  generateTrace(smt_path,TraceType::SMT);
-
-  //add the constraints from the traces to the sygus file
-  addConstraintsfromTrace();
-
-  if(runRandomState){
-    print("Try to get an unreachable state\n");
-    StateMaker sm(&traces,signals);
-    State* state = sm.makeRandomState();
-    bool checkResult = false;
-    while(!checkResult){
-      checkResult = vc.checkStateReachability(state);
-      if(checkResult){
-        printDebug("Find an unreachable state\n",1);
-        sygus->addConstraints(state,false);
-      }
-      else{
-        printDebug("The state is reachable\n",1);
-        // sygus->addConstraints(state,true);
-      }
-    }
-  }
-
-  sygus->printSysgusPath("sygus.sl");
-  
-  printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
-  std::string sygusResult = runCVC5Sygus("sygus.sl");
-
-  printDebug("the cvc5 result is: \n"+sygusResult,1);
-
-  SmtFunctionParser smtParser;
-  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
-
-  print("Found an assertion in "+std::to_string(loopTime)+" times: \n");
-  print(func->getBodyVerilogExpr());
-
-  bool safetyResult = vc.checkExprSafety(func,generateSMTResultPath());
-
-  //clean up
-  for(auto &trace : traces){
-    delete trace;
-  }
-  traces.clear();
-
-  if(safetyResult){
-    print("The assertion is safe\n");
-    return 0;
-  }
-  else{
-    print("The assertion is not safe\n");
-    return 1;
-  }
-}
