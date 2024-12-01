@@ -33,7 +33,8 @@ void setUpSignal();
 int RunSmart(int);
 
 int main(int argc, char* argv[]){
-  
+  StateMaker::setSeed(42);
+
   int looptime = 1;
   while (looptime < 10)
   { 
@@ -69,12 +70,11 @@ int RunSmart(int loopTime){
   if(runRandomState){
     print("Try to get an unreachable state\n");
     StateMaker sm(&traces,signals);
+
     State* state = sm.makeRandomState();
+    
     bool checkResult = false;
     while(!checkResult){
-      print("Try to get an unreachable state\n");
-      print(state->toString());
-
       checkResult = vc.checkStateReachability(state);
       if(checkResult){
         printDebug("Find an unreachable state\n",1);

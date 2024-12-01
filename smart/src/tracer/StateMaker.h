@@ -12,10 +12,11 @@ class StateMaker
         StateMaker(std::vector<Trace*>*,std::vector<Signal>*);
         ~StateMaker();
         State* makeRandomState();
+        static void setSeed(int);
+
     private:
         std::vector<Trace*> traces;
         std::vector<Signal>* signals;
-        int seed;
         //this is random values gathered
         std::vector<Value*> randomValues;
         void checkState();

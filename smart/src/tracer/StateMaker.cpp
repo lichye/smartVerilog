@@ -3,7 +3,6 @@
 // StateMaker class function definitions below
 StateMaker::StateMaker(){
     printDebug("StateMaker with no arguments Constructor called",10);
-    seed = -1;
 }
 
 StateMaker::StateMaker(std::vector<Signal>* signals){
@@ -49,4 +48,8 @@ State* StateMaker::makeRandomState(){
         }
     }
     return state;
+}
+
+void StateMaker::setSeed(int seed){
+    Value::setSeed(seed);
 }
