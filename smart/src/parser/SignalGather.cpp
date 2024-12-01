@@ -9,11 +9,11 @@ SignalGather::SignalGather(){
     std::set<std::string> sectionList = reader.Sections();
     for(auto &section : sectionList){
         Signal signal;
-        signal.moduleName = reader.Get(section,"moduleName");
-        signal.name = reader.Get(section,"signalName");
+        signal.moduleName = reader.Get(section,"modulename");
+        signal.name = reader.Get(section,"signalname");
         signal.lindex = std::stoi(reader.Get(section,"lindex"));
         signal.rindex = std::stoi(reader.Get(section,"rindex"));
-        signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signalType")));
+        signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signaltype")));
         signals.push_back(signal);
     }
 }
@@ -23,11 +23,11 @@ SignalGather::SignalGather(std::string path){
     std::set<std::string> sectionList = reader.Sections();
     for(auto &section : sectionList){
         Signal signal;
-        signal.moduleName = reader.Get(section,"moduleName");
-        signal.name = reader.Get(section,"signalName");
+        signal.moduleName = reader.Get(section,"modulename");
+        signal.name = reader.Get(section,"signalname");
         signal.lindex = std::stoi(reader.Get(section,"lindex"));
         signal.rindex = std::stoi(reader.Get(section,"rindex"));
-        signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signalType")));
+        signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signaltype")));
         signals.push_back(signal);
     }
 }

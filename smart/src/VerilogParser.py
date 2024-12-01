@@ -1,4 +1,5 @@
 import re
+import configparser
 
 def split_modules(file_path):
     try:
@@ -25,7 +26,7 @@ def extract_signals(content):
     variable_pattern = r'\b(input|output|inout|reg|wire)(\s+reg)?\s*(\[[^\]]+\])?\s+(\w+)\s*'
     matches = re.finditer(variable_pattern, content)
     
-    parsed_signals = []
+    parsed_signals = set()
 
     for match in matches:
         var_type = match.group(1)
@@ -36,7 +37,8 @@ def extract_signals(content):
         full_type = f"{var_type}{reg_type}".strip()
         var_name_list = [name.strip().rstrip(",") for name in var_names.split(",")] 
         for var_name in var_name_list:
-            parsed_signals.append((full_type, bit_range, var_name))
+            if var_name not in parsed_signals:
+                parsed_signals.add((full_type, bit_range, var_name))
 
     print(f"Extracted variables: {parsed_signals}") 
     return parsed_signals
@@ -100,12 +102,10 @@ def insert_copy_variables_and_always_block(module, copy_lines, always_block):
    
 def write_to_file(file_path, modules):
     try:
-        with open(file_path, 'w') as file:
-            for module in modules:
-                # Join the lines of each module and write them to the file
-                file.write("\n".join(module))
-                file.write("\n\n")  # Separate modules with an extra newline for clarity
-        print(f"Modified Verilog content written to {file_path}")
+       with open(file_path, 'w') as file:
+        for module in modules:
+            for line in module:
+                file.write(line + '\n')
     except Exception as e:
         print(f"Error writing to file {file_path}: {e}")
 
@@ -116,16 +116,67 @@ def parse_always_block(module, signals):
     return all_blocks
 
 def write_to_ini(module_name,variables,signals):
+    print("module_name: ",module_name)
+    print("variables: ",variables)
+    print("signals: ",signals)
+    file_path = "User/test.ini"
+
+    config = configparser.ConfigParser()
+
+    for variable in variables:
+
+        pick_signal =[]
+        for signal in signals:
+            if variable == signal[2]:
+                pick_signal = signal
+                break
+        print("pick_signal: ",pick_signal)
+
+
+        bit_range = pick_signal[1]
+
+        if bit_range.startswith('[') and bit_range.endswith(']'):
+            lindex, rindex = map(int, bit_range[1:-1].split(':'))
+            signalType = 1
+        else:
+            lindex, rindex = -1, -1
+            signalType = 0
+       
+        config[variable]={
+            "moduleName":module_name,
+            "signalName":variable,
+            "signalType":signalType,
+            "lindex":lindex,
+            "rindex":rindex
+        }
+        variable_copy = variable + "_copy"
+        config[variable_copy]={
+            "moduleName":module_name,
+            "signalName":variable_copy,
+            "signalType":signalType,
+            "lindex":lindex,
+            "rindex":rindex
+        }
+
+    with open(file_path, 'w') as configfile:
+        config.write(configfile)
+
+    print(f"INI 文件已写入: {file_path}")
+
 
 
 # Test the function
-if __name__ == "__main__":
-    file_path = "addsub.sv"
+if  __name__ == "__main__":
+    file_path = "User/addsub.sv"
     modules = split_modules(file_path)
-    result_file_path = "addsub_modified.sv"
+    result_file_path = "test_modified.sv"
 
     new_module = []
+
+    interesting_varibales_collections = []
+
     for module in modules:
+        print("Module name: ", module['id'])
         # this will be a list of complex defined signals
         signals = extract_signals(module['content'])
         
@@ -133,8 +184,17 @@ if __name__ == "__main__":
         interesting_varibales = extrace_interesting_signals(module['content'])
 
         copy_signals = generate_copy_variables(signals)
+
         assign_always_block = generate_always_block(signals)
+
         modified_module_lines = insert_copy_variables_and_always_block(module['content'].split("\n"), copy_signals, assign_always_block)
+
         new_module.append(modified_module_lines)
-        # we test only the first module
+
+        interesting_varibales_collections.append({"interesting":interesting_varibales,"signals":signals,"module_name":module['id']})
+    
     write_to_file(result_file_path, new_module)
+
+    #we just fucus on the first module's first always block
+    write_to_ini(interesting_varibales_collections[0]["module_name"],interesting_varibales_collections[0]["interesting"][0],interesting_varibales_collections[0]["signals"])
+    # print(interesting_varibales_collections[0])

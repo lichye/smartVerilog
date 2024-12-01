@@ -1,22 +1,25 @@
 Time_Left:
-# 8 weeks before submission
+# 7 weeks before submission
 
-Working_ON:
-# DEBUGING
-## make a vector to maintain unreachable state
-
-Plan:
+Found out:
 # Check about the next assertion
-
-
-# Write a new preprocessing code
-## Automatic layer analysis 
-## Automatic Signal copyer
-## Automatic variables poicker for sygus 
-## Support for multiply layers of design
+### there does not exist good experssion for the states updates???
+### |-> support for last state check
+### |=> support for next state check
 
 # Evalute the assertions
 ## Fix random seed to make the result the same
+
+Working_ON:
+# Write a new preprocessing code
+## Automatic variables poicker for sygus 
+### would trigger effenciency issue
+
+Plan:
+
+
+
+# Evalute the assertions
 ## Mutate the verilog circut and check the assertion is violate
 ## Check multiply false states
 ## Benchmark
