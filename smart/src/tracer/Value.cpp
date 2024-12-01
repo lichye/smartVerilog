@@ -7,6 +7,7 @@
 std::random_device Value::rd;
 std::mt19937 Value::gen(rd());
 std::uniform_int_distribution<> Value::dis(0, 1);
+int Value::seed = -1;
 
 Value::Value(){
     type = SignalType::UNKNOWNSINGALTYPES;
@@ -229,6 +230,9 @@ Value* Value::makeXValue(SignalType type,int bitWidth){
 
 Value* Value::makeRandomValue(SignalType type,int bitWidth){
     Value* value = new Value();
+    
+    gen.seed(42);
+
     value->type = type;
     if(type == SignalType::BOOLEAN){
         value->value.bitValue = dis(gen) == 0 ? BitType::ZERO : BitType::ONE;
@@ -244,3 +248,4 @@ Value* Value::makeRandomValue(SignalType type,int bitWidth){
     }
     return value;
 }
+

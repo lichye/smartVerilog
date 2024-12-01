@@ -72,6 +72,9 @@ int RunSmart(int loopTime){
     State* state = sm.makeRandomState();
     bool checkResult = false;
     while(!checkResult){
+      print("Try to get an unreachable state\n");
+      print(state->toString());
+
       checkResult = vc.checkStateReachability(state);
       if(checkResult){
         printDebug("Find an unreachable state\n",1);

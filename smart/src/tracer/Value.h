@@ -9,6 +9,7 @@ class Value{
     public:
         static Value* makeXValue(SignalType,int);
         static Value* makeRandomValue(SignalType,int);
+        
 
         Value(VCDValue* value);
         Value();
@@ -24,6 +25,7 @@ class Value{
         static std::random_device rd;
         static std::mt19937 gen;
         static std::uniform_int_distribution<> dis;
+        static int seed;
 
         SignalType type;
         union valstore{
