@@ -119,7 +119,7 @@ def write_to_ini(module_name,variables,signals):
     print("module_name: ",module_name)
     print("variables: ",variables)
     print("signals: ",signals)
-    file_path = "User/test.ini"
+    file_path = "User/config.ini"
 
     config = configparser.ConfigParser()
 
@@ -193,7 +193,7 @@ if  __name__ == "__main__":
 
         interesting_varibales_collections.append({"interesting":interesting_varibales,"signals":signals,"module_name":module['id']})
     
-    write_to_file(result_file_path, new_module)
+    # write_to_file(result_file_path, new_module)
 
     #we just fucus on the first module's first always block
     write_to_ini(interesting_varibales_collections[0]["module_name"],interesting_varibales_collections[0]["interesting"][0],interesting_varibales_collections[0]["signals"])
