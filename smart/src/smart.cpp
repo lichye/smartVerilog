@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
   StateMaker::setSeed(42);
 
   int looptime = 1;
-  while (looptime < 10)
+  while (true)
   { 
     sygus = new SyGuSGenerater();
     setUpSignal();

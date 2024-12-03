@@ -10,14 +10,11 @@ Found out:
 # Evalute the assertions
 ## Fix random seed to make the result the same
 
-Working_ON:
 # Write a new preprocessing code
 ## Automatic variables poicker for sygus 
 ### would trigger effenciency issue
 
 Plan:
-
-
 
 # Evalute the assertions
 ## Mutate the verilog circut and check the assertion is violate

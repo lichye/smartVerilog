@@ -98,6 +98,8 @@ sim_clean:
 
 smart_clean:
 	rm -rf sygus.sl
+	rm -rf runtime/sim_results/*.vcd
+	rm -rf runtime/smt_results/*.vcd
 
 assertion_clean:
 	rm -rf $(ASSERTION_TARGET)
