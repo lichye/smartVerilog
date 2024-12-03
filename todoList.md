@@ -26,6 +26,8 @@ Plan:
 ### a large case test
 
 # Write the paper - Overleaf
+## Research paper
+## Tool paper
 ---------------------------
 
 

@@ -88,7 +88,7 @@ all_clean:
 	rm -rf sim_build
 	rm -rf $(SMART_TARGET)
 	rm -rf sygus.sl
-
+	rm -rf User/*
 sim_clean:
 	rm -rf sim_build
 	rm -rf runtime/__pycache__

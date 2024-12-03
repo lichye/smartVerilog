@@ -8,24 +8,25 @@ compiled = False
 
 prep = False
 
+file_name = "/addsub.sv"
+
 current_path = os.getcwd()
 
 user_config_path = current_path+"/User/config.ini"
 
 user_verilog_path = current_path+"/User"
 
-user_verilog_file = user_verilog_path+"/addsub.sv"
+user_verilog_file = user_verilog_path + file_name
 
 runtime_ebmc_path = current_path+"/runtime/ebmc/"
 
 runtime_verilog_path = current_path+"/runtime/verilog"
 
-runtime_verilog_file = runtime_verilog_path+"/addsub.sv"
+runtime_verilog_file = runtime_verilog_path+file_name
 
 sim_target_dir = current_path+"/runtime/sim_results"
 
 smt_target_dir = current_path+"/runtime/smt_results"
-
 
 def compile():
     global compiled
@@ -76,6 +77,14 @@ def clean():
     prep = False
     print("Finish Cleaning")
 
+def trace():
+    global compiled
+    if(not compiled):
+        print("Has not compiled, run compile first")
+        compile()
+    print("Running Sygus File Generation")
+    subprocess.run(["./smart.out","--trace"])
+
 def VerilogPrep():
     print("Running Verilog Code Preprocessing")
     result = subprocess.run(["python", "src/VerilogPrep.py", user_verilog_file, runtime_verilog_file],
@@ -84,13 +93,41 @@ def VerilogPrep():
 
     print("Finished Verilog Code Preprocessing")
 
+def smart():
+    subprocess.run(["./smart.out"])
 
+def runner():
+    print("This file path is "+current_path)
+    while True:
+        cmd = input("")
+        if cmd == "exit" or cmd == "quit" or cmd == "q" or cmd == "e": 
+            return
+        elif cmd == "compile":
+            compile()
+        elif cmd == "clear":
+            subprocess.run(["clear"])
+        elif cmd == "clean" or cmd == "c":
+            clean()
+        elif cmd == "sim":
+            sim()
+        elif cmd == "smart":
+            smart()
+        elif cmd == "trace" or cmd == "t":
+            trace()
+        elif cmd == "prep":
+            VerilogPrep()
+        elif cmd == "all":
+            VerilogPrep()
+            compile()
+            sim()
+        else:
+            print("Invalid Command")
 
 def setup():
     if not os.path.exists(current_path+"/runtime"):
         os.makedirs(current_path+"/runtime")
-    subprocess.run(["cp", current_path+"/src/runtime/sim.py",current_path+"/runtime/sim.py"])
-    subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
+    subprocess.run(["cp", user_verilog_path+"/sim.py",current_path+"/runtime/sim.py"])
+    # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
     if not os.path.exists(sim_target_dir):
         os.makedirs(sim_target_dir)
     if not os.path.exists(smt_target_dir):
@@ -100,9 +137,8 @@ def setup():
     if not os.path.exists(runtime_ebmc_path):
         os.makedirs(runtime_ebmc_path)
     VerilogPrep()
-
    
 if __name__ == "__main__":
     setup()
-    compile()
     sim()
+    runner()
