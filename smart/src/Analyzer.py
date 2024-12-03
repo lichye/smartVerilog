@@ -1,5 +1,6 @@
 import re
 import configparser
+import sys
 
 def split_modules(file_path):
     try:
@@ -66,11 +67,16 @@ def extrace_interesting_signals(content):
     return result;    
     
 def generate_copy_variables(variables):
+    print(f"Generating copy variables for: {variables}")
     copy_lines = []
+    exist_variables = set()
     for _, bit_range, var_name in variables:
+        if var_name in exist_variables:
+            continue
         bit_range_str = f"{bit_range} " if bit_range else ""
-        copy_line = f"\treg {bit_range_str}{var_name}_copy;\n"
+        copy_line = f"\treg {bit_range_str}{var_name}_copy;"
         copy_lines.append(copy_line)
+        exist_variables.add(var_name)
     return copy_lines
 
 def generate_always_block(variables, clk_signal="clk"):
@@ -88,7 +94,9 @@ def insert_copy_variables_and_always_block(module, copy_lines, always_block):
             insert_index = i + 1
             break
 
-    modified_lines = module[:insert_index] + copy_lines + ["\n"] + module[insert_index:]
+    insert_index = insert_index + 1
+
+    modified_lines = module[:insert_index] + copy_lines + module[insert_index:]
 
     endmodule_index = len(modified_lines)
     for i, line in enumerate(modified_lines):
@@ -167,9 +175,17 @@ def write_to_ini(module_name,variables,signals):
 
 # Test the function
 if  __name__ == "__main__":
-    file_path = "User/addsub.sv"
-    modules = split_modules(file_path)
-    result_file_path = "test_modified.sv"
+    
+    if(len(sys.argv) ==3):
+        input_file = sys.argv[1]
+        output_file = sys.argv[2]
+    else:
+        print("Should give verilog design path")
+        print(len(sys.argv))
+        input_file = "User/addsub.sv"
+        output_file = "runtime/verilog/addsub.sv"
+
+    modules = split_modules(input_file)
 
     new_module = []
 
@@ -193,8 +209,8 @@ if  __name__ == "__main__":
 
         interesting_varibales_collections.append({"interesting":interesting_varibales,"signals":signals,"module_name":module['id']})
     
-    # write_to_file(result_file_path, new_module)
+    write_to_file(output_file, new_module)
 
     #we just fucus on the first module's first always block
-    write_to_ini(interesting_varibales_collections[0]["module_name"],interesting_varibales_collections[0]["interesting"][0],interesting_varibales_collections[0]["signals"])
+    # write_to_ini(interesting_varibales_collections[0]["module_name"],interesting_varibales_collections[0]["interesting"][0],interesting_varibales_collections[0]["signals"])
     # print(interesting_varibales_collections[0])

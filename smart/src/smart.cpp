@@ -29,7 +29,7 @@ void generateTrace(std::string Path,TraceType type);
 void addConstraintsfromTrace();
 std::string runCVC5Sygus(std::string);
 std::string generateSMTResultPath();
-void setUpSignal();
+void setUpSignal(bool);
 int RunSmart(int);
 
 int main(int argc, char* argv[]){
@@ -39,8 +39,17 @@ int main(int argc, char* argv[]){
   while (true)
   { 
     sygus = new SyGuSGenerater();
-    setUpSignal();
+
+    generateTrace(sim_path,TraceType::SIM);
+    generateTrace(smt_path,TraceType::SMT);
+
+    setUpSignal(false);
     
+    if(signals->size() == 0){
+      print("No signals found\n");
+      return 1;
+    }
+
     int result = RunSmart(looptime);
     if(result == 0)
       break;
@@ -54,15 +63,13 @@ int main(int argc, char* argv[]){
 }
 
 int RunSmart(int loopTime){ 
-  assert(traces.empty());
+  assert(!traces.empty());
   assert(signals != nullptr);
 
   sygus->setSignals(signals);
 
   VerilogChecker vc(verilogSrcPath,ebmcPath);
 
-  generateTrace(sim_path,TraceType::SIM);
-  generateTrace(smt_path,TraceType::SMT);
 
   //add the constraints from the traces to the sygus file
   addConstraintsfromTrace();
@@ -204,10 +211,19 @@ std::string generateSMTResultPath(){
   return filename;
 }
 
-void setUpSignal(){
-  printDebug("Run setUp\n",1);
-  SignalGather sg(config_path);
-  signals = sg.getAllSignals();
-  printDebug("Number of signals: "+std::to_string(signals->size())+"\n",1);
+void setUpSignal(bool userDefined){
+  if(userDefined){
+    printDebug("Run setUp\n",1);
+    SignalGather sg(config_path);
+    signals = sg.getAllSignals();
+    printDebug("Number of signals: "+std::to_string(signals->size())+"\n",1);
+  }
+  else{
+    if(traces.size() == 0){
+      print("No traces found\n");
+      return;
+    }
+    signals = traces[0]->getAllSignals(); 
+  }
 }
 
