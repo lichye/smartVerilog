@@ -187,6 +187,7 @@ std::string runCVC5Sygus(std::string sygusPath){
     return "";
   }
   try{
+    print("Reading cvc5 output\n");
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
             result += buffer;
     }
