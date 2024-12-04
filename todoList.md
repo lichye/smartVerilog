@@ -1,5 +1,7 @@
 Time_Left:
-# 7 weeks before submission
+# 8 weeks before submission
+## CAV2025 submission ddl delay to 1/31 (from 1/20)
+## annual leave from Edinburgh on from 1/25?
 
 Found out:
 # Check about the next assertion
@@ -17,6 +19,9 @@ Found out:
 # Sygus
 ## different order of parameter would lead to different solving time
 ## would more unreachable state be helpful to make the correct abstrace module??
+
+# cocotb
+## How to simulate two trace
 
 Plan:
 # Setup the benchmark
