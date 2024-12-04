@@ -14,10 +14,16 @@ Found out:
 ## Automatic variables poicker for sygus 
 ### would trigger effenciency issue
 
-Plan:
+# Sygus
+## different order of parameter would lead to different solving time
 
+
+Plan:
+# Setup the benchmark
 # Evalute the assertions
+## we might get different assertions when we run the sygus as there is different possible
 ## Mutate the verilog circut and check the assertion is violate
+### ideas about waht is mutation and how is the mutation
 ## Check multiply false states
 ## Benchmark
 ### realworld && Companying work
@@ -27,6 +33,7 @@ Plan:
 
 # Write the paper - Overleaf
 ## Research paper
+### what is the story
 ## Tool paper
 ---------------------------
 

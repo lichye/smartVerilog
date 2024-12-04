@@ -66,8 +66,11 @@ def VerilogPrep(current_path, file_name):
     
     print("Finished Verilog Code Preprocessing")
 
-def smart():
-    subprocess.run(["./smart.out"])
+def smart(current_path, file_name):
+    src_file = current_path+"/runtime/verilog/"+file_name
+    module_name = file_name.split(".")[0]
+    print("module name: ", module_name)
+    subprocess.run(["./smart.out",src_file,module_name])
 
 def setup(current_path):
     if not os.path.exists(current_path+"/runtime"):
@@ -94,7 +97,22 @@ def setup(current_path):
     if not os.path.exists(runtime_ebmc_path):
         os.makedirs(runtime_ebmc_path)
     
-   
+def runner(current_path, file_name):
+    while True:
+        cmd = input("Enter Command: ")
+        if cmd == "compile":
+            compile()
+        elif cmd == "sim":
+            sim()
+        elif cmd == "clean":
+            clean()
+        elif cmd == "exit" or cmd == "quit" or cmd == "q" or cmd == "e": 
+            break
+        elif cmd == "smart" or cmd == "s":
+            smart(current_path, file_name)
+        else:
+            print("Invalid Command")
+
 if __name__ == "__main__":
     file_name = ""
 
@@ -107,4 +125,5 @@ if __name__ == "__main__":
         file_name = sys.argv[1]
     setup(current_path)
     VerilogPrep(current_path, file_name)
-    sim(current_path,file_name)
+    print("finish Verilog Prep and Setup")
+    runner(current_path, file_name)

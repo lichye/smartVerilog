@@ -21,8 +21,9 @@ SyGuSGenerater* sygus;
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
 std::string config_path = "User/config.ini";
-std::string verilogSrcPath = "runtime/verilog/addsub.sv";
-std::string ebmcPath = "runtime/ebmc/addsub.sv";
+std::string verilogSrcPath = "";
+std::string ebmcPath = "runtime/ebmc/formal.sv";
+std::string moduleName = "";
 
 
 void generateTrace(std::string Path,TraceType type); 
@@ -34,6 +35,14 @@ int RunSmart(int);
 
 int main(int argc, char* argv[]){
   StateMaker::setSeed(42);
+  if(argc!=3){
+    print("Usage: ./smart <verilog_file_name> <module_name>\n");
+    return 1;
+  }
+  else{
+    verilogSrcPath = argv[1];
+    moduleName = argv[2];
+  }
 
   int looptime = 1;
   while (true)
@@ -223,7 +232,7 @@ void setUpSignal(bool userDefined){
       print("No traces found\n");
       return;
     }
-    signals = traces[0]->getAllSignals(); 
+    signals = traces[0]->getAllSignals(moduleName); 
   }
 }
 
