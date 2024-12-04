@@ -94,7 +94,8 @@ def insert_copy_variables_and_always_block(module, copy_lines, always_block):
             insert_index = i + 1
             break
 
-    insert_index = insert_index + 1
+    if insert_index == 0:
+        insert_index = insert_index + 1
 
     modified_lines = module[:insert_index] + copy_lines + module[insert_index:]
 

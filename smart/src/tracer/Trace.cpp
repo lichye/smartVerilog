@@ -99,6 +99,10 @@ std::vector<Signal>* Trace::getAllSignals(std::string moduleName){
             signals->push_back(signalCopy);
         }
     }
+    if(signals->size() == 0){
+        print("We do not have any signals for the module: "+moduleName);
+    }
+    assert(signals->size() != 0);
     return signals;
 }
 

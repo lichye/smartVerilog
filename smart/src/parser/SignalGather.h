@@ -17,7 +17,8 @@ class SignalGather
         std::vector<Signal>* getAllSignals();
         Signal getOneSignal(int);
         int getSignalSize();
-        
+        bool hasSignal();
+
     private:
         std::vector<Signal> signals;
         

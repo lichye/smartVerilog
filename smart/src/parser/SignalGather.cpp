@@ -21,6 +21,10 @@ SignalGather::SignalGather(){
 SignalGather::SignalGather(std::string path){
     inih::INIReader reader(path);
     std::set<std::string> sectionList = reader.Sections();
+    if(sectionList.size() == 0){
+        print("No signals found, so use the all Signal model\n");
+        return;
+    }
     for(auto &section : sectionList){
         Signal signal;
         signal.moduleName = reader.Get(section,"modulename");
@@ -59,4 +63,8 @@ Signal SignalGather::getOneSignal(int index){
 
 int SignalGather::getSignalSize(){
     return signals.size();
+}
+
+bool SignalGather::hasSignal(){
+    return signals.size() > 0;
 }

@@ -103,7 +103,7 @@ def runner(current_path, file_name):
         if cmd == "compile":
             compile()
         elif cmd == "sim":
-            sim()
+            sim(current_path,file_name)
         elif cmd == "clean":
             clean()
         elif cmd == "exit" or cmd == "quit" or cmd == "q" or cmd == "e": 
