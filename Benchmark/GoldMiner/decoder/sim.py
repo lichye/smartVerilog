@@ -1,6 +1,9 @@
 import random
 import os
 import sys
+import glob
+import shutil
+import subprocess
 
 import cocotb
 from cocotb.clock import Clock
@@ -10,44 +13,65 @@ from cocotb.triggers import RisingEdge, Timer
 from cocotb.binary import BinaryValue
 from pathlib import Path
 
-
-
 @cocotb.test()
 async def my_first_test(dut):
+    """Test a design without clock signals."""
     random.seed(42)
-    """Try accessing the design."""
-    clock = Clock(dut.clk, 2, units="ns")  # Create a 10ns period clock on port clk
-    cocotb.start_soon(clock.start())  # Start the clock
 
-    
-    await RisingEdge(dut.clk)
-    # dut.rst.value = 1
+    # Example: Initialize signals if necessary
+    dut.instr_new_i.value = 0
+    dut.instr_rdata_i.value = 0
+    dut.illegal_c_insn_i.value = 0
 
+    # Simulate 10 cycles (or steps) without clock
     for cycle in range(10):
-        #clk rising edge
-        await RisingEdge(dut.clk)
-        dut.instr_new_i.value = random.randint(0,1)
-        dut.instr_rdata_i.value = random.randint(0,2 ** 32)
-        dut.illegal_c_insn_i.value = random.randint(0,1)
-        # dut.rst.value = 0
+        # Set random values for inputs
+        dut.instr_new_i.value = random.randint(0, 1)
+        dut.instr_rdata_i.value = random.randint(0, 2 ** 32 - 1)
+        dut.illegal_c_insn_i.value = random.randint(0, 1)
+
+        # Wait for 10ns to simulate processing time
+        await Timer(10, units="ns")
+
+        # Log the current state for debugging
+        dut._log.info(
+            f"Cycle {cycle}: instr_new_i={dut.instr_new_i.value}, "
+            f"instr_rdata_i={dut.instr_rdata_i.value}, "
+            f"illegal_c_insn_i={dut.illegal_c_insn_i.value}"
+        )
 
 
-
-def runner(verilog_path):
+def runner():
     sim = os.getenv("SIM", "verilator")
-    verilog_sources = verilog_path
+
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    print("File path is "+str(dir_path))
+
+    subprocess.run(["mkdir", "sim_build"])
+
+    subprocess.run(["cp","ibex_pkg.sv","sim_build/ibex_pkg.sv"])
 
     # set parameters
     extra_args = []
     
     extra_args.append(f"--trace")
+
+    # extra_args.append("--lint-only")
+    extra_args.append("-Wno-WIDTHEXPAND")
+    extra_args.append("-Wno-WIDTHTRUNC")
+
+
+    sources = glob.glob(os.path.join(dir_path, "*.sv"))
+
+    print("Sources is "+str(sources))
     
     print("Args is ")
     print(extra_args)
     print("")
     runner = get_runner(sim)
     runner.build(
-        verilog_sources=verilog_sources,
+        verilog_sources=sources,
         hdl_toplevel="ibex_decoder",
         build_args=extra_args,
     )
@@ -56,10 +80,4 @@ def runner(verilog_path):
 
 
 if __name__ == "__main__":
-    if(len(sys.argv) !=2):
-        print("Should give verilog design path")
-        exit(1)
-    else:
-        verilog_sources = [sys.argv[1]]
-        print(verilog_sources)
-        runner(verilog_sources)
+    runner()

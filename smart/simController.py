@@ -120,10 +120,13 @@ if __name__ == "__main__":
     
     if(len(sys.argv) !=2):
         print("Should give verilog design file name")
+        print("Usage: python simController.py <verilog_design_file_name>")
         exit(1)
     else:
         file_name = sys.argv[1]
     setup(current_path)
+    
     VerilogPrep(current_path, file_name)
+    
     print("finish Verilog Prep and Setup")
     runner(current_path, file_name)

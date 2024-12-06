@@ -3,27 +3,21 @@ Time_Left:
 ## CAV2025 submission ddl delay to 1/31 (from 1/20)
 ## annual leave from Edinburgh on from 1/25?
 
-Found out:
-# Check about the next assertion
-### there does not exist good experssion for the states updates???
-### |-> support for last state check
-### |=> support for next state check
+Finish:
 
-# Evalute the assertions
-## Fix random seed to make the result the same
+To_Do:
+# add support for non-clk module prep
 
 # Write a new preprocessing code
 ## Automatic variables poicker for sygus 
-### would trigger effenciency issue
-
-# Sygus
-## different order of parameter would lead to different solving time
-## would more unreachable state be helpful to make the correct abstrace module??
-
-# cocotb
-## How to simulate two trace
+### polish up the picker -- more better ini file
 
 Plan:
+
+# Write the paper - Overleaf
+## Research paper format
+## Abstract
+
 # Setup the benchmark
 # Evalute the assertions
 ## we might get different assertions when we run the sygus as there is different possible
@@ -36,12 +30,10 @@ Plan:
 ### compare with the real assertion
 ### a large case test
 
-# Write the paper - Overleaf
-## Research paper
-### what is the story
-## Tool paper
+# Speed up plan
+## cvc5 speed up by multi call
+## gather some rules from the traces
 ---------------------------
-
 
 
 # add support for bv value

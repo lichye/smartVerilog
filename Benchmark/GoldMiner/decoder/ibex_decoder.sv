@@ -80,7 +80,7 @@ module ibex_decoder (
 	output reg data_sign_extension_o;
 	output reg jump_in_dec_o;
 	output reg branch_in_dec_o;
-	`include "ibex_pkg.v"
+	`include "ibex_pkg.sv"
 	reg illegal_insn;
 	wire illegal_reg_rv32e;
 	reg csr_illegal;
