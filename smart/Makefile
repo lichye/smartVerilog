@@ -76,7 +76,7 @@ sim:
 	mv sim_build/dump.vcd $(RUNTIME_DIR)/sim_results/sim.vcd
 
 # clean is clean the compiled code
-clean: 
+clean: all_clean
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
