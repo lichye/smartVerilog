@@ -71,31 +71,6 @@ def smart(current_path, file_name):
     module_name = file_name.split(".")[0]
     print("module name: ", module_name)
     subprocess.run(["./smart.out",src_file,module_name])
-
-def setup(current_path):
-    if not os.path.exists(current_path+"/runtime"):
-        os.makedirs(current_path+"/runtime")
-
-    runtime_ebmc_path = current_path+"/runtime/ebmc/"
-
-    runtime_verilog_path = current_path+"/runtime/verilog/"
-
-    user_verilog_path = current_path+"/User"
-    
-    sim_target_dir = current_path+"/runtime/sim_results"
-
-    smt_target_dir = current_path+"/runtime/smt_results"
-
-    subprocess.run(["cp", user_verilog_path+"/sim.py",current_path+"/runtime/sim.py"])
-    # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
-    if not os.path.exists(sim_target_dir):
-        os.makedirs(sim_target_dir)
-    if not os.path.exists(smt_target_dir):
-        os.makedirs(smt_target_dir)
-    if not os.path.exists(runtime_verilog_path):
-        os.makedirs(runtime_verilog_path)
-    if not os.path.exists(runtime_ebmc_path):
-        os.makedirs(runtime_ebmc_path)
     
 def runner(current_path, file_name):
     while True:
@@ -110,23 +85,14 @@ def runner(current_path, file_name):
             break
         elif cmd == "smart" or cmd == "s":
             smart(current_path, file_name)
+        elif cmd == "prep":
+            VerilogPrep(current_path, file_name)
         else:
             print("Invalid Command")
 
 if __name__ == "__main__":
     file_name = ""
-
     current_path = os.getcwd()
-    
-    if(len(sys.argv) !=2):
-        print("Should give verilog design file name")
-        print("Usage: python simController.py <verilog_design_file_name>")
-        exit(1)
-    else:
-        file_name = sys.argv[1]
-    setup(current_path)
-    
-    VerilogPrep(current_path, file_name)
     
     print("finish Verilog Prep and Setup")
     runner(current_path, file_name)

@@ -43,32 +43,11 @@ def extract_signals(content):
 
     print(f"Extracted variables: {parsed_signals}") 
     return parsed_signals
-
-def extrace_interesting_signals(content):
-    # Regular expression to match always blocks
-    always_block_pattern = re.compile(r'always\s*@\s*\(.*?\)\s*begin(.*?)end', re.S)
-    
-    # Regular expression to find variable names (identifiers)
-    variable_pattern = re.compile(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\b')
-    
-    # Extract all always blocks
-    always_blocks = always_block_pattern.findall(content)
-    result = []
-    
-    for block in always_blocks:
-        # Find all unique variable names in the block
-        variables = set(variable_pattern.findall(block))
-        
-        # Filter out keywords (you can expand this list as needed)
-        keywords = {'if', 'else', 'begin', 'end', 'case', 'default', 'assign', 'always', 'posedge', 'negedge', 'or'}
-        variables = {var for var in variables if var not in keywords}
-        result.append(variables)
-        print(f"Interesting signals in always block: {variables}")
-    return result;    
     
 def generate_copy_variables(variables):
     print(f"Generating copy variables for: {variables}")
     copy_lines = []
+    copy_lines.append("\n")
     exist_variables = set()
     for _, bit_range, var_name in variables:
         if var_name in exist_variables:
@@ -77,12 +56,13 @@ def generate_copy_variables(variables):
         copy_line = f"\treg {bit_range_str}{var_name}_copy;"
         copy_lines.append(copy_line)
         exist_variables.add(var_name)
+    copy_lines.append("\n")
     return copy_lines
 
 def generate_always_block(variables, clk_signal="clk"):
-    always_block = [f"\talways @(posedge {clk_signal}) begin\n"]
+    always_block = [f"\talways @(posedge {clk_signal}) begin"]
     for _, _, var_name in variables:
-        assign_line = f"\t\t{var_name}_copy <= {var_name};\n"
+        assign_line = f"\t\t{var_name}_copy <= {var_name};"
         always_block.append(assign_line)
     always_block.append("\tend\n")
     return always_block
@@ -117,62 +97,6 @@ def write_to_file(file_path, modules):
                 file.write(line + '\n')
     except Exception as e:
         print(f"Error writing to file {file_path}: {e}")
-
-def parse_always_block(module, signals):
-
-    all_blocks = []  # List to hold variables for each always block
-
-    return all_blocks
-
-def write_to_ini(module_name,variables,signals):
-    print("module_name: ",module_name)
-    print("variables: ",variables)
-    print("signals: ",signals)
-    file_path = "User/config.ini"
-
-    config = configparser.ConfigParser()
-
-    for variable in variables:
-
-        pick_signal =[]
-        for signal in signals:
-            if variable == signal[2]:
-                pick_signal = signal
-                break
-        print("pick_signal: ",pick_signal)
-
-
-        bit_range = pick_signal[1]
-
-        if bit_range.startswith('[') and bit_range.endswith(']'):
-            lindex, rindex = map(int, bit_range[1:-1].split(':'))
-            signalType = 1
-        else:
-            lindex, rindex = -1, -1
-            signalType = 0
-       
-        config[variable]={
-            "moduleName":module_name,
-            "signalName":variable,
-            "signalType":signalType,
-            "lindex":lindex,
-            "rindex":rindex
-        }
-        variable_copy = variable + "_copy"
-        config[variable_copy]={
-            "moduleName":module_name,
-            "signalName":variable_copy,
-            "signalType":signalType,
-            "lindex":lindex,
-            "rindex":rindex
-        }
-
-    with open(file_path, 'w') as configfile:
-        config.write(configfile)
-
-    print(f"INI 文件已写入: {file_path}")
-
-
 
 # Test the function
 if  __name__ == "__main__":
@@ -212,6 +136,4 @@ if  __name__ == "__main__":
     
     write_to_file(output_file, new_module)
 
-    #we just fucus on the first module's first always block
-    # write_to_ini(interesting_varibales_collections[0]["module_name"],interesting_varibales_collections[0]["interesting"][0],interesting_varibales_collections[0]["signals"])
     # print(interesting_varibales_collections[0])

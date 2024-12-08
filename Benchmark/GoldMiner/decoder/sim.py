@@ -40,17 +40,8 @@ async def my_first_test(dut):
             f"illegal_c_insn_i={dut.illegal_c_insn_i.value}"
         )
 
-
 def runner():
     sim = os.getenv("SIM", "verilator")
-
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-
-    print("File path is "+str(dir_path))
-
-    subprocess.run(["mkdir", "sim_build"])
-
-    subprocess.run(["cp","ibex_pkg.sv","sim_build/ibex_pkg.sv"])
 
     # set parameters
     extra_args = []
@@ -80,4 +71,15 @@ def runner():
 
 
 if __name__ == "__main__":
+
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    print("File path is "+str(dir_path))
+
+    if not os.path.exists("sim_build"):
+        subprocess.run(["mkdir", "sim_build"])
+
+    if not os.path.exists(dir_path+"sim_build/ibex_pkg.sv"):
+        subprocess.run(["cp","ibex_pkg.sv","sim_build/ibex_pkg.sv"])
+    
     runner()

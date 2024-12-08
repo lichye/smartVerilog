@@ -1,5 +1,6 @@
 import random
 import os
+import glob
 import sys
 
 import cocotb
@@ -32,21 +33,24 @@ async def my_first_test(dut):
 
 
 
-def runner(verilog_path):
+def runner():
     sim = os.getenv("SIM", "verilator")
-    verilog_sources = verilog_path
 
     # set parameters
     extra_args = []
     
     extra_args.append(f"--trace")
     
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    sources = glob.glob(os.path.join(dir_path, "*.sv"))
+
     print("Args is ")
     print(extra_args)
     print("")
     runner = get_runner(sim)
     runner.build(
-        verilog_sources=verilog_sources,
+        verilog_sources=sources,
         hdl_toplevel="arb2",
         build_args=extra_args,
     )
@@ -55,10 +59,11 @@ def runner(verilog_path):
 
 
 if __name__ == "__main__":
-    if(len(sys.argv) !=2):
-        print("Should give verilog design path")
-        exit(1)
-    else:
-        verilog_sources = [sys.argv[1]]
-        print(verilog_sources)
-        runner(verilog_sources)
+    runner()
+    # if(len(sys.argv) !=2):
+    #     print("Should give verilog design path")
+    #     exit(1)
+    # else:
+    #     verilog_sources = [sys.argv[1]]
+    #     print(verilog_sources)
+    #     runner(verilog_sources)

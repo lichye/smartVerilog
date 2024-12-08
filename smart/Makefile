@@ -7,6 +7,7 @@ LDFLAGS         = -L./lib
 SRC_DIR         ?= ./src
 BUILD_DIR       ?= ./build
 RUNTIME_DIR     ?= ./runtime
+PYTHON_DIR      ?= ./src/python
 
 # Ensure subdirectories exist
 BUILD_SUBDIRS   = $(BUILD_DIR)/parser $(BUILD_DIR)/tracer
@@ -57,6 +58,12 @@ $(YAC_OUT): $(YAC_SRC) | $(BUILD_SUBDIRS)
 $(LEX_OUT): $(LEX_SRC) $(YAC_OUT) | $(BUILD_SUBDIRS)
 	flex  -P VCDParser --header-file=$(LEX_HEADER) -o $(LEX_OUT) $(LEX_SRC)
 
+all: smart_compile
+
+
+setup:
+	python $(PYTHON_DIR)/setUp.py
+
 compile: smart_compile
 
 # Main compilation rule for smart.out
@@ -69,26 +76,27 @@ assertion_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(ASSERTION_SRC)
 
 smart:
 	./$(SMART_TARGET)
-	cvc5 --sygus sygus.sl
 
 sim:
 	python $(RUNTIME_DIR)/sim.py $(RUNTIME_DIR)/verilog/addsub.sv
 	mv sim_build/dump.vcd $(RUNTIME_DIR)/sim_results/sim.vcd
 
 # clean is clean the compiled code
-clean: all_clean
+all_clean: clean 
+	rm -rf $(RUNTIME_DIR)
+	rm -rf sim_build
+	rm -rf $(SMART_TARGET)
+	rm -rf User/*
+	rm -rf sygus.sl
+
+clean:
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
-	mkdir $(BUILD_DIR)
-	rm -rf User/*
-
-all_clean:
 	rm -rf $(RUNTIME_DIR)
-	rm -rf sim_build
-	rm -rf $(SMART_TARGET)
-	rm -rf sygus.sl
+	mkdir $(BUILD_DIR)
+
 
 sim_clean:
 	rm -rf sim_build
