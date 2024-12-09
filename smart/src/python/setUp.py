@@ -58,11 +58,9 @@ def move_User_verilog(current_path):
 
     for file in sv_files:
         subprocess.run(["cp", file, runtime_verilog_path])
-        subprocess.run(["cp", file, runtime_ebmc_path])
-        subprocess.run(["cp", file, sim_build_path])
 
 if __name__ == "__main__":
     file_name = ""
     current_path = os.getcwd()
     setup(current_path)
-    move_User_verilog(current_path)
+    # move_User_verilog(current_path)

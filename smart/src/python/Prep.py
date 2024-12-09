@@ -23,6 +23,34 @@ def split_modules(file_path):
         print(f"Error: File {file_path} not found.")
         return []
 
+def extract_non_module_content(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        module_pattern = r"module\s+(\w+)\b.*?endmodule\b"
+        module_matches = re.finditer(module_pattern, content, re.DOTALL)
+        module_ranges = []
+        for match in module_matches:
+            start, end = match.span()
+            module_ranges.append((start, end))
+        non_module_content = []
+        last_end = 0
+        for start, end in module_ranges:
+            if last_end < start:
+                non_module_content.append(content[last_end:start])
+            last_end = end
+        if last_end < len(content):
+            non_module_content.append(content[last_end:])
+        return ''.join(non_module_content).strip()
+
+    except FileNotFoundError:
+        print(f"Error: File {file_path} not found.")
+        return ""
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return ""
+
+
 def extract_signals(content):
     variable_pattern = r'\b(input|output|inout|reg|wire)(\s+reg)?\s*(\[[^\]]+\])?\s+(\w+)\s*'
     matches = re.finditer(variable_pattern, content)
@@ -41,13 +69,14 @@ def extract_signals(content):
             if var_name not in parsed_signals:
                 parsed_signals.add((full_type, bit_range, var_name))
 
-    print(f"Extracted variables: {parsed_signals}") 
+    # print(f"Extracted variables: {parsed_signals}") 
     return parsed_signals
     
 def generate_copy_variables(variables):
     print(f"Generating copy variables for: {variables}")
     copy_lines = []
     copy_lines.append("\n")
+    copy_lines.append("\t // Copy variables for time analysis")
     exist_variables = set()
     for _, bit_range, var_name in variables:
         if var_name in exist_variables:
@@ -91,12 +120,28 @@ def insert_copy_variables_and_always_block(module, copy_lines, always_block):
    
 def write_to_file(file_path, modules):
     try:
-       with open(file_path, 'w') as file:
+       with open(file_path, 'a') as file:
         for module in modules:
             for line in module:
-                file.write(line + '\n')
+                file.write(line+"\n")
     except Exception as e:
         print(f"Error writing to file {file_path}: {e}")
+
+def add_str_to_file(file_path, content):
+    try:
+       with open(file_path, 'w') as file:
+        file.write(content)
+        file.write("\n\n")
+    except Exception as e:
+        print(f"Error writing to file {file_path}: {e}")
+
+def check_clock_signal(signals):
+    
+    clock_signals = ["clk", "clock"]
+    for signal in signals:
+        if "clk" in signal:
+            return True
+    return False
 
 # Test the function
 if  __name__ == "__main__":
@@ -106,34 +151,33 @@ if  __name__ == "__main__":
         output_file = sys.argv[2]
     else:
         print("Should give verilog design path")
-        print(len(sys.argv))
-        input_file = "User/addsub.sv"
-        output_file = "runtime/verilog/addsub.sv"
+        exit(1)
 
     modules = split_modules(input_file)
 
-    new_module = []
+    non_module_content = extract_non_module_content(input_file)
 
-    interesting_varibales_collections = []
+    new_module = []
 
     for module in modules:
         print("Module name: ", module['id'])
         # this will be a list of complex defined signals
         signals = extract_signals(module['content'])
-        
-        # this will be a list of list of variable names
-        interesting_varibales = extrace_interesting_signals(module['content'])
 
-        copy_signals = generate_copy_variables(signals)
+        # we should check whether this module has a clock signal
 
-        assign_always_block = generate_always_block(signals)
+        if check_clock_signal(signals):
+            print("This module has a clock signal")
+            copy_signals = generate_copy_variables(signals)
+            assign_always_block = generate_always_block(signals)
+            modified_module_lines = insert_copy_variables_and_always_block(module['content'].split("\n"), copy_signals, assign_always_block)
+            new_module.append(modified_module_lines)
+        else:
+            print("This module does not have a clock signal")
+            new_module.append(module['content'].split("\n"))
 
-        modified_module_lines = insert_copy_variables_and_always_block(module['content'].split("\n"), copy_signals, assign_always_block)
-
-        new_module.append(modified_module_lines)
-
-        interesting_varibales_collections.append({"interesting":interesting_varibales,"signals":signals,"module_name":module['id']})
-    
+    # write_to_file(output_file, non_module_content)
+    add_str_to_file(output_file, non_module_content)        
     write_to_file(output_file, new_module)
-
+    
     # print(interesting_varibales_collections[0])

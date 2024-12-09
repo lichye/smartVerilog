@@ -36,18 +36,19 @@ async def my_first_test(dut):
 def runner():
     sim = os.getenv("SIM", "verilator")
 
-    # set parameters
-    extra_args = []
-    
-    extra_args.append(f"--trace")
-    
     dir_path = os.path.dirname(os.path.abspath(__file__))
-
     sources = glob.glob(os.path.join(dir_path, "*.sv"))
 
+    # set parameters
+    extra_args = []
+    extra_args.append(f"--trace")
+    
+    #debug of Args
     print("Args is ")
     print(extra_args)
     print("")
+
+    
     runner = get_runner(sim)
     runner.build(
         verilog_sources=sources,
@@ -60,10 +61,3 @@ def runner():
 
 if __name__ == "__main__":
     runner()
-    # if(len(sys.argv) !=2):
-    #     print("Should give verilog design path")
-    #     exit(1)
-    # else:
-    #     verilog_sources = [sys.argv[1]]
-    #     print(verilog_sources)
-    #     runner(verilog_sources)

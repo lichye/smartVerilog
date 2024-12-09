@@ -43,23 +43,28 @@ async def my_first_test(dut):
 def runner():
     sim = os.getenv("SIM", "verilator")
 
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    sources = glob.glob(os.path.join(dir_path, "*.sv"))
+    working_dir = os.getcwd()
+    
+    # move ibex_pkg.sv to sim_build
+    if not os.path.exists(working_dir+"/sim_build"):
+        subprocess.run(["mkdir", "sim_build"])
+    if not os.path.exists(working_dir+"/sim_build/ibex_pkg.sv"):
+        subprocess.run(["cp",dir_path+"/ibex_pkg.sv",working_dir+"/sim_build/ibex_pkg.sv"])
+
     # set parameters
     extra_args = []
-    
     extra_args.append(f"--trace")
-
     # extra_args.append("--lint-only")
     extra_args.append("-Wno-WIDTHEXPAND")
     extra_args.append("-Wno-WIDTHTRUNC")
 
-
-    sources = glob.glob(os.path.join(dir_path, "*.sv"))
-
-    print("Sources is "+str(sources))
-    
+    #debug of Args
     print("Args is ")
     print(extra_args)
     print("")
+
     runner = get_runner(sim)
     runner.build(
         verilog_sources=sources,
@@ -71,15 +76,4 @@ def runner():
 
 
 if __name__ == "__main__":
-
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-
-    print("File path is "+str(dir_path))
-
-    if not os.path.exists("sim_build"):
-        subprocess.run(["mkdir", "sim_build"])
-
-    if not os.path.exists(dir_path+"sim_build/ibex_pkg.sv"):
-        subprocess.run(["cp","ibex_pkg.sv","sim_build/ibex_pkg.sv"])
-    
     runner()
