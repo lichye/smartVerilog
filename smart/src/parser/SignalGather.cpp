@@ -2,20 +2,25 @@
 #include "ini.h"
 #include <iostream>
 #include <fstream>
+#include <exception>
 
 SignalGather::SignalGather(){
-
-    inih::INIReader reader("tests/config.ini");
-    std::set<std::string> sectionList = reader.Sections();
-    for(auto &section : sectionList){
+    try{
+        inih::INIReader reader("tests/config.ini");
+        std::set<std::string> sectionList = reader.Sections();
+        for(auto &section : sectionList){
+            Signal signal;
+            signal.moduleName = reader.Get(section,"modulename");
+            signal.name = reader.Get(section,"signalname");
+            signal.lindex = std::stoi(reader.Get(section,"lindex"));
+            signal.rindex = std::stoi(reader.Get(section,"rindex"));
+            signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signaltype")));
+            signals.push_back(signal);
+        }
+    } catch (...){
         Signal signal;
-        signal.moduleName = reader.Get(section,"modulename");
-        signal.name = reader.Get(section,"signalname");
-        signal.lindex = std::stoi(reader.Get(section,"lindex"));
-        signal.rindex = std::stoi(reader.Get(section,"rindex"));
-        signal.type = static_cast<SignalType>(std::stoi(reader.Get(section,"signaltype")));
-        signals.push_back(signal);
     }
+    
 }
 
 SignalGather::SignalGather(std::string path){

@@ -4,6 +4,15 @@ import os
 import subprocess
 import shutil
 
+def copy_sv_files(original_path, target_path):
+    for root, dirs, files in os.walk(original_path):
+        for file in files:
+            if file.endswith(".sv"):
+                shutil.copy(os.path.join(root, file), target_path)
+            elif file.endswith(".v"):
+                print("Please convert the verilog files to system verilog")
+                exit(1)
+
 def sim(current_path,file_name):
     print("Verilog Simulating")
     
@@ -36,19 +45,7 @@ def sim(current_path,file_name):
     
     print("Finish Verilog simulation")
 
-def smart(current_path, file_name):
-    src_file = current_path+"/runtime/verilog/"+file_name
-    module_name = file_name.split(".")[0]
-    print("module name: ", module_name)
-    subprocess.run(["./smart.out",src_file,module_name])
-
-def has_files(dir_path):
-    files = os.listdir(dir_path)
-    if len(files) == 0:
-        return False
-    return True
-
-def sv_prep(sv_path):
+def sv_prep(sv_path,rst_path):
     sv_file_names = []
     sv_file_paths = []
     
@@ -58,7 +55,7 @@ def sv_prep(sv_path):
                 sv_file_names.append(file)
                 sv_file_paths.append(os.path.join(root, file))
                 
-                sv_file_prep_path = "runtime/cocotb/"+file
+                sv_file_prep_path = rst_path + file
                 cmd = ["python", "src/python/Prep.py", os.path.join(root, file), sv_file_prep_path]
                 print("Run cmd: ", cmd)
                 subprocess.run(cmd)
@@ -68,40 +65,53 @@ def sv_prep(sv_path):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
 
+def smart(current_path, file_name):
+    src_file = current_path+"/runtime/verilog/"+file_name
+    module_name = file_name.split(".")[0]
+    print("module name: ", module_name)
+    subprocess.run(["./smart.out",src_file,module_name])
+
 if __name__ == "__main__":
+
+    current_path = os.getcwd()
+    user_path = current_path+"/User"
+    cocotb_path = current_path+"/runtime/cocotb/"
+    ebmc_path = current_path+"/runtime/ebmc/"
+    mverilog_path = current_path+"/runtime/verilog/"
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
     
+    # Check if the User give the correct input
     if(len(sys.argv)==2):
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"
     else:
-        main_module = input("Should give the main module name")
+        print("Should give the main module name")
+        exit(1)
 
-
-
-    current_path = os.getcwd()
-    
-    user_path = current_path+"/User"
-    
-    runtime_verilog_path = current_path+"/runtime/verilog"
-
-
-    # Check if there is a file in the User directory
-    if not has_files(user_path):
+    files = os.listdir(dir_path)
+    if len(files) == 0:
         print("No files in User directory")
         print("Stop running")
         exit(1)
 
-    # If there is a file in the User directory
-    # Run the smart compiler and setup
+    #Start the preporcessing
     subprocess.run(["make", "setup"]) # this will setup the directories and files needed for the smart compiler
-    
-
-    sv_prep(user_path) # this will prepare the system verilog files for cocotb
-
+    sv_prep(user_path,mverilog_path) # this will prepare the system verilog files for cocotb
     print("Finish Initial Setup")
     
+    #before the simulation copy all the files from cocotb to runtime/ebmc
+    copy_sv_files(mverilog_path, cocotb_path)
+    copy_sv_files(mverilog_path, ebmc_path)
+
+    #Start the simulation
     print("Start Simulation")
     sim(current_path, main_file_name) # this will run the simulation
 
+    #Start compile the smart compiler
+    subprocess.run(["make", "compile"]) # this will compile the smart compiler
 
-    # subprocess.run(["make", "compile"]) # this will compile the smart compiler
+    #Start to run smart main module
+    main_module_path = mverilog_path+main_file_name
+   
+    subprocess.run(["./smart.out",main_module_path,main_module])
