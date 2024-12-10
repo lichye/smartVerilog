@@ -75,7 +75,7 @@ void VerilogChecker::addProperty(State* state,PropertyType type) {
     if(type == PropertyType::REACHABILITY_PROPERTY) {
         assert(!state->isUndefined());//only defined states can be verified
 
-        properties.push_back("##[0:$] (!"+state->toVerilogExpr()+")");
+        properties.push_back("##1 (!"+state->toVerilogExpr()+")");
     }
 }
 
@@ -83,10 +83,10 @@ void VerilogChecker::addProperty(SygusFunction* func,PropertyType type) {
     propertyTypes.push_back(type);
 
     if(type == PropertyType::REACHABILITY_PROPERTY){
-        properties.push_back("##[0:$] "+func->getBodyVerilogExpr());
+        properties.push_back("##1 "+func->getBodyVerilogExpr());
     }
     else if(type == PropertyType::SAFT_PROPERTY){
-        properties.push_back("##[0:$] "+func->getBodyVerilogExpr());
+        properties.push_back("##1 "+func->getBodyVerilogExpr());
     }
     else{
         printError("Error: Property type not supported\n");
