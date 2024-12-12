@@ -203,4 +203,6 @@ nand NAND4_158 (N430, N381, N386, N422, N399);
 nand NAND4_159 (N431, N381, N386, N425, N428);
 nand NAND4_160 (N432, N381, N422, N425, N429);
 
+assert property (N1);
+assert property (0);
 endmodule
