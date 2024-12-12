@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
     delete sygus;
   }
 
-  print("Stop after loop for "+std::to_string(looptime)+" times\n");
+  print("Found invariants after loop for "+std::to_string(looptime)+" times\n");
   delete signals;
   return 0;
 }
@@ -91,9 +91,16 @@ int RunSmart(int loopTime){
 
     State* state = sm.makeRandomState();
     
+    
+
     bool checkResult = false;
+    int tryCount = 0;
     while(!checkResult){
+      // print("Make a random state: \n");
+      // print(state->toString());
+
       checkResult = vc.checkStateReachability(state);
+
       if(checkResult){
         printDebug("Find an unreachable state\n",1);
         sygus->addConstraints(state,false);
@@ -101,7 +108,12 @@ int RunSmart(int loopTime){
       else{
         printDebug("The state is reachable\n",1);
         // sygus->addConstraints(state,true);
+        state = sm.makeRandomState();
       }
+    }
+    if(tryCount++>10){
+      print("Cannot find an unreachable state in 10 loop\n");
+      return 1;
     }
   }
 
@@ -115,7 +127,7 @@ int RunSmart(int loopTime){
   SmtFunctionParser smtParser;
   SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
 
-  print("Found an assertion in "+std::to_string(loopTime)+" times: \n");
+  print("Found an assertion in "+std::to_string(loopTime)+" times");
   print(func->getBodyVerilogExpr());
 
   bool safetyResult = vc.checkExprSafety(func,generateSMTResultPath());
@@ -125,15 +137,8 @@ int RunSmart(int loopTime){
     delete trace;
   }
   traces.clear();
-
-  if(safetyResult){
-    print("The assertion is safe\n");
-    return 0;
-  }
-  else{
-    print("The assertion is not safe\n");
-    return 1;
-  }
+  
+  return !safetyResult;
 }
 
 int generateTrace(std::string Path,TraceType type){
@@ -225,14 +230,19 @@ std::string generateSMTResultPath(){
 }
 
 void setUpSignal(){
-  SignalGather sg(config_path);
-  if(sg.hasSignal()){
-    signals = sg.getAllSignals();
-  }
-  else{
-    assert(!traces.empty());
-    signals = traces[0]->getAllSignals(moduleName);
-    assert(signals->size() != 0);
-  }
+  // SignalGather sg(config_path);
+  // if(sg.hasSignal()){
+  //   signals = sg.getAllSignals();
+  // }
+  // else{
+  //   assert(!traces.empty());
+  //   signals = traces[0]->getAllSignals(moduleName);
+  //   assert(signals->size() != 0);
+  // }
+
+  assert(!traces.empty());
+  signals = traces[0]->getAllSignals(moduleName);
+  assert(signals->size() != 0);
+
 }
 

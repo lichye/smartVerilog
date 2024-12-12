@@ -3,6 +3,7 @@ import sys
 import os
 import subprocess
 import shutil
+import time
 
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
@@ -114,4 +115,10 @@ if __name__ == "__main__":
     #Start to run smart main module
     main_module_path = mverilog_path+main_file_name
    
+    smart_start_time = time.time()  # grab the time
+
     subprocess.run(["./smart.out",main_module_path,main_module])
+
+    smart_end_time = time.time()  # grab the time
+
+    print("Smart running took: ", smart_end_time - smart_start_time, " seconds")

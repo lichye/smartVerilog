@@ -150,7 +150,8 @@ void Trace::readVCDFile(VCDFile* vcdFile){
                 if(val == nullptr){
                     if(traceType==TraceType::SMT){
                         Value* value = Value::makeXValue(s.type,s.lindex - s.rindex + 1);
-                        std::cout<<"Unknown Signal: "<<s.name<<" has length: "<<s.lindex - s.rindex + 1<<std::endl;
+                        printDebug("Unknown Signal: "+s.name+" has length: "+std::to_string(s.lindex - s.rindex + 1),3);
+                        // std::cout<<"Unknown Signal: "<<s.name<<" has length: "<<s.lindex - s.rindex + 1<<std::endl;
                         values->push_back(value);
                     }
                     else{
