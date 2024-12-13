@@ -227,4 +227,5 @@ module ibex_multdiv_slow (
 			endcase
 	end
 	assign valid_o = ((md_state_q == MD_FINISH) | ((md_state_q == MD_LAST) & ((operator_i == MD_OP_MULL) | (operator_i == MD_OP_MULH))));
+	assert property (1);
 endmodule

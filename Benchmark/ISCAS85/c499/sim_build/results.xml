@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1733916072" />
-    <testcase name="my_first_test" classname="sim" file="/home/magna/smartVerilog/Benchmark/ISCAS85/c499/sim.py" lineno="16" time="0.004006385803222656" sim_time_ns="100.001" ratio_time="24960.401946203285" />
-  </testsuite>
-</testsuites>

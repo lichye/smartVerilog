@@ -3,21 +3,14 @@ To_Do:
 # 1/16 10:15 AM
 # 1/23 10:15 AM
 
-# ICSA85 Benchmark
-## Report to EBMC
+# Runtime variables remover
+### block variables picker per block **
+### try drop meaningful values
 
 # Write a new preprocessing code
 ## Automatic variables poicker for sygus 
 ### polish up the picker -- more better ini file
 ### drop meanless values
-
-# Runtime variables remover
-### block variables picker per block **
-### try drop meaningful values
-
-# Write the paper - Overleaf
-## Upload the graph
-## Abstract
 
 # Mutation Test***
 # Parts of result
