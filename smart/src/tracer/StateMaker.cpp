@@ -2,6 +2,7 @@
 
 // StateMaker class function definitions below
 StateMaker::StateMaker(){
+    this->signals = nullptr;
     printDebug("StateMaker with no arguments Constructor called",10);
 }
 
@@ -10,14 +11,6 @@ StateMaker::StateMaker(std::vector<Signal>* signals){
     printDebug("StateMaker Constructor called",10);
 }
 
-StateMaker::StateMaker(std::vector<Trace*>* traces,std::vector<Signal>* signals){
-    for(auto trace : *traces){
-        this->traces.push_back(trace);
-    }
-    this->signals = signals;
-    
-    printDebug("StateMaker Constructor called",10);
-}
 
 StateMaker::~StateMaker(){
     printDebug("StateMaker Destructor called",10);
@@ -25,6 +18,9 @@ StateMaker::~StateMaker(){
 
 State* StateMaker::makeRandomState(){
     //check there is signals to make the state
+    printDebug("Call StateMaker::makeRandomState",2);
+    assert(signals != nullptr);
+    printDebug("Signals are not null",2);
     if(signals->size() == 0){
         printDebug("No signals to make state",1);
         exit(1);
@@ -38,14 +34,6 @@ State* StateMaker::makeRandomState(){
         
         state->addValue(value);
         delete value;
-    }
-
-    //TODO:
-    //this might loop forever, need to fix
-    for(auto trace : traces){
-        if(trace->checkStateExist(state)){
-            state = makeRandomState();
-        }
     }
     return state;
 }

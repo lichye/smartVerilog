@@ -78,7 +78,7 @@ smart:
 	./$(SMART_TARGET)
 
 sim:
-	python $(RUNTIME_DIR)/sim.py $(RUNTIME_DIR)/verilog/addsub.sv
+	python $(RUNTIME_DIR)/cocotb/sim.py $(RUNTIME_DIR)/verilog/addsub.sv
 	mv sim_build/dump.vcd $(RUNTIME_DIR)/sim_results/sim.vcd
 
 # clean is clean the compiled code

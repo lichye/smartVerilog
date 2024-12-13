@@ -58,6 +58,7 @@ void SyGuSGenerater::setSignals(std::vector<Signal>* signals)
 }
 
 void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstraints,bool trueConstrains){
+    printDebug("Run addConstraints",2);
     if(inputConstraints.size()!=this->signals.size()){
         std::cout<<"The constraints size is not the same length with the signals"<<std::endl;
         std::cout<<"The constraints size is "<<inputConstraints.size()<<" and the signals size is "<<this->signals.size()<<std::endl;
@@ -98,6 +99,7 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
             }
         }
     }
+    printDebug("Finish SyGuSGenerater::addConstraints",2);
 }
 
 void SyGuSGenerater::addConstrainComments(std::string comment,bool isTrueConstrains){
@@ -127,7 +129,7 @@ void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
     std::vector<Value*> values = state->getValues();
     assert(values.size() == this->signals.size()); 
     //we suppose the signal order is correct
-    addConstrainComments("This constrainsts are added from the state",trueConstrains);
+    // addConstrainComments("This constrainsts are added from the state",trueConstrains);
     if(trueConstrains){
        if(constraints.size()==0){
             for(auto value : values){
@@ -137,11 +139,9 @@ void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
             }
        }
        else{
-            for(auto value: values){
-                for(auto &constraint : constraints){
-                    printDebug("Adding value "+value->toSyGusString(),3);
-                    constraint.push_back(value);
-                }
+            int size = values.size();
+            for(int i=0;i<size;i++){
+                constraints[i].push_back(values[i]);
             }
        }
     }
@@ -156,10 +156,9 @@ void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
             }
         }
         else{
-            for(auto value: values){
-                for(auto &constraint : falseConstraints){
-                    constraint.push_back(value);
-                }
+            int size = values.size();
+            for(int i=0;i<size;i++){
+                falseConstraints[i].push_back(values[i]);
             }
         }
     }
@@ -204,6 +203,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
     else{
         std::cout<<"Error opening file"<<std::endl;
     }
+    printDebug("Printing the SyGuS file to the path: "+path,2);
 }
 
 void SyGuSGenerater::debugPrint()
@@ -226,6 +226,33 @@ void SyGuSGenerater::debugPrint()
         }
     }
 }
+
+std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
+  std::string command = "cvc5 --lang=sygus2 "+sygusPath;
+  std::string result;
+  char buffer[128];
+  FILE* pipe = popen(command.c_str(), "r");
+  if(!pipe){
+    print("Error: popen failed\n");
+    return "";
+  }
+  try{
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+            result += buffer;
+    }
+  }
+  catch(...){
+    pclose(pipe);
+    throw;
+  }
+  int exitCode = pclose(pipe);
+  if(exitCode!=0){
+    print("Error: cvc5 failed\n");
+    return "";
+  }
+  return result;
+}
+
 
 std::string SyGuSGenerater::createSyntheisFunction(const std::vector<Signal> signals)
 {   

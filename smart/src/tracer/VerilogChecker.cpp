@@ -123,11 +123,13 @@ bool VerilogChecker::runEBMC(std::string tracePath){
 }
 
 bool VerilogChecker::checkStateReachability(State* state) {
+    printDebug("VerilogChecker::Checking state reachability",1);
     cleanProperties();
     addProperty(state,PropertyType::REACHABILITY_PROPERTY);
     writeVerilogFile();
     bool result = runEBMC();
     //if the property is verified, then the state is unreachable
+    printDebug("The reachability result is: "+std::to_string(result),1);
     return result;
 }
 

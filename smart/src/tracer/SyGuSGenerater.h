@@ -23,6 +23,7 @@ class SyGuSGenerater
 
         void printSysgusPath(std::string);
         void debugPrint();
+        std::string runCVC5Sygus(std::string);
 
     private:
         

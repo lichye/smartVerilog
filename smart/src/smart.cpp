@@ -10,205 +10,117 @@
 #include "StateMaker.h"
 #include "VerilogChecker.h"
 #include "SmtFunctionParser.h"
+#include "Module.h"
 namespace fs = std::filesystem;
 
-//globak variables
-std::vector<Trace*> traces;
-std::vector<Signal>* signals;
+//global variables
 
+std::vector<Signal>* signals;
 SyGuSGenerater* sygus;
+Module* module;
+VerilogChecker* checker;
+StateMaker* stateMaker;
 
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
 std::string config_path = "User/config.ini";
-std::string verilogSrcPath = "";
 std::string ebmcPath = "runtime/ebmc/formal.sv";
+std::string ebmcReachable = "runtime/ebmc/reachable.sv";
 std::string moduleName = "";
+std::string verilogSrcPath = "";
 
-
-int generateTrace(std::string Path,TraceType type); 
-void addConstraintsfromTrace();
-std::string runCVC5Sygus(std::string);
 std::string generateSMTResultPath();
-void setUpSignal();
-int RunSmart(int);
+
 
 int main(int argc, char* argv[]){
-  StateMaker::setSeed(42);
+  
   if(argc!=3){
     print("Usage: ./smart <verilog_file_name> <module_name>\n");
-    return 1;
+    return -1;
   }
   else{
     verilogSrcPath = argv[1];
     moduleName = argv[2];
   }
 
-  int looptime = 1;
-  while (true)
-  { 
-    sygus = new SyGuSGenerater();
+  StateMaker::setSeed(42);
+  SmtFunctionParser parser;
+  module = new Module(moduleName);
+  sygus = new SyGuSGenerater();
+  checker = new VerilogChecker(verilogSrcPath,ebmcPath);
+  
+  module->addTracesfromDir(SIM,sim_path);
+  module->addTracesfromDir(SMT,smt_path);
 
-    int tracefileCount = 0;
-    tracefileCount += generateTrace(sim_path,TraceType::SIM);
-    tracefileCount += generateTrace(smt_path,TraceType::SMT);
-    assert(tracefileCount != 0);
-
-    setUpSignal();
-    
-    if(signals->size() == 0){
-      print("No signals found\n");
-      return 1;
-    }
-
-    int result = RunSmart(looptime);
-    if(result == 0)
-      break;
-    looptime++;
-    delete sygus;
-  }
-
-  print("Found invariants after loop for "+std::to_string(looptime)+" times\n");
-  delete signals;
-  return 0;
-}
-
-int RunSmart(int loopTime){ 
-  assert(!traces.empty());
-  assert(signals != nullptr);
+  signals = module->getAllSignals();
 
   sygus->setSignals(signals);
 
-  VerilogChecker vc(verilogSrcPath,ebmcPath);
+  stateMaker = new StateMaker(signals);
+
+  std::vector<Constrains> constraints = module->getAllConstraints(signals);
+  for(auto &constrain : constraints){
+    sygus->addConstraints(constrain.constraints,constrain.isTrue);
+    sygus->addConstrainComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
+  }
+
+  printDebug("Adding random state",2);
+  State* randomState = stateMaker->makeRandomState();
+  printDebug("Get a random state: "+randomState->toString(),2);
 
 
-  //add the constraints from the traces to the sygus file
-  addConstraintsfromTrace();
-
-  if(runRandomState){
-    print("Try to get an unreachable state\n");
-    StateMaker sm(&traces,signals);
-
-    State* state = sm.makeRandomState();
-    
-    
-
-    bool checkResult = false;
-    int tryCount = 0;
-    while(!checkResult){
-      // print("Make a random state: \n");
-      // print(state->toString());
-
-      checkResult = vc.checkStateReachability(state);
-
-      if(checkResult){
-        printDebug("Find an unreachable state\n",1);
-        sygus->addConstraints(state,false);
-      }
-      else{
-        printDebug("The state is reachable\n",1);
-        // sygus->addConstraints(state,true);
-        state = sm.makeRandomState();
-      }
-    }
-    if(tryCount++>10){
-      print("Cannot find an unreachable state in 10 loop\n");
-      return 1;
-    }
+  if(checker->checkStateReachability(randomState)){
+    printDebug("The random state is unreachable\n",1);
+    sygus->addConstraints(randomState,false);
   }
 
   sygus->printSysgusPath("sygus.sl");
+  std::string Cvc5result = sygus->runCVC5Sygus("sygus.sl");
+  SygusFunction* sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
   
-  printDebug("Sygus file generated to "+std::string("sygus.sl")+"\n",1);
-  std::string sygusResult = runCVC5Sygus("sygus.sl");
-
-  printDebug("the cvc5 result is: \n"+sygusResult,1);
-
-  SmtFunctionParser smtParser;
-  SygusFunction* func = (SygusFunction*)smtParser.parseSmtFunction(sygusResult);
-
-  print("Found an assertion in "+std::to_string(loopTime)+" times");
-  print(func->getBodyVerilogExpr());
-
-  bool safetyResult = vc.checkExprSafety(func,generateSMTResultPath());
-
-  //clean up
-  for(auto &trace : traces){
-    delete trace;
-  }
-  traces.clear();
+  std::string SMTVCDfilePath = generateSMTResultPath();
+  bool verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
   
-  return !safetyResult;
-}
+  int timeOut = 0;
+  
+  while(!verifiedResult){
+    module->addTrace(SMT,SMTVCDfilePath);
+    
+    Constrains c = module->getConstrain(SMTVCDfilePath,signals);
 
-int generateTrace(std::string Path,TraceType type){
-  int vcdFileCount = 0;
-  std::vector<std::string> vcdFiles;
-  try{
-    for(const auto& entry : fs::directory_iterator(Path)){
-      if(entry.is_regular_file() && entry.path().extension() == ".vcd"){
-        ++vcdFileCount;
-        vcdFiles.push_back(entry.path().string());
-      }
+    sygus->addConstraints(c.constraints,c.isTrue);
+    sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
+    
+    randomState = stateMaker->makeRandomState();
+
+    if(checker->checkStateReachability(randomState)){
+      sygus->addConstraints(randomState,false);
     }
-    printDebug("Number of VCD files: " + std::to_string(vcdFileCount)+"\n",1);
-  }
-  catch(const std::filesystem::filesystem_error& e){
-    std::cerr << "Error: " << e.what() << std::endl;
-  }
-  if(vcdFileCount > 0){
-    printDebug("List of VCD files: \n",1);
-  }
-  for(auto &vcdFile : vcdFiles){
-    std::cout<<vcdFile<<std::endl;
-    Trace* trace = new Trace(type, vcdFile);
-    traces.push_back(trace);
-  }
-  return vcdFileCount;
-}
 
-void addConstraintsfromTrace(){
-  assert(signals != nullptr && signals->size()!=0);
+    sygus->printSysgusPath("sygus.sl");
+    
+    Cvc5result = sygus->runCVC5Sygus("sygus.sl");
 
-  printDebug("Adding constraints from the traces\n",1);
-  printDebug("Number of traces: "+std::to_string(traces.size())+"\n",1);
-  for(auto &trace : traces){
-    printDebug("Adding constraints from the trace: "+trace->getPath()+"\n",1);
-    std::vector<std::vector<Value*>>* constraints = trace->getConstraints(signals);
-    sygus->addConstrainComments("Getting constraints from the trace :\t"+trace->getPath(),true);
-    assert(constraints->size() !=0);
-    sygus->addConstraints(*constraints,true);
-  }
-}
+    sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
 
-std::string runCVC5Sygus(std::string sygusPath){
-  print("Running cvc5\n");
-  std::string command = "cvc5 --lang=sygus2 "+sygusPath;
-  std::string result;
-  char buffer[128];
-  FILE* pipe = popen(command.c_str(), "r");
-  if(!pipe){
-    print("Error: popen failed\n");
-    return "";
-  }
-  try{
-    print("Reading cvc5 output\n");
-    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-            result += buffer;
+    SMTVCDfilePath = generateSMTResultPath();
+    verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
+    
+    print("In looptime we get assertion:" + sygusfunc->getBodyVerilogExpr() + "\n");
+    print("We have tried loop over "+std::to_string(timeOut)+" times\n");
+    if(timeOut++>20){
+      print("Time out\n");
+      break;
     }
+    if(verifiedResult)
+      break;
   }
-  catch(...){
-    pclose(pipe);
-    throw;
-  }
-  int exitCode = pclose(pipe);
-  if(exitCode!=0){
-    print("Error: cvc5 failed\n");
-    return "";
-  }
-  return result;
+  return 0;
 }
 
+void runSmart(){
+
+}
 std::string generateSMTResultPath(){
   auto now = std::chrono::system_clock::now();
 
@@ -228,21 +140,3 @@ std::string generateSMTResultPath(){
   filename +=".vcd";
   return filename;
 }
-
-void setUpSignal(){
-  // SignalGather sg(config_path);
-  // if(sg.hasSignal()){
-  //   signals = sg.getAllSignals();
-  // }
-  // else{
-  //   assert(!traces.empty());
-  //   signals = traces[0]->getAllSignals(moduleName);
-  //   assert(signals->size() != 0);
-  // }
-
-  assert(!traces.empty());
-  signals = traces[0]->getAllSignals(moduleName);
-  assert(signals->size() != 0);
-
-}
-
