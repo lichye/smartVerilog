@@ -3,17 +3,20 @@ To_Do:
 # 1/16 10:15 AM
 # 1/23 10:15 AM
 
-# Runtime variables remover
-### block variables picker per block **
-### try drop meaningful values
+# Mutation Test***
+# preposing
+# ebmc
 
 # Write a new preprocessing code
 ## Automatic variables poicker for sygus 
 ### polish up the picker -- more better ini file
 ### drop meanless values
 
-# Mutation Test***
-# Parts of result
+# Runtime variables remover
+### make assertion back to Signals?
+### block variables picker per block **
+### try drop meaningful values
+
 
 Plan:
 # Speed up plan

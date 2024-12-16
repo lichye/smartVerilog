@@ -33,7 +33,8 @@ std::string generateSMTResultPath();
 
 
 int main(int argc, char* argv[]){
-  
+  int timeOut = 0;
+
   if(argc!=3){
     print("Usage: ./smart <verilog_file_name> <module_name>\n");
     return -1;
@@ -75,24 +76,25 @@ int main(int argc, char* argv[]){
   }
 
   sygus->printSysgusPath("sygus.sl");
+  print("\tFinish generating sygus file");
+
   std::string Cvc5result = sygus->runCVC5Sygus("sygus.sl");
   SygusFunction* sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
   
-  int timeOut = 0;
-  print("In looptime "+std::to_string(timeOut)+" we get assertion:" + sygusfunc->getBodyVerilogExpr() + "\n");
-
   
+  print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
+
   std::string SMTVCDfilePath = generateSMTResultPath();
   bool verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
-  
-  print("\tFinish checking the assertion: "+std::to_string(verifiedResult)+"\n");
+  print("\tFinish checking the assertion: "+std::to_string(verifiedResult));
+  print("\tTrace goes to VCD file: "+SMTVCDfilePath);
 
   while(!verifiedResult){
     if(timeOut++>20||verifiedResult){
       print("Time out\n");
       break;
     }
-    print("In looptime "+std::to_string(timeOut)+":\n");
+    print("In looptime "+std::to_string(timeOut)+":");
 
     module->addTrace(SMT,SMTVCDfilePath);
     
@@ -101,22 +103,26 @@ int main(int argc, char* argv[]){
     sygus->addConstraints(c.constraints,c.isTrue);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
-    randomState = stateMaker->makeRandomState();
 
-    if(checker->checkStateReachability(randomState)){
-      sygus->addConstraints(randomState,false);
-    }
+    // randomState = stateMaker->makeRandomState();
+
+    // if(checker->checkStateReachability(randomState)){
+    //   sygus->addConstraints(randomState,false);
+    // }
    
     sygus->printSysgusPath("sygus.sl");
-    print("\tFinish generating sygus file\n");
+    print("\tFinish generating sygus file");
 
     Cvc5result = sygus->runCVC5Sygus("sygus.sl");
 
     sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
-    print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr() + "\n");
+    print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
+
     SMTVCDfilePath = generateSMTResultPath();
     verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
-    print("\tFinish checking the assertion: "+std::to_string(verifiedResult)+"\n");
+    print("\tFinish checking the assertion: "+std::to_string(verifiedResult));
+    print("\tTrace goes to VCD file: "+SMTVCDfilePath);
+
 
   }
   if(verifiedResult){

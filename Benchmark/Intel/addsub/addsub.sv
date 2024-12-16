@@ -15,5 +15,5 @@ module addsub
 		else
 			result <= dataa - datab;
 	end
-
+	
 endmodule
