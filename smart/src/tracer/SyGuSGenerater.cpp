@@ -188,6 +188,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         }
 
         //print out the false constraints, only if false constraints exist
+        file<<"; "<<"False Constraints below"<<std::endl;
         if(falseConstraints.size() > 0){
             for(int i =0;i<falseConstraints[0].size();i++){
                 if(falseComments.find(i) != falseComments.end()){
@@ -252,7 +253,6 @@ std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
   }
   return result;
 }
-
 
 std::string SyGuSGenerater::createSyntheisFunction(const std::vector<Signal> signals)
 {   
@@ -389,6 +389,7 @@ std::string SyGuSGenerater::createBoolGrammar()
     std::string("\t(\n")+
 
     //std::string("; true false\n")+
+    std::string("\t(= Start Start) \n")+
     std::string("\t(not Start) \n")+
     std::string("\t(and Start Start) \n")+
     std::string("\t(or Start Start)\n");

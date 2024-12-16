@@ -78,12 +78,22 @@ int main(int argc, char* argv[]){
   std::string Cvc5result = sygus->runCVC5Sygus("sygus.sl");
   SygusFunction* sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
   
+  int timeOut = 0;
+  print("In looptime "+std::to_string(timeOut)+" we get assertion:" + sygusfunc->getBodyVerilogExpr() + "\n");
+
+  
   std::string SMTVCDfilePath = generateSMTResultPath();
   bool verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
   
-  int timeOut = 0;
-  
+  print("\tFinish checking the assertion: "+std::to_string(verifiedResult)+"\n");
+
   while(!verifiedResult){
+    if(timeOut++>20||verifiedResult){
+      print("Time out\n");
+      break;
+    }
+    print("In looptime "+std::to_string(timeOut)+":\n");
+
     module->addTrace(SMT,SMTVCDfilePath);
     
     Constrains c = module->getConstrain(SMTVCDfilePath,signals);
@@ -96,24 +106,24 @@ int main(int argc, char* argv[]){
     if(checker->checkStateReachability(randomState)){
       sygus->addConstraints(randomState,false);
     }
-
+   
     sygus->printSysgusPath("sygus.sl");
-    
+    print("\tFinish generating sygus file\n");
+
     Cvc5result = sygus->runCVC5Sygus("sygus.sl");
 
     sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
-
+    print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr() + "\n");
     SMTVCDfilePath = generateSMTResultPath();
     verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
-    
-    print("In looptime we get assertion:" + sygusfunc->getBodyVerilogExpr() + "\n");
-    print("We have tried loop over "+std::to_string(timeOut)+" times\n");
-    if(timeOut++>20){
-      print("Time out\n");
-      break;
-    }
-    if(verifiedResult)
-      break;
+    print("\tFinish checking the assertion: "+std::to_string(verifiedResult)+"\n");
+
+  }
+  if(verifiedResult){
+    print("Last assertion is verified\n");
+  }
+  else{
+    print("All assertion is not verified\n");
   }
   return 0;
 }
