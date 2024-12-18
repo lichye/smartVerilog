@@ -107,7 +107,8 @@ if __name__ == "__main__":
 
     #Start the simulation
     print("Start Simulation")
-    sim(current_path, main_file_name) # this will run the simulation
+    for i in range(3):
+        sim(current_path, main_file_name) # this will run the simulation
 
     #Start compile the smart compiler
     subprocess.run(["make", "compile"]) # this will compile the smart compiler

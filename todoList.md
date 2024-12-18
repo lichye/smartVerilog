@@ -12,6 +12,9 @@ To_Do:
 # preposing
 # ebmc
 
+# Sygus
+## --sygus-stream         enumerate a stream of solutions instead of terminating
+
 # Write a new preprocessing code
 ## Automatic variables poicker for sygus 
 ### polish up the picker -- more better ini file
