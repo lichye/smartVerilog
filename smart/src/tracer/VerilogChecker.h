@@ -56,6 +56,7 @@ class VerilogChecker {
         void writeVerilogFile();
         bool runEBMC();
         bool runEBMC(std::string);
+        std::string setNewEMBCFilePath();
 };
 
 #endif

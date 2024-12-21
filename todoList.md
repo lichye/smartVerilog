@@ -12,6 +12,9 @@ To_Do:
 # preposing
 # ebmc
 
+# Checker 
+## add different formal file in different time
+
 # Sygus
 ## --sygus-stream         enumerate a stream of solutions instead of terminating
 

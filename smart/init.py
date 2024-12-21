@@ -107,7 +107,8 @@ if __name__ == "__main__":
 
     #Start the simulation
     print("Start Simulation")
-    for i in range(3):
+    sim_loop = 3
+    for i in range(sim_loop):
         sim(current_path, main_file_name) # this will run the simulation
 
     #Start compile the smart compiler
