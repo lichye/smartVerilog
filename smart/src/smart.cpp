@@ -69,8 +69,8 @@ int main(int argc, char* argv[]){
   State* randomState = stateMaker->makeRandomState();
   printDebug("Get a random state: "+randomState->toString(),2);
 
-
-  if(checker->checkStateReachability(randomState)){
+  //if the random state is unreachable, then we need to add the constraints
+  if(!checker->checkStateReachability(randomState)){
     printDebug("The random state is unreachable\n",1);
     sygus->addConstraints(randomState,false);
   }

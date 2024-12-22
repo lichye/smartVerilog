@@ -456,5 +456,4 @@ module ibex_controller (
 		input [(6 - 1):0] inp;
 		sv2v_cast_89EA8 = inp;
 	endfunction
-	assert property (1);
 endmodule

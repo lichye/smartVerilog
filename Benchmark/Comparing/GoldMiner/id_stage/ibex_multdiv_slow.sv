@@ -37,7 +37,7 @@ module ibex_multdiv_slow (
 	output reg [32:0] alu_operand_b_o;
 	output reg [31:0] multdiv_result_o;
 	output wire valid_o;
-	`include "ibex_pkg.v"
+	`include "ibex_pkg.sv"
 	reg [4:0] multdiv_state_q;
 	reg [4:0] multdiv_state_d;
 	wire [4:0] multdiv_state_m1;

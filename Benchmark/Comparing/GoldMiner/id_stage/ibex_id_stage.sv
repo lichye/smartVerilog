@@ -168,7 +168,7 @@ module ibex_id_stage (
 	output wire perf_tbranch_o;
 	output reg instr_ret_o;
 	output wire instr_ret_compressed_o;
-	`include "ibex_pkg.v"
+	`include "ibex_pkg.sv"
 	wire illegal_insn_dec;
 	wire ebrk_insn;
 	wire mret_insn_dec;
@@ -482,3 +482,4 @@ module ibex_id_stage (
 	end
 	assign instr_ret_compressed_o = (instr_ret_o & instr_is_compressed_i);
 endmodule
+

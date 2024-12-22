@@ -124,7 +124,7 @@ module ibex_controller (
 	input wire stall_branch_i;
 	output reg perf_jump_o;
 	output reg perf_tbranch_o;
-	`include "ibex_pkg.v"
+	`include "ibex_pkg.sv"
 	reg [3:0] ctrl_fsm_cs;
 	reg [3:0] ctrl_fsm_ns;
 	reg nmi_mode_q;

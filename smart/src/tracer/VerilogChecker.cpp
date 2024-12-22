@@ -5,6 +5,12 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+#include <cstdlib>
+
 
 VerilogChecker::VerilogChecker() {
     verilogSrcPath = "";
@@ -121,24 +127,57 @@ bool VerilogChecker::runEBMC(std::string tracePath){
     int status = system(command.c_str());
     return status==0;
 }
-
+//The check function will return true if the state is reachable
 bool VerilogChecker::checkStateReachability(State* state) {
-    printDebug("VerilogChecker::Checking state reachability",1);
     cleanProperties();
+    generateEbmcPath(PropertyType::REACHABILITY_PROPERTY);
     addProperty(state,PropertyType::REACHABILITY_PROPERTY);
     writeVerilogFile();
     bool result = runEBMC();
     //if the property is verified, then the state is unreachable
     printDebug("The reachability result is: "+std::to_string(result),1);
-    return result;
+    return !result;
 }
 
+//The check function will return true if the property is verified/ the state is safe
 bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) {
     cleanProperties();
+    generateEbmcPath(PropertyType::SAFT_PROPERTY);
     addProperty(func,PropertyType::SAFT_PROPERTY);
     writeVerilogFile();
     bool result = runEBMC(tracePath);
     //if the property is verified, then the state is safe
     printDebug("The safety result is: "+std::to_string(result),1);
     return result;
+}
+
+std::string VerilogChecker::generateEbmcPath(PropertyType type) {
+
+    auto now = std::chrono::system_clock::now();
+
+    std::time_t timeNow = std::chrono::system_clock::to_time_t(now);
+
+    auto duration = now.time_since_epoch();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() % 1000;
+
+    std::ostringstream oss;
+    oss << std::put_time(std::localtime(&timeNow), "%Y%m%d_%H%M%S") 
+        << "_" << std::setw(3) << std::setfill('0') << millis;
+
+    std::string filename="";
+    filename += "runtime/ebmc/";
+    if(type == PropertyType::REACHABILITY_PROPERTY) {
+        filename +="/reachability_";
+    }
+    else if(type == PropertyType::SAFT_PROPERTY) {
+        filename +="/safety_";
+    }
+    else {
+        printError("Error: Property type not supported\n");
+        exit(1);
+    }
+    filename += oss.str();
+    filename +=".sv";
+    ebmcPath = filename;
+    return filename;
 }

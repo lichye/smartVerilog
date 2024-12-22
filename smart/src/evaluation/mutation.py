@@ -17,6 +17,26 @@ class VerilogMutation:
         with open(self.input_file, 'r') as file:
             self.code_lines = file.readlines()
 
+
+    import random
+
+    def mutate_localparam(self,localparam_str):
+        match = re.match(
+            r"localparam\s+(?P<range>\[\d+:\d+\])\s+(?P<variable>[a-zA-Z_]\w*)\s*=\s*(?P<value>\d+);",
+            localparam_str
+        )
+        if not match:
+            return localparam_str
+
+        current_value = int(match.group("value"))
+
+        bit_range = match.group("range")
+        bit_width = int(bit_range.split(":")[0][1:]) - int(bit_range.split(":")[1][:-1]) + 1
+        max_value = (1 << bit_width) - 1
+        mutated_value = random.choice([v for v in range(0, max_value + 1) if v != current_value])
+        return f"localparam {match.group('range')} {match.group('variable')} = {mutated_value};"
+
+
     def define_mutations(self):    
         # define muation operations
         self.mutations = []
@@ -59,13 +79,28 @@ class VerilogMutation:
             }
         )
 
-        # logical negation mutation
+        # variable_negation mutation
         self.mutations.append({
             "category": "variable_negation",
             "pattern": r"(?<![!~\d0-9'])\b[a-zA-Z_]\w*\b", 
             "replacement": lambda m: random.choice([f"!{m.group(0)}", f"~{m.group(0)}"])
         })
 
+        # localparam mutation
+        self.mutations.append({
+            "category": "localparam_mutation",
+            "pattern": r"localparam\s+\[\d+:\d+\]\s+[a-zA-Z_]\w*\s*=\s*\d+;",
+            "replacement": lambda m: self.mutate_localparam(m.group(0))
+        })
+        
+        # if negation mutation
+        self.mutations.append({
+            "category": "if_negation",
+            "pattern": r"if\s*\(\s*(csr_mfip_i\[\d+\])\s*\)",  # 匹配 if 条件中的数组元素
+            "replacement": lambda m: f"if (!{m.group(1)})"
+        })
+        
+        # negation flip mutation
         self.mutations.append({
             "category": "negation_flip",
             "pattern": r"(?<![a-zA-Z0-9_])([!~])([a-zA-Z_]\w*)\b", 
@@ -77,6 +112,20 @@ class VerilogMutation:
             "category": "verilog_random_literal",
             "pattern": r"(\d+)'([bBoOdDhH])[01]+",
             "replacement": lambda m: f"{m.group(1)}'{m.group(2)}{''.join(random.choice(['0', '1']) for _ in range(int(m.group(1))))}"
+        })
+
+        # Logical mutation for changing input to output
+        self.mutations.append({
+            "category": "verilog_io_mutation",
+            "pattern": r"\binput\s+wire\s+(\w+);",
+            "replacement": lambda m: f"output wire {m.group(1)};"
+        })
+
+        # Logical mutation for changing output to input
+        self.mutations.append({
+            "category": "verilog_io_mutation",
+            "pattern": r"\boutput\s+wire\s+(\w+);",
+            "replacement": lambda m: f"input wire {m.group(1)};"
         })
 
         print(f"Generated {len(self.mutations)} mutation rules.")
@@ -119,41 +168,32 @@ class VerilogMutation:
 
         for line in self.code_lines:
             mutated_lines = []
-
             self.is_in_always_block(line)  # update always block status
-            
-            
-            # when we are in always block, we should apply the mutation to the right side of the assignment
-            if self.always_block:
-                # print("In always block: "+line)
-                assignment = re.search(r"^\s*([a-zA-Z_]\w*)\s*(<{0,1}=)\s*(.+?);", line)
-                # print("assignment: "+str(assignment)+"\n")
-                for muation in self.mutations:
-                    if assignment:
-                        lhs = assignment.group(1)
-                        op = assignment.group(2)
-                        rhs = assignment.group(3)
-                        if len(re.findall(muation["pattern"], rhs))>0:
-                            modified_rhs = re.sub(muation["pattern"], muation["replacement"], rhs)
-                            test_count += 1
-                            modified_line = lhs + " " + op + " " + modified_rhs + ";\n"
-                            print("This is the "+str(test_count)+" mutation")
-                            my_matchs = re.findall(muation["pattern"], rhs)
-                            print("The match is : "+str(my_matchs))
-                            print("The pattern is: "+muation["category"])
-                            print("Muations: "+line + " -> " + modified_line)
-                            # then we should write the modified line to the file
-                            self.write_to_file(test_count,line,modified_line)
-            # if we are not in always block, we should apply the mutation to the whole line
-            else:
-                for muation in self.mutations:
-                    if len(re.findall(muation["pattern"], line))>0:
-                        modified_line = re.sub(muation["pattern"], muation["replacement"], line)
+            for mutation in self.mutations:
+                if(mutation["category"]=="variable_negation"):
+                    matches = re.findall(mutation["pattern"], line)
+                    for match_index, match in enumerate(matches):
+                        # 对当前匹配的变量进行替换
+                        modified_line = re.sub(
+                            rf"\b{re.escape(match)}\b", 
+                            mutation["replacement"](re.match(rf"\b{re.escape(match)}\b", match)), 
+                            line
+                        )
+                        test_count += 1
+                        print(f"This is mutation {test_count}")
+                        print(f"The match is: {match}")
+                        print(f"The pattern is: {mutation['category']}")
+                        print(f"Mutations: {line.strip()} -> {modified_line.strip()}")
+                        # 写入突变后的文件
+                        self.write_to_file(test_count, line, modified_line)
+                else:   
+                    if len(re.findall(mutation["pattern"], line))>0:
+                        modified_line = re.sub(mutation["pattern"], mutation["replacement"], line)
                         test_count += 1
                         print("This is the "+str(test_count)+" mutation")
-                        my_matchs = re.findall(muation["pattern"], line)
+                        my_matchs = re.findall(mutation["pattern"], line)
                         print("The match is : "+str(my_matchs))
-                        print("The pattern is: "+muation["category"])
+                        print("The pattern is: "+mutation["category"])
                         print("Muations: "+line + " -> " + modified_line)
                         # then we should write the modified line to the file
                         self.write_to_file(test_count,line,modified_line)
@@ -169,7 +209,7 @@ class VerilogMutation:
         file_count=self.generate_mutants()
         return file_count
 
-def run_ebmc_on_verilog_files(directory, ebmc_path="ebmc"):
+def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
     """
     Automatically runs `ebmc` on all Verilog files named mutant_*.sv in the specified directory.
 
@@ -204,12 +244,13 @@ def run_ebmc_on_verilog_files(directory, ebmc_path="ebmc"):
         # print(f"Running ebmc on: {verilog_file}")
         try:
             # Run ebmc command
-            result = subprocess.run([ebmc_path, verilog_file],
+            result = subprocess.run([ebmc_path, verilog_file,"-p",property,"--bound",str(bound)],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     text=True)
             
             # Print the output of the command
+            # print()
             # print(f"Output for {verilog_file}:")
             # print(result.stdout)
 
@@ -273,16 +314,33 @@ def remove_files(file_list):
             print(f"Error removing file {file}: {e}")
 
 if __name__ == "__main__":
-    input_file_dir = "verilog/"
-    input_file = input_file_dir+sys.argv[1]  
-    output_dir = "mutants"         
+    # Set the configuration
+    if(len(sys.argv) != 3):
+        print("Usage: python mutation.py <input_file> <output_dir>")
+        print("Run default configuration")
+        input_file_dir = "verilog/"
+        input_file = input_file_dir+"ibex_controller.sv"  
+        # output_dir = "mutants"
+    else:
+        input_file_dir = sys.argv[1]
+        input_file = input_file_dir+sys.argv[2]
+        # output_dir = sys.argv[3]
+
+    output_dir = "mutants"
+    
+    # Generate mutants
     mutation_tool = VerilogMutation(input_file, output_dir)
     file_count = mutation_tool.run()
+    
+    # Setup the environment
     move_files(input_file_dir, output_dir)
-    error_files=run_ebmc_on_verilog_files(output_dir)
 
-    print(f"Generated {file_count} mutant files in '{output_dir}' directory.")
-    print("Number of error files: "+str(len(error_files)))
-    remove_files(error_files)
+    # Run ebmc on the generated mutants and remove error files
+    bad_files=run_ebmc_on_verilog_files(output_dir,"1==1",10)
+    
+    remove_files(bad_files)
 
-    print("Remain files number: "+str(file_count-len(error_files)))
+    # finish the process
+    print("Generated "+str(file_count)+" mutant files in '"+output_dir+"' directory.")
+    print("Removed "+str(len(bad_files))+" bad files.")
+    print("Remain files number: "+str(file_count-len(bad_files)))
