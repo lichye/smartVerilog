@@ -95,7 +95,8 @@ clean:
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
 	rm -rf $(RUNTIME_DIR)
-	rm -rf Benchmarks
+	rm -rf benchmarks
+	rm -rf result/*
 	mkdir $(BUILD_DIR)
 
 

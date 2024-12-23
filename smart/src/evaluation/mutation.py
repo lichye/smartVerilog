@@ -114,19 +114,19 @@ class VerilogMutation:
             "replacement": lambda m: f"{m.group(1)}'{m.group(2)}{''.join(random.choice(['0', '1']) for _ in range(int(m.group(1))))}"
         })
 
-        # Logical mutation for changing input to output
-        self.mutations.append({
-            "category": "verilog_io_mutation",
-            "pattern": r"\binput\s+wire\s+(\w+);",
-            "replacement": lambda m: f"output wire {m.group(1)};"
-        })
+        # # Logical mutation for changing input to output
+        # self.mutations.append({
+        #     "category": "verilog_io_mutation",
+        #     "pattern": r"\binput\s+wire\s+(\w+);",
+        #     "replacement": lambda m: f"output wire {m.group(1)};"
+        # })
 
-        # Logical mutation for changing output to input
-        self.mutations.append({
-            "category": "verilog_io_mutation",
-            "pattern": r"\boutput\s+wire\s+(\w+);",
-            "replacement": lambda m: f"input wire {m.group(1)};"
-        })
+        # # Logical mutation for changing output to input
+        # self.mutations.append({
+        #     "category": "verilog_io_mutation",
+        #     "pattern": r"\boutput\s+wire\s+(\w+);",
+        #     "replacement": lambda m: f"input wire {m.group(1)};"
+        # })
 
         print(f"Generated {len(self.mutations)} mutation rules.")
 
@@ -145,9 +145,10 @@ class VerilogMutation:
             if self.begin_count == 0:
                 self.always_block = False
 
-    def write_to_file(self, mutation_count,line,modified_line):
+    def write_to_file(self, mutation_count,line,modified_line,comment=""):
         file_dir = self.output_dir+"/mutant_"+str(mutation_count)+".sv"
         with open(file_dir, 'w') as file:
+            file.write(comment)
             for self_line in self.code_lines:
                 if self_line == line:
                     file.write(modified_line)
@@ -169,34 +170,43 @@ class VerilogMutation:
         for line in self.code_lines:
             mutated_lines = []
             self.is_in_always_block(line)  # update always block status
+            if("//" in line):
+                continue
             for mutation in self.mutations:
                 if(mutation["category"]=="variable_negation"):
                     matches = re.findall(mutation["pattern"], line)
                     for match_index, match in enumerate(matches):
-                        # 对当前匹配的变量进行替换
                         modified_line = re.sub(
                             rf"\b{re.escape(match)}\b", 
                             mutation["replacement"](re.match(rf"\b{re.escape(match)}\b", match)), 
                             line
                         )
                         test_count += 1
-                        print(f"This is mutation {test_count}")
-                        print(f"The match is: {match}")
-                        print(f"The pattern is: {mutation['category']}")
-                        print(f"Mutations: {line.strip()} -> {modified_line.strip()}")
-                        # 写入突变后的文件
-                        self.write_to_file(test_count, line, modified_line)
+                        # print(f"This is mutation {test_count}")
+                        # print(f"The match is: {match}")
+                        # print(f"The pattern is: {mutation['category']}")
+                        # print(f"Mutations: {line.strip()} -> {modified_line.strip()}")
+                        comment = f"// This is mutation {test_count} for {mutation['category']}\n"
+                        comment += f"// The match is: {match}\n"
+                        comment += f"// The pattern is: {mutation['category']}\n"
+                        comment += f"// Mutations: {line.strip()} -> {modified_line.strip()}\n"
+                        self.write_to_file(test_count, line, modified_line, comment)
                 else:   
                     if len(re.findall(mutation["pattern"], line))>0:
                         modified_line = re.sub(mutation["pattern"], mutation["replacement"], line)
                         test_count += 1
-                        print("This is the "+str(test_count)+" mutation")
+                        
                         my_matchs = re.findall(mutation["pattern"], line)
-                        print("The match is : "+str(my_matchs))
-                        print("The pattern is: "+mutation["category"])
-                        print("Muations: "+line + " -> " + modified_line)
+                        # print("This is the "+str(test_count)+" mutation")
+                        # print("The match is : "+str(my_matchs))
+                        # print("The pattern is: "+mutation["category"])
+                        # print("Muations: "+line + " -> " + modified_line)
                         # then we should write the modified line to the file
-                        self.write_to_file(test_count,line,modified_line)
+                        comment = f"// This is mutation {test_count} for {mutation['category']}\n"
+                        comment += f"// The match is: {match}\n"
+                        comment += f"// The pattern is: {mutation['category']}\n"
+                        comment += f"// Mutations: {line.strip()} -> {modified_line.strip()}\n"
+                        self.write_to_file(test_count, line, modified_line, comment)
         
         return test_count
         

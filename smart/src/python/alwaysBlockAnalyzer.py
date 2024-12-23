@@ -2,7 +2,7 @@ def write_to_ini(module_name,variables,signals):
     print("module_name: ",module_name)
     print("variables: ",variables)
     print("signals: ",signals)
-    file_path = "User/config.ini"
+    file_path = "user/config.ini"
 
     config = configparser.ConfigParser()
 

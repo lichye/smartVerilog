@@ -76,7 +76,7 @@ def generate_copy_variables(variables):
     print(f"Generating copy variables for: {variables}")
     copy_lines = []
     copy_lines.append("\n")
-    copy_lines.append("\t // Copy variables for time analysis")
+    # copy_lines.append("\t // Copy variables for time analysis")
     exist_variables = set()
     for _, bit_range, var_name in variables:
         if var_name in exist_variables:

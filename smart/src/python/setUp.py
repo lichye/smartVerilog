@@ -14,7 +14,7 @@ def setup(current_path):
 
     sim_build_path = current_path+"/sim_build"
 
-    user_verilog_path = current_path+"/User"
+    user_verilog_path = current_path+"/user"
     
     sim_target_dir = current_path+"/runtime/sim_results"
 

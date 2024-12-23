@@ -1,4 +1,8 @@
 
+import os
+import sys
+import subprocess
+
 def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
     """
     Automatically runs `ebmc` on all Verilog files named mutant_*.sv in the specified directory.
@@ -55,16 +59,62 @@ def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
             error_files.append(verilog_file)    
     return error_files
 
+def get_result_files(directory):
+
+    result_files = set()
+    
+    if not os.path.exists(directory):
+        raise FileNotFoundError(f"Directory '{directory}' does not exist.")
+
+    for filename in os.listdir(directory):
+        full_path = os.path.join(directory, filename)
+        if filename.startswith("result") and os.path.isfile(full_path):
+            result_files.add(full_path)
+
+    return result_files
+
+def get_mutant_files(directory):
+    
+    mutant_files = set()
+        
+    if not os.path.exists(directory):
+        raise FileNotFoundError(f"Directory '{directory}' does not exist.")
+    
+    for filename in os.listdir(directory):
+        full_path = os.path.join(directory, filename)
+        if filename.startswith("mutant") and os.path.isfile(full_path):
+            mutant_files.add(full_path)
+    return mutant_files
+
+def read_file(file):
+    with open(file, "r") as file:
+        content = file.read()
+    return content
+
 if __name__ == "__main__":
-    # Example usage
-    directory = "smart/User"
-    property = "G ! (req1 & req2)"
+    property_dir = "result"
     bound = 10
     ebmc_path = "ebmc"
-    error_files = run_ebmc_on_verilog_files(directory, property,bound, ebmc_path)
-    if error_files:
-        print(f"Errors occurred while running ebmc on the following files:")
-        for file in error_files:
-            print(file)
-    else:
-        print("All files processed successfully.")
+    directory = "benchmarks"
+    
+    properties = []
+    property_files = get_result_files(property_dir)
+    for file in property_files:
+        read = read_file(file)
+        properties.append(read)
+    print("Properties: ",properties)
+
+    find_files = set()
+    for p in properties:
+        print("Property: ",p)
+        p_find_files = run_ebmc_on_verilog_files(directory, p,bound,ebmc_path)
+        for file in p_find_files:
+            find_files.add(file)
+
+    print("Found mutations: ",sorted(find_files))
+    print("Found total mutations: ",len(find_files))
+    
+    mutant_files = get_mutant_files(directory)
+    print("Total mutations: ",len(mutant_files))
+    print("Coverage percentage: ",(len(find_files)/len(mutant_files))*100)
+    

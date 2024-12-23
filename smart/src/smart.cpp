@@ -11,6 +11,7 @@
 #include "VerilogChecker.h"
 #include "SmtFunctionParser.h"
 #include "Module.h"
+#include <fstream>
 namespace fs = std::filesystem;
 
 //global variables
@@ -28,20 +29,23 @@ std::string ebmcPath = "runtime/ebmc/formal.sv";
 std::string ebmcReachable = "runtime/ebmc/reachable.sv";
 std::string moduleName = "";
 std::string verilogSrcPath = "";
-
+std::string resultFileDir = "";
 std::string generateSMTResultPath();
+
+bool writeStringToFile(const std::string&, const std::string&);
 
 
 int main(int argc, char* argv[]){
   int timeOut = 0;
 
-  if(argc!=3){
-    print("Usage: ./smart <verilog_file_name> <module_name>\n");
+  if(argc!=4){
+    print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir>\n");
     return -1;
   }
   else{
     verilogSrcPath = argv[1];
     moduleName = argv[2];
+    resultFileDir = argv[3];
   }
 
   StateMaker::setSeed(42);
@@ -123,10 +127,11 @@ int main(int argc, char* argv[]){
     print("\tFinish checking the assertion: "+std::to_string(verifiedResult));
     print("\tTrace goes to VCD file: "+SMTVCDfilePath);
 
-
   }
   if(verifiedResult){
     print("Last assertion is verified\n");
+    print("The property is "+sygusfunc->getBodyVerilogExpr());
+    writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr());
   }
   else{
     print("All assertion is not verified\n");
@@ -134,9 +139,6 @@ int main(int argc, char* argv[]){
   return 0;
 }
 
-void runSmart(){
-
-}
 std::string generateSMTResultPath(){
   auto now = std::chrono::system_clock::now();
 
@@ -155,4 +157,15 @@ std::string generateSMTResultPath(){
   filename += oss.str();
   filename +=".vcd";
   return filename;
+}
+
+bool writeStringToFile(const std::string& filename, const std::string& content) {
+    std::ofstream outfile(filename); 
+    if (!outfile.is_open()) {        
+        std::cerr << "Error: Unable to open file " << filename << " for writing." << std::endl;
+        return false;
+    }
+    outfile << content; 
+    outfile.close();    
+    return true;     
 }

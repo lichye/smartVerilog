@@ -71,19 +71,19 @@ def setupMutants(sv_path,top_module,mutant_path):
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
-def smart(current_path, file_name):
+def smart(current_path, file_name,result_file):
     src_file = current_path+"/runtime/verilog/"+file_name
     module_name = file_name.split(".")[0]
     print("module name: ", module_name)
-    subprocess.run(["./smart.out",src_file,module_name])
+    subprocess.run(["./smart.out",src_file,module_name,result_file])
 
 if __name__ == "__main__":
 
     current_path = os.getcwd()
-    user_path = current_path+"/User"
+    user_path = current_path+"/user"
     cocotb_path = current_path+"/runtime/cocotb/"
     ebmc_path = current_path+"/runtime/ebmc/"
-    mutant_path = current_path+"/Benchmarks/"
+    mutant_path = current_path+"/benchmarks/"
     mverilog_path = current_path+"/runtime/verilog/"
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -122,3 +122,6 @@ if __name__ == "__main__":
 
     #Setup the mutants
     setupMutants(mverilog_path,main_file_name,mutant_path)
+
+    #Run Smart
+    smart(current_path, main_file_name,"result/result1.txt")
