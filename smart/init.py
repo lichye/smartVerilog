@@ -66,6 +66,11 @@ def sv_prep(sv_path,rst_path):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
 
+def setupMutants(sv_path,top_module,mutant_path):
+    cmd = ["python", "src/evaluation/mutation.py", sv_path, top_module, mutant_path]
+    print("Run cmd: ", cmd)
+    subprocess.run(cmd)
+
 def smart(current_path, file_name):
     src_file = current_path+"/runtime/verilog/"+file_name
     module_name = file_name.split(".")[0]
@@ -78,6 +83,7 @@ if __name__ == "__main__":
     user_path = current_path+"/User"
     cocotb_path = current_path+"/runtime/cocotb/"
     ebmc_path = current_path+"/runtime/ebmc/"
+    mutant_path = current_path+"/Benchmarks/"
     mverilog_path = current_path+"/runtime/verilog/"
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -113,3 +119,6 @@ if __name__ == "__main__":
 
     #Start compile the smart compiler
     subprocess.run(["make", "compile"]) # this will compile the smart compiler
+
+    #Setup the mutants
+    setupMutants(mverilog_path,main_file_name,mutant_path)

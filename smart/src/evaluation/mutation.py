@@ -315,8 +315,8 @@ def remove_files(file_list):
 
 if __name__ == "__main__":
     # Set the configuration
-    if(len(sys.argv) != 3):
-        print("Usage: python mutation.py <input_file> <output_dir>")
+    if(len(sys.argv) != 4):
+        print("Usage: python mutation.py <input_file> <filename>")
         print("Run default configuration")
         input_file_dir = "verilog/"
         input_file = input_file_dir+"ibex_controller.sv"  
@@ -324,9 +324,10 @@ if __name__ == "__main__":
     else:
         input_file_dir = sys.argv[1]
         input_file = input_file_dir+sys.argv[2]
+        output_dir = sys.argv[3]
         # output_dir = sys.argv[3]
 
-    output_dir = "mutants"
+    # output_dir = "mutants"
     
     # Generate mutants
     mutation_tool = VerilogMutation(input_file, output_dir)
