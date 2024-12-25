@@ -86,7 +86,7 @@ all_clean: clean
 	rm -rf $(RUNTIME_DIR)
 	rm -rf sim_build
 	rm -rf $(SMART_TARGET)
-	rm -rf User/*
+	rm -rf user/*
 	rm -rf sygus.sl
 
 clean:

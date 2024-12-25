@@ -30,15 +30,17 @@ std::string ebmcReachable = "runtime/ebmc/reachable.sv";
 std::string moduleName = "";
 std::string verilogSrcPath = "";
 std::string resultFileDir = "";
+std::string resultRemoveVariablesPath = "";
 std::string generateSMTResultPath();
 
 bool writeStringToFile(const std::string&, const std::string&);
 
+void removeSignals(std::string);
 
 int main(int argc, char* argv[]){
   int timeOut = 0;
 
-  if(argc!=4){
+  if(argc!=5){
     print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir>\n");
     return -1;
   }
@@ -46,6 +48,7 @@ int main(int argc, char* argv[]){
     verilogSrcPath = argv[1];
     moduleName = argv[2];
     resultFileDir = argv[3];
+    resultRemoveVariablesPath = argv[4];
   }
 
   StateMaker::setSeed(42);
@@ -57,7 +60,12 @@ int main(int argc, char* argv[]){
   module->addTracesfromDir(SIM,sim_path);
   module->addTracesfromDir(SMT,smt_path);
 
+  // we first get all the signals from the module
   signals = module->getAllSignals();
+  removeSignals(resultRemoveVariablesPath);
+  //TODO: add two functions
+  //1. intersection of signals and variables
+  
 
   sygus->setSignals(signals);
 
@@ -168,4 +176,35 @@ bool writeStringToFile(const std::string& filename, const std::string& content) 
     outfile << content; 
     outfile.close();    
     return true;     
+}
+
+void removeSignals(std::string removeVariablesPath){
+  // std::string removeVariablesPath = "/home/magna/Desktop/smartVerilog/smart/runtime/variables/removeVariables.txt";
+  std::vector<std::string> lines;
+  std::ifstream file(removeVariablesPath); // Open the file
+
+  if (!file.is_open()) {
+      std::cerr << "Error: Unable to open file " << removeVariablesPath << std::endl;
+      // exit(1);
+      // return lines; // Return an empty vector if the file cannot be opened
+  }
+
+  std::string line;
+  while (std::getline(file, line)) { // Read the file line by line
+      lines.push_back(line); // Add each line to the vector
+  }
+
+  for(auto &line : lines){
+    printDebug("Removing signal: "+line,2);
+  }
+  for(auto &line : lines){
+    for(auto it = signals->begin(); it != signals->end();){
+      if(it->name == line){
+        it = signals->erase(it);
+      }
+      else{
+        ++it;
+      }
+    }
+  }
 }

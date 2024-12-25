@@ -67,15 +67,21 @@ def sv_prep(sv_path,rst_path):
                 exit(1)
 
 def setupMutants(sv_path,top_module,mutant_path):
-    cmd = ["python", "src/evaluation/mutation.py", sv_path, top_module, mutant_path]
+    cmd = ["python", "src/python/mutation.py", sv_path, top_module, mutant_path]
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
-def smart(current_path, file_name,result_file):
+def smart(current_path, file_name,result_file,runtimeRemoveVariables):
     src_file = current_path+"/runtime/verilog/"+file_name
     module_name = file_name.split(".")[0]
     print("module name: ", module_name)
-    subprocess.run(["./smart.out",src_file,module_name,result_file])
+    subprocess.run(["./smart.out",src_file,module_name,result_file,runtimeRemoveVariables])
+
+def resultAnalysis(resultDir,runtimeRemoveVariables):
+    print("Result Analysis")
+    cmd = ["python", "src/python/resultAnalyzer.py", resultDir, runtimeRemoveVariables]
+    print("Run cmd: ", cmd)
+    subprocess.run(cmd)
 
 if __name__ == "__main__":
 
@@ -85,6 +91,9 @@ if __name__ == "__main__":
     ebmc_path = current_path+"/runtime/ebmc/"
     mutant_path = current_path+"/benchmarks/"
     mverilog_path = current_path+"/runtime/verilog/"
+    
+    resultDir = current_path+"/result"
+    runtimeRemoveVariables = current_path+"/runtime/variables/removeVariables.txt"
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -123,5 +132,13 @@ if __name__ == "__main__":
     #Setup the mutants
     setupMutants(mverilog_path,main_file_name,mutant_path)
 
-    #Run Smart
-    smart(current_path, main_file_name,"result/result1.txt")
+    # loop here:
+
+    smart_loop = 3
+    
+    for i in range(smart_loop):
+        result_file = resultDir+"/result"+str(i)+".txt"
+        smart(current_path, main_file_name,result_file,runtimeRemoveVariables)
+        #Result Analysis
+        resultAnalysis(resultDir,runtimeRemoveVariables)
+    

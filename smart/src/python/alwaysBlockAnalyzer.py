@@ -1,3 +1,6 @@
+import re
+import configparser
+
 def write_to_ini(module_name,variables,signals):
     print("module_name: ",module_name)
     print("variables: ",variables)

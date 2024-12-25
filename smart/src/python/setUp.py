@@ -20,6 +20,13 @@ def setup(current_path):
 
     smt_target_dir = current_path+"/runtime/smt_results"
 
+    variables_dir = current_path+"/runtime/variables"
+
+    result_dir = current_path+"/result"
+
+    removeVariables = current_path+"/runtime/removeVariables.txt"
+
+
     # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
     if not os.path.exists(sim_target_dir):
         os.makedirs(sim_target_dir)
@@ -33,6 +40,12 @@ def setup(current_path):
         os.makedirs(sim_build_path)
     if not os.path.exists(runtime_cocotb_path):
         os.makedirs(runtime_cocotb_path)
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+    if not os.path.exists(variables_dir):
+        os.makedirs(variables_dir)
+    if not os.path.exists(removeVariables):
+        open(removeVariables, 'w').close()
 
     subprocess.run(["cp", user_verilog_path+"/sim.py",runtime_cocotb_path+"sim.py"])
 
