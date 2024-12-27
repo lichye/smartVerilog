@@ -24,7 +24,7 @@ def setup(current_path):
 
     result_dir = current_path+"/result"
 
-    removeVariables = current_path+"/runtime/removeVariables.txt"
+    removeVariables = current_path+"/runtime/variables/removeVariables.txt"
 
 
     # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])

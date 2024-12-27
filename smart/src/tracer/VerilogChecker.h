@@ -41,7 +41,9 @@ class VerilogChecker {
         //The check function will return true if the state is reachable
         bool checkStateReachability(State*);
         bool checkExprSafety(SygusFunction*,std::string);
-
+        void setBound(int);
+        void setTopModule(std::string);
+        void setModuleTime(std::string);
     private:
         //parameters of ebmc
         std::string verilogSrcPath;
@@ -57,6 +59,8 @@ class VerilogChecker {
         bool runEBMC();
         bool runEBMC(std::string);
         std::string generateEbmcPath(PropertyType);
+        std::string topModule;
+        std::string moduleTime;
 };
 
 #endif

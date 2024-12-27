@@ -12,16 +12,29 @@
 #include <cstdlib>
 
 
+#include <string>
+#include <algorithm>
+#include <cctype>
+
+std::string trim(const std::string &str) {
+    size_t first = str.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return "";
+    size_t last = str.find_last_not_of(" \t\r\n");
+    return str.substr(first, last - first + 1);
+}
+
 VerilogChecker::VerilogChecker() {
     verilogSrcPath = "";
     ebmcPath = "";
     tracePath = "";
+    moduleTime = "";
     bound = 10;
 }
 
 VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string ebmcPath) {
     this->verilogSrcPath = verilogSrcPath;
     this->ebmcPath = ebmcPath;
+    moduleTime = "";
     bound = 10;
 }
 
@@ -48,14 +61,33 @@ void VerilogChecker::writeVerilogFile() {
     }
     std::vector<std::string> lines;
     std::string line;
+    std::string currentModuleName = "";
+    bool isModule = false;
 
     while (std::getline(inputFile, line)) {
         lines.push_back(line);
-        if(line.find("endmodule") != std::string::npos) {
+
+        if (line.find("module ") != std::string::npos) {
+            size_t start = line.find("module ") + 7; 
+            size_t end = line.find('(', start);
+            if (end != std::string::npos) {
+                currentModuleName = line.substr(start, end - start);
+                currentModuleName = trim(currentModuleName);
+            }
+        }
+
+        if(currentModuleName == topModule) {
+            isModule = true;
+        }else{
+            isModule = false;
+        }
+
+        if(line.find("endmodule") != std::string::npos && isModule) {
             assert(properties.size() == propertyTypes.size());
             for(int i=0;i<properties.size();i++) {
                 lines.insert(lines.end() - 1, "    assert property (" + properties[i] + ");\n");
             }
+            isModule = false;
         }
     }
     inputFile.close();
@@ -81,7 +113,7 @@ void VerilogChecker::addProperty(State* state,PropertyType type) {
     if(type == PropertyType::REACHABILITY_PROPERTY) {
         assert(!state->isUndefined());//only defined states can be verified
 
-        properties.push_back("##1 (!"+state->toVerilogExpr()+")");
+        properties.push_back(moduleTime+" (!"+state->toVerilogExpr()+")");
     }
 }
 
@@ -89,10 +121,10 @@ void VerilogChecker::addProperty(SygusFunction* func,PropertyType type) {
     propertyTypes.push_back(type);
 
     if(type == PropertyType::REACHABILITY_PROPERTY){
-        properties.push_back("##1 "+func->getBodyVerilogExpr());
+        properties.push_back(moduleTime+" "+func->getBodyVerilogExpr());
     }
     else if(type == PropertyType::SAFT_PROPERTY){
-        properties.push_back("##1 "+func->getBodyVerilogExpr());
+        properties.push_back(moduleTime+func->getBodyVerilogExpr());
     }
     else{
         printError("Error: Property type not supported\n");
@@ -110,7 +142,9 @@ bool VerilogChecker::runEBMC(){
     std::string command = "";
     command += "ebmc "+ebmcPath;
     command += " --bound "+std::to_string(bound);
-    command += " --vcd test.vcd";
+    if(topModule != "")
+        command += " --top "+topModule;
+    // command += " --vcd test.vcd";
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
     int status = system(command.c_str());
@@ -121,6 +155,8 @@ bool VerilogChecker::runEBMC(std::string tracePath){
     std::string command = "";
     command += "ebmc "+ebmcPath;
     command += " --bound "+std::to_string(bound);
+    if(topModule != "")
+        command += " --top "+topModule;
     command += " --vcd "+tracePath;
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
@@ -135,7 +171,7 @@ bool VerilogChecker::checkStateReachability(State* state) {
     writeVerilogFile();
     bool result = runEBMC();
     //if the property is verified, then the state is unreachable
-    printDebug("The reachability result is: "+std::to_string(result),1);
+    // printDebug("The reachability result is: "+std::to_string(result),1);
     return !result;
 }
 
@@ -180,4 +216,16 @@ std::string VerilogChecker::generateEbmcPath(PropertyType type) {
     filename +=".sv";
     ebmcPath = filename;
     return filename;
+}
+
+void VerilogChecker::setBound(int bound) {
+    this->bound = bound;
+}
+
+void VerilogChecker::setTopModule(std::string topModule) {
+    this->topModule = topModule;
+}
+
+void VerilogChecker::setModuleTime(std::string moduleTime) {
+    this->moduleTime = moduleTime;
 }

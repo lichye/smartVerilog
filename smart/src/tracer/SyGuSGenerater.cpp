@@ -179,6 +179,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         
         //print out  the constraints, only if constraints exist
         if(constraints.size() >0){
+            //we believe that the constraints are the same length with the signals
             for(int i =0;i<constraints[0].size();i++){
                 if(comments.find(i) != comments.end()){
                     file<<"; "<<comments[i]<<std::endl;
@@ -457,9 +458,6 @@ bool SyGuSGenerater::checkConstraintsDefined(int index,bool trueConstrains)
 {   
     if(trueConstrains){
         for(auto &constraint : constraints){
-            if(constraint.size() <= index){
-                return false;
-            }
             if(constraint[index]->isUndefined()){
                 return false;
             }
@@ -468,9 +466,6 @@ bool SyGuSGenerater::checkConstraintsDefined(int index,bool trueConstrains)
     }
     else{
         for(auto &constraint : falseConstraints){
-            if(constraint.size() <= index){
-                return false;
-            }
             if(constraint[index]->isUndefined()){
                 return false;
             }

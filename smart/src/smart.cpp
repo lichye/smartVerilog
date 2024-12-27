@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
   int timeOut = 0;
 
   if(argc!=5){
-    print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir>\n");
+    print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir> <resultRemoveVariablesPath>\n");
     return -1;
   }
   else{
@@ -55,7 +55,11 @@ int main(int argc, char* argv[]){
   SmtFunctionParser parser;
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
+
   checker = new VerilogChecker(verilogSrcPath,ebmcPath);
+  checker->setTopModule(moduleName);
+  // this means we does not care about the initial state
+  // checker->setModuleTime("##1");
   
   module->addTracesfromDir(SIM,sim_path);
   module->addTracesfromDir(SMT,smt_path);
@@ -82,6 +86,7 @@ int main(int argc, char* argv[]){
   printDebug("Get a random state: "+randomState->toString(),2);
 
   //if the random state is unreachable, then we need to add the constraints
+  
   if(!checker->checkStateReachability(randomState)){
     printDebug("The random state is unreachable\n",1);
     sygus->addConstraints(randomState,false);

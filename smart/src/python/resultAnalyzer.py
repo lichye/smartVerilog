@@ -11,7 +11,7 @@ def parse_variables_from_file(file_path):
     try:
         with open(file_path, 'r') as file:
             for line in file:
-                print(f"line: {line}")
+                # print(f"line: {line}")
                 # Use regex to match variable definitions (e.g., variable_name = value)
                 matches = re.findall(r"(?<![\d0-9'])\b[a-zA-Z_]\w*\b", line)
                 variables.update(matches)

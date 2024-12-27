@@ -9,17 +9,20 @@ Finish:
 ## We can generate different assertions
 
 TODO:
-# add support for ISCA benchmark
+# Write a variable picker**
 
-# Write a variable picker
+# TimeTable compared to Others
+----------------------------- 1/9
 
-# Optimazation
-## --sygus-stream         enumerate a stream of solutions instead of terminating
+# Run time Optimazation
+## --sygus-stream
 
 # Dockerfile
 ## Late Feb?
 
----------------------------
+# Write the paper
+
+--------------------------- before paper review
 # Future work
 # make support 
 ## for bv value rules

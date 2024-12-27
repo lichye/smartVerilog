@@ -119,8 +119,10 @@ std::string Value::toSyGusString(){
     if(type == SignalType::BOOLEAN){
         if(value.bitValue == BitType::ZERO)
             return "false";
-        else
+        else if (value.bitValue == BitType::ONE)
             return "true";
+        else
+            return "unknown";
     }
     else if(type == SignalType::BITS){
         std::string str="#b";
