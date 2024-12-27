@@ -66,8 +66,8 @@ def sv_prep(sv_path,rst_path):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
 
-def setupMutants(sv_path,top_module,mutant_path):
-    cmd = ["python", "src/python/mutation.py", sv_path, top_module, mutant_path]
+def setupMutants(sv_path,top_module_file,mutant_path,top_module):
+    cmd = ["python", "src/python/mutation.py", sv_path, top_module_file, mutant_path,top_module]
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
@@ -122,21 +122,22 @@ if __name__ == "__main__":
 
     #Start the simulation
     print("Start Simulation")
-    sim_loop = 3
+    sim_loop = 1
     for i in range(sim_loop):
         sim(current_path, main_file_name) # this will run the simulation
 
-    #Start compile the smart compiler
+    # Start compile the smart compiler
     subprocess.run(["make", "compile"]) # this will compile the smart compiler
 
     #Setup the mutants
-    setupMutants(mverilog_path,main_file_name,mutant_path)
+    setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
 
     # loop here:
 
     smart_loop = 3
     
     for i in range(smart_loop):
+        cmd = input("Run a smart loop?:")
         result_file = resultDir+"/result"+str(i)+".txt"
         smart(current_path, main_file_name,result_file,runtimeRemoveVariables)
         #Result Analysis

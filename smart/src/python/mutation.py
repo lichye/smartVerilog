@@ -45,7 +45,17 @@ class VerilogMutation:
         self.bitwise_ops = {"&": r"\&", "|": r"\|", "^": r"\^"}
         self.arithmatic_ops = {"+": r"\+", "-": r"-", "*": r"\*", "/": r"/", "%": r"%"}
         self.relational_ops = {"==": r"==", "!=": r"!=", ">": r">", "<": r"<", ">=": r">=", "<=": r"<="}
+        # • Verilog has 8 gate types that are primitive components: and, or, nand, nor, xor, xnor, not, buf
+        self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor","not","buf"}
 
+        # gate mutation
+        for op in self.gate_ops:
+            self.mutations.append({
+                "category": "gate",
+                "pattern": rf"\b{op}\b",
+                "replacement": random.choice([y for y in self.gate_ops if y != op])
+            })
+        
         # bitwise mutation
         for op, escaped_op in self.bitwise_ops.items():
             self.mutations.append({
@@ -219,7 +229,7 @@ class VerilogMutation:
         file_count=self.generate_mutants()
         return file_count
 
-def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
+def run_ebmc_on_verilog_files(directory, property,bound,top_module,ebmc_path="ebmc"):
     """
     Automatically runs `ebmc` on all Verilog files named mutant_*.sv in the specified directory.
 
@@ -254,12 +264,12 @@ def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
         # print(f"Running ebmc on: {verilog_file}")
         try:
             # Run ebmc command
-            result = subprocess.run([ebmc_path, verilog_file,"-p",property,"--bound",str(bound)],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    text=True)
+            cmd = [ebmc_path, verilog_file, 
+                    "-p", property, 
+                    "--bound", str(bound), 
+                    "--module", top_module]
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             
-            # Print the output of the command
             # print()
             # print(f"Output for {verilog_file}:")
             # print(result.stdout)
@@ -325,16 +335,18 @@ def remove_files(file_list):
 
 if __name__ == "__main__":
     # Set the configuration
-    if(len(sys.argv) != 4):
+    if(len(sys.argv) != 5):
         print("Usage: python mutation.py <input_file> <filename>")
-        print("Run default configuration")
-        input_file_dir = "verilog/"
-        input_file = input_file_dir+"ibex_controller.sv"  
+        exit(1)
+        # print("Run default configuration")
+        # input_file_dir = "verilog/"
+        # input_file = input_file_dir+"ibex_controller.sv"  
         # output_dir = "mutants"
     else:
         input_file_dir = sys.argv[1]
         input_file = input_file_dir+sys.argv[2]
         output_dir = sys.argv[3]
+        top_module = sys.argv[4]
         # output_dir = sys.argv[3]
 
     # output_dir = "mutants"
@@ -347,7 +359,7 @@ if __name__ == "__main__":
     move_files(input_file_dir, output_dir)
 
     # Run ebmc on the generated mutants and remove error files
-    bad_files=run_ebmc_on_verilog_files(output_dir,"1==1",10)
+    bad_files=run_ebmc_on_verilog_files(output_dir,"1==1",10,top_module)
     
     remove_files(bad_files)
 

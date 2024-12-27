@@ -1,45 +1,33 @@
 Finish:
 # EBMC has claimed to fixed up bugs
-## 12/16
+## write an email to make them make new release
 
-# Mutation test
+# Muatation test
+# We can evalute our result
 
+# Variable remover
+## We can generate different assertions
 
-To_Do:
-# 1/9 10:15 AM
-# 1/16 10:15 AM
-# 1/23 10:15 AM
+TODO:
+# add support for ISCA benchmark
 
-# Mutation Test***
-# preposing
-# ebmc
+# Write a variable picker
 
-# Checker 
-## add different formal file in different time
-
-# Sygus
+# Optimazation
 ## --sygus-stream         enumerate a stream of solutions instead of terminating
 
-# Write a new preprocessing code
-## Automatic variables poicker for sygus 
-### polish up the picker -- more better ini file
-### drop meanless values
-
-# Runtime variables remover
-### make assertion back to Signals?
-### block variables picker per block **
-### try drop meaningful values
-
-
-Plan:
-# Speed up plan
-## cvc5 speed up by multi call
-## gather some rules from the traces
----------------------------
-# add support for bv value
-## make support for assertion like (value_a != 0bv8)
-
 # Dockerfile
+## Late Feb?
+
+---------------------------
+# Future work
+# make support 
+## for bv value rules
+## for assertion like (value_a != 0bv8)
+
+----------------------------
+# Side way research
 Sideway_Work: 
 ##  unbound checking
 ##  liveness property
+

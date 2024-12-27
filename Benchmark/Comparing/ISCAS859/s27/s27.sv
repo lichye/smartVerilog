@@ -9,7 +9,7 @@ input CK,D;
 output Q;
 
   wire NM,NCK;
-  trireg NQ,M;
+  reg NQ,M; // trireg -> reg
 
   nmos N7 (M,D,NCK);
   not P3 (NM,M);
@@ -38,7 +38,5 @@ output G17;
   nor NOR2_1(G11,G5,G9);
   nor NOR2_2(G12,G1,G7);
   nor NOR2_3(G13,G2,G12);
-
-assert property (0);
 
 endmodule
