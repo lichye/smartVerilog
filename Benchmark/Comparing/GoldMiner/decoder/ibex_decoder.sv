@@ -455,5 +455,4 @@ module ibex_decoder (
 		input [(7 - 1):0] inp;
 		sv2v_cast_DB892 = inp;
 	endfunction
-	assert property (1);
 endmodule

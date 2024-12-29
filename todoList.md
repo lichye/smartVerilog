@@ -13,7 +13,8 @@ TODO:
 
 # Support for EBMC list of files
 
-# TimeTable compared to Others
+# Benchmark comparing
+
 ----------------------------- 1/9
 
 # Run time Optimazation
@@ -26,9 +27,14 @@ TODO:
 
 --------------------------- before paper review
 # Future work
+
 # make support 
+
 ## for bv value rules
+
 ## for assertion like (value_a != 0bv8)
+
+## for muti layer verilog code
 
 ----------------------------
 # Side way research

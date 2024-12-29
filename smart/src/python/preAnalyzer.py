@@ -70,3 +70,6 @@ def extrace_interesting_signals(content):
     return result;   
     
     print(f"INI 文件已写入: {file_path}")
+
+if __name__ == "__main__":
+    

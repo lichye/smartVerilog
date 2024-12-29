@@ -244,6 +244,7 @@ def run_ebmc_on_verilog_files(directory, property,bound,top_module,ebmc_path="eb
     if not os.path.exists(directory):
         print(f"Error: Directory '{directory}' does not exist.")
         return
+    
 
     # Get all Verilog files matching mutant_*.sv in the directory
     verilog_files = [
@@ -252,11 +253,18 @@ def run_ebmc_on_verilog_files(directory, property,bound,top_module,ebmc_path="eb
         if file.startswith("mutant_") and file.endswith(".sv")
     ]
 
+    relate_files = [
+        os.path.join(directory, file)
+        for file in os.listdir(directory)
+        if not file.startswith("mutant_") and file.endswith(".sv")
+    ]
+
     if not verilog_files:
         print("No matching Verilog files found in the specified directory.")
         return
 
     print(f"Found {len(verilog_files)} Verilog files. Starting to process...")
+    print(f"Found {len(relate_files)} relate files.")
 
     error_files = []  # List to track files with errors
 

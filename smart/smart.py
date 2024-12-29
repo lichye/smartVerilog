@@ -25,7 +25,7 @@ def sim(current_path,file_name):
 
     if result.returncode != 0:
         print("Error in simulation")
-        exit(1)
+        return
 
     sourceVcdFile = current_path+"/sim_build/dump.vcd"
     
