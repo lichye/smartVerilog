@@ -63,35 +63,44 @@ void VerilogChecker::writeVerilogFile() {
     std::string line;
     std::string currentModuleName = "";
     bool isModule = false;
+    bool insertProperties = false;
+    
 
     while (std::getline(inputFile, line)) {
         lines.push_back(line);
-
-        if (line.find("module ") != std::string::npos) {
-            size_t start = line.find("module ") + 7; 
-            size_t end = line.find('(', start);
-            if (end != std::string::npos) {
-                currentModuleName = line.substr(start, end - start);
-                currentModuleName = trim(currentModuleName);
-            }
-        }
-
-        if(currentModuleName == topModule) {
-            isModule = true;
-        }else{
-            isModule = false;
-        }
 
         if(line.find("endmodule") != std::string::npos && isModule) {
             assert(properties.size() == propertyTypes.size());
             for(int i=0;i<properties.size();i++) {
                 lines.insert(lines.end() - 1, "    assert property (" + properties[i] + ");\n");
+                insertProperties = true;
             }
             isModule = false;
         }
+
+        if (line.find("module") != std::string::npos) {
+            int start = line.find("module") + 6; 
+            int end = line.find('(', start);
+            if(end == std::string::npos) {
+                end = line.find('\n', start);
+            }
+            currentModuleName = line.substr(start, end - start);
+            currentModuleName = trim(currentModuleName);
+            printDebug("Current module name: "+currentModuleName,4);
+        }
+
+        if(currentModuleName == topModule) {
+            printDebug("Current module is top module",4);
+            isModule = true;
+        }else{
+            printDebug("Current module name: "+currentModuleName,4);
+            printDebug("Top module name: "+topModule,4);
+            isModule = false;
+        }
+        
     }
     inputFile.close();
-
+   
     std::ofstream outputFile(ebmcPath);
     if(!outputFile.is_open()) {
         printError("Error: Unable to open output file "+ebmcPath+"\n");
@@ -102,6 +111,11 @@ void VerilogChecker::writeVerilogFile() {
     }
     outputFile.close();
     printDebug("Modified Verilog file is stored in " + ebmcPath,3);
+
+    if(!insertProperties) {
+        printError("Error: Unable to insert properties in the module "+topModule+"\n");
+        exit(1);
+    }
 }
 
 void VerilogChecker::addProperty(State* state,PropertyType type) {

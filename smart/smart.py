@@ -71,11 +71,13 @@ def setupMutants(sv_path,top_module_file,mutant_path,top_module):
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
-def smart(current_path, file_name,result_file,runtimeRemoveVariables):
+def smart(current_path, file_name,result_file,runtimeRemoveVariables,initVariables):
     src_file = current_path+"/runtime/verilog/"+file_name
     module_name = file_name.split(".")[0]
     print("module name: ", module_name)
-    subprocess.run(["./smart.out",src_file,module_name,result_file,runtimeRemoveVariables])
+    cmd = ["./smart.out",src_file,module_name,result_file,runtimeRemoveVariables,initVariables]
+    print("Run cmd: ", cmd)
+    subprocess.run(cmd)
 
 def resultAnalysis(resultDir,runtimeRemoveVariables):
     print("Result Analysis")
@@ -83,7 +85,18 @@ def resultAnalysis(resultDir,runtimeRemoveVariables):
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
+def preAnalysis(file_path,top_module,output_file):
+    cmd = ["python", "src/python/preAnalyzer.py", file_path, top_module, output_file]
+    print("Run cmd: ", cmd)
+    subprocess.run(cmd)
+
 if __name__ == "__main__":
+    sim_loop = 2
+    smart_loop = 5
+    compile_cmd = 1
+    mutant_cmd = 1
+    preAnalysis_cmd = 1
+
 
     current_path = os.getcwd()
     user_path = current_path+"/user"
@@ -93,7 +106,9 @@ if __name__ == "__main__":
     mverilog_path = current_path+"/runtime/verilog/"
     
     resultDir = current_path+"/result"
+    runtimeInitVariables = current_path+"/runtime/variables/initVariables.txt"
     runtimeRemoveVariables = current_path+"/runtime/variables/removeVariables.txt"
+    initVariables = current_path+"/runtime/variables/initVariables.txt"
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -122,24 +137,29 @@ if __name__ == "__main__":
 
     #Start the simulation
     print("Start Simulation")
-    sim_loop = 1
+
     for i in range(sim_loop):
         sim(current_path, main_file_name) # this will run the simulation
 
+
     # Start compile the smart compiler
-    subprocess.run(["make", "compile"]) # this will compile the smart compiler
+    if(compile_cmd):
+        subprocess.run(["make", "compile"]) # this will compile the smart compiler
 
     #Setup the mutants
-    setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
+    if(mutant_cmd):
+        setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
+
+    #Pre analysis of the code
+    if(preAnalysis_cmd):
+        preAnalysis(mverilog_path+main_file_name,main_module,runtimeInitVariables)
 
     # loop here:
-
-    smart_loop = 3
     
     for i in range(smart_loop):
         cmd = input("Run a smart loop?:")
         result_file = resultDir+"/result"+str(i)+".txt"
-        smart(current_path, main_file_name,result_file,runtimeRemoveVariables)
+        smart(current_path, main_file_name,result_file,runtimeRemoveVariables,initVariables)
         #Result Analysis
         resultAnalysis(resultDir,runtimeRemoveVariables)
     

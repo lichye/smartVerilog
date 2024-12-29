@@ -8,15 +8,17 @@ Finish:
 # Variable remover
 ## We can generate different assertions
 
-TODO:
-# Write a variable picker**
+# Variable picker
 
-# Support for EBMC list of files
+TODO:
 
 # Benchmark comparing
 
------------------------------ 1/9
+Problem:
 
+# Bad edge
+
+----------------------------- 1/9
 # Run time Optimazation
 ## --sygus-stream
 
@@ -24,6 +26,8 @@ TODO:
 ## Late Feb?
 
 # Write the paper
+
+# Support for EBMC list of files
 
 --------------------------- before paper review
 # Future work

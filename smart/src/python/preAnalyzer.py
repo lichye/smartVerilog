@@ -1,75 +1,105 @@
 import re
 import configparser
+import sys
 
-def write_to_ini(module_name,variables,signals):
-    print("module_name: ",module_name)
-    print("variables: ",variables)
-    print("signals: ",signals)
-    file_path = "user/config.ini"
-
-    config = configparser.ConfigParser()
-
-    for variable in variables:
-
-        pick_signal =[]
-        for signal in signals:
-            if variable == signal[2]:
-                pick_signal = signal
-                break
-        print("pick_signal: ",pick_signal)
-
-
-        bit_range = pick_signal[1]
-
-        if bit_range.startswith('[') and bit_range.endswith(']'):
-            lindex, rindex = map(int, bit_range[1:-1].split(':'))
-            signalType = 1
-        else:
-            lindex, rindex = -1, -1
-            signalType = 0
-       
-        config[variable]={
-            "moduleName":module_name,
-            "signalName":variable,
-            "signalType":signalType,
-            "lindex":lindex,
-            "rindex":rindex
-        }
-        variable_copy = variable + "_copy"
-        config[variable_copy]={
-            "moduleName":module_name,
-            "signalName":variable_copy,
-            "signalType":signalType,
-            "lindex":lindex,
-            "rindex":rindex
-        }
-
-    with open(file_path, 'w') as configfile:
-        config.write(configfile)
-
-def extrace_interesting_signals(content):
-    # Regular expression to match always blocks
-    always_block_pattern = re.compile(r'always\s*@\s*\(.*?\)\s*begin(.*?)end', re.S)
-    
-    # Regular expression to find variable names (identifiers)
-    variable_pattern = re.compile(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\b')
-    
-    # Extract all always blocks
-    always_blocks = always_block_pattern.findall(content)
-    result = []
-    
-    for block in always_blocks:
-        # Find all unique variable names in the block
-        variables = set(variable_pattern.findall(block))
+def split_modules(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
         
-        # Filter out keywords (you can expand this list as needed)
-        keywords = {'if', 'else', 'begin', 'end', 'case', 'default', 'assign', 'always', 'posedge', 'negedge', 'or'}
-        variables = {var for var in variables if var not in keywords}
-        result.append(variables)
-        print(f"Interesting signals in always block: {variables}")
-    return result;   
+        # Regex to match module content and extract module name
+        module_pattern = r"module\s+(\w+)\b.*?endmodule\b"
+        matches = re.finditer(module_pattern, content, re.DOTALL)
+        
+        modules = []
+        for match in matches:
+            module_id = match.group(1)  # Extract module name
+            module_content = match.group(0)  # Extract full module content
+            modules.append({"id": module_id, "content": module_content})
+        
+        return modules
     
-    print(f"INI 文件已写入: {file_path}")
+    except FileNotFoundError:
+        print(f"Error: File {file_path} not found.")
+        return []
+
+def extract_variables(module_content):
+    """
+    Extract all variables involved in operations within a Verilog module.
+    This function processes different types of operations step by step.
+
+    Args:
+        module_content (str): The content of the Verilog module as a string.
+
+    Returns:
+        set: A set of variable names involved in operations.
+    """
+    # Define regex patterns for different types of operations
+    rules = {
+        "arithmetic": re.compile(r'[\w\[\]\.]+(?:\s*[+\-*/%]\s*[\w\[\]\.]+)+'),  # All arithmetic operations
+        "logical": re.compile(r'[\w\[\]\.]+(?:\s*[&|^]{2}\s*[\w\[\]\.]+)+'),     # Logical operations
+        "bitwise": re.compile(r'[\w\[\]\.]+(?:\s*[&|^~]\s*[\w\[\]\.]+)+'),       # Bitwise operations
+        "relational": re.compile(r'[\w\[\]\.]+(?:\s*(==|!=|>=|<=|>|<)\s*[\w\[\]\.]+)+'),  # Relational operations
+        "shift": re.compile(r'[\w\[\]\.]+(?:\s*(<<|>>)\s*[\w\[\]\.]+)+'),         # Shift operations
+        "conditional": re.compile(r'[\w\[\]\.]+(?:\s*\?\s*[\w\[\]\.]+\s*:\s*[\w\[\]\.]+)'),  # Conditional operations
+        "assignment": re.compile(r'[\w\[\]\.]+\s*(=|<=)\s*[\w\[\]\.]+'),                # Assignment operations
+        "module_instantiation": re.compile(r'^\s*(?!module\b)(\w+)\s+(\w+)\s*\(([^;]*)\);')
+    }
+    
+    key_words = ["module", "endmodule", "input", "output", "inout", 
+                "wire", "reg", "assign", "always", "posedge", 
+                "negedge", "if", "else", "begin", "end", "case", 
+                "default", "for", "while", "repeat", "forever", 
+                "initial", "function", "task", "fork", "join", 
+                "disable", "wait", "disable", "repeat"]
+
+    variables = set()
+    print("This is the module content")
+    # Loop through each operation type and find all matches
+    for line in module_content.split("\n"):
+        # print("This line is "+line)
+        for operation_type, pattern in rules.items():
+            # print("\t We check rule "+operation_type)
+            matches = pattern.findall(line)
+            if(matches):
+                # print("\t\t We found matches")
+                variable_pattern = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_\[\]\.]*\b')
+                variable = variable_pattern.findall(line)
+                variables.update(variable)
+    
+    for variable in variables:
+        if variable in key_words:
+            variables.remove(variable)
+        
+    return variables
+
+
+def write_to_file(output_file, data):
+    try:
+        with open(output_file, 'w') as file:
+            file.write(data)
+        print(f"Data written to {output_file}")
+    except Exception as e:
+        print(f"Error writing to file: {e}")
 
 if __name__ == "__main__":
+    if(len(sys.argv)!=4):
+        print("Usage: python3 preAnalyzer.py <input_file> <top_module> <output_file>")
+        sys.exit(1)
+    else:
+        input_file = sys.argv[1]
+        top_module = sys.argv[2]
+        output_file = sys.argv[3]
+
+    modules = split_modules(input_file)
+    
+    variables = []
+
+    for module in modules:
+        if(module["id"] == top_module):
+            top_module_content = module["content"]
+            variables = extract_variables(top_module_content)
+
+    write_to_file(output_file, "\n".join([f"{var}" for var in variables]))
+    
     

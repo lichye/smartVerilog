@@ -50,7 +50,6 @@ def extract_non_module_content(file_path):
         print(f"Unexpected error: {e}")
         return ""
 
-
 def extract_signals(content):
     variable_pattern = r'\b(input|output|inout|reg|wire)(\s+reg)?\s*(\[[^\]]+\])?\s+(\w+)\s*'
     matches = re.finditer(variable_pattern, content)

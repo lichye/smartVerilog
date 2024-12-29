@@ -32,16 +32,18 @@ std::string verilogSrcPath = "";
 std::string resultFileDir = "";
 std::string resultRemoveVariablesPath = "";
 std::string generateSMTResultPath();
+std::string initVariables = "";
 
 bool writeStringToFile(const std::string&, const std::string&);
 
-void removeSignals(std::string);
+void modifySignals(std::string,int mode);
+void intersectionSignals(std::string);
 
 int main(int argc, char* argv[]){
   int timeOut = 0;
 
-  if(argc!=5){
-    print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir> <resultRemoveVariablesPath>\n");
+  if(argc!=6){
+    print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir> <resultRemoveVariablesPath> <initVariables>\n");
     return -1;
   }
   else{
@@ -49,6 +51,7 @@ int main(int argc, char* argv[]){
     moduleName = argv[2];
     resultFileDir = argv[3];
     resultRemoveVariablesPath = argv[4];
+    initVariables = argv[5];
   }
 
   StateMaker::setSeed(42);
@@ -59,17 +62,20 @@ int main(int argc, char* argv[]){
   checker = new VerilogChecker(verilogSrcPath,ebmcPath);
   checker->setTopModule(moduleName);
   // this means we does not care about the initial state
-  // checker->setModuleTime("##1");
+  checker->setModuleTime("##1");
   
   module->addTracesfromDir(SIM,sim_path);
   module->addTracesfromDir(SMT,smt_path);
 
   // we first get all the signals from the module
   signals = module->getAllSignals();
-  removeSignals(resultRemoveVariablesPath);
-  //TODO: add two functions
-  //1. intersection of signals and variables
-  
+  modifySignals(resultRemoveVariablesPath,0);
+  modifySignals(initVariables,1);
+
+  print("Remaining signals:");
+  for(auto &signal : *signals){
+    print("\t"+signal.name);
+  }
 
   sygus->setSignals(signals);
 
@@ -81,16 +87,26 @@ int main(int argc, char* argv[]){
     sygus->addConstrainComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
 
-  printDebug("Adding random state",2);
-  State* randomState = stateMaker->makeRandomState();
-  printDebug("Get a random state: "+randomState->toString(),2);
+  print("In looptime "+std::to_string(timeOut)+":");
 
-  //if the random state is unreachable, then we need to add the constraints
-  
-  if(!checker->checkStateReachability(randomState)){
-    printDebug("The random state is unreachable\n",1);
-    sygus->addConstraints(randomState,false);
+  State* randomState = stateMaker->makeRandomState();
+  int loopTime = 0;
+
+  while(checker->checkStateReachability(randomState)){
+    print("\tGenerating random state in "+std::to_string(loopTime)+" time");
+    print("\t The state is: "+randomState->toString());
+    randomState = stateMaker->makeRandomState();
+    if(loopTime++>20){
+      print("Time out\n");
+      break;
+    }
   }
+
+  sygus->addConstraints(randomState,false);
+
+  print("\tFinish generating random state");
+
+  sygus->addConstraints(randomState,false);
 
   sygus->printSysgusPath("sygus.sl");
   print("\tFinish generating sygus file");
@@ -121,11 +137,18 @@ int main(int argc, char* argv[]){
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
 
-    // randomState = stateMaker->makeRandomState();
+    State* randomState = stateMaker->makeRandomState();
+    while(checker->checkStateReachability(randomState)){
+      print("\tGenerating random state in "+std::to_string(loopTime)+" time");
+      print("\t The state is: "+randomState->toString());
+      randomState = stateMaker->makeRandomState();
+      if(loopTime++>100){
+        print("Time out\n");
+        break;
+      }
+    }
 
-    // if(checker->checkStateReachability(randomState)){
-    //   sygus->addConstraints(randomState,false);
-    // }
+    sygus->addConstraints(randomState,false);
    
     sygus->printSysgusPath("sygus.sl");
     print("\tFinish generating sygus file");
@@ -183,13 +206,14 @@ bool writeStringToFile(const std::string& filename, const std::string& content) 
     return true;     
 }
 
-void removeSignals(std::string removeVariablesPath){
+void modifySignals(std::string removeVariablesPath,int mode){
   // std::string removeVariablesPath = "/home/magna/Desktop/smartVerilog/smart/runtime/variables/removeVariables.txt";
   std::vector<std::string> lines;
   std::ifstream file(removeVariablesPath); // Open the file
 
   if (!file.is_open()) {
       std::cerr << "Error: Unable to open file " << removeVariablesPath << std::endl;
+      return;
       // exit(1);
       // return lines; // Return an empty vector if the file cannot be opened
   }
@@ -202,14 +226,35 @@ void removeSignals(std::string removeVariablesPath){
   for(auto &line : lines){
     printDebug("Removing signal: "+line,2);
   }
-  for(auto &line : lines){
-    for(auto it = signals->begin(); it != signals->end();){
-      if(it->name == line){
-        it = signals->erase(it);
-      }
-      else{
-        ++it;
-      }
+  if(mode == 0){
+    for(auto &line : lines){
+      //if in mode 0, we remove the signal with the same name in file
+      for(auto it = signals->begin(); it != signals->end();){
+
+          if(it->name == line){
+          it = signals->erase(it);
+          }
+          else{
+            ++it;
+          }
+        }
     }
   }
+
+  if(mode == 1){
+    // we will keep the signals inside the file
+    std::vector<Signal> tempSignals;
+    for(auto &line : lines){
+      for(auto &signal : *signals){
+        if(signal.name == line){
+          tempSignals.push_back(signal);
+        }
+      }
+    }
+    signals->clear();
+    for(auto &signal : tempSignals){
+      signals->push_back(signal);
+    }
+  }
+
 }
