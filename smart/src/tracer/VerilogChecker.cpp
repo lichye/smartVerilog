@@ -283,13 +283,13 @@ bool VerilogChecker::runSby() {
     sbyFile << "mode bmc" << std::endl;
     sbyFile << "depth " << bound << std::endl;
     sbyFile << "timeout 10000" << std::endl;
-    sbyFile << "vcd_sim on" << std::endl;
-    sbyFile << "append 3"<<std::endl;
+    
+    // sbyFile << "vcd_sim on" << std::endl;
     sbyFile << std::endl;
 
     sbyFile << "[engines]" << std::endl;
     sbyFile << "bmc_check:" << std::endl;
-    sbyFile << "smtbmc cvc5" << std::endl;
+    sbyFile << "smtbmc --nopresat cvc5"<<std::endl;
     sbyFile << std::endl;
 
     sbyFile << "[script]" << std::endl;
@@ -298,16 +298,18 @@ bool VerilogChecker::runSby() {
     sbyFile << "prep -top " << topModule << std::endl;
     sbyFile.close();
 
-    print("Successfully wrote sby file "+sbyFilePath+"\n");
+    // print("Successfully wrote sby file "+sbyFilePath+"\n");
 
 
     std::string command = "";
     command += "sby "+sbyFilePath;
     command += " -f";
 
+    command += " > /dev/null 2>&1";
+
     int status = system(command.c_str());
-    print("The command is "+command+"\n");
-    print("The status is "+std::to_string(status)+"\n");
+    // print("The command is "+command+"\n");
+    // print("The status is "+std::to_string(status)+"\n");
     return status==0;
 }
 

@@ -63,9 +63,6 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
         return signals_map[s];
     }
     else{
-        for (const auto& pair : signals_map) {
-            print("Signal Name: "+pair.first.name);
-        }
         print("Signal not found: "+s.name+" in the trace "+vcdPath);
         exit(1);
     }
