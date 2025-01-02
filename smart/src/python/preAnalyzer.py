@@ -52,6 +52,7 @@ def extract_variables(module_content):
                 "default", "for", "while", "repeat", "forever", 
                 "initial", "function", "task", "fork", "join", 
                 "disable", "wait", "disable", "repeat"]
+    key_words += ["clk","clk_copy"]
 
     ret_variables = set()
     remove_variables = set()
@@ -68,11 +69,13 @@ def extract_variables(module_content):
                 variable = variable_pattern.findall(line)
                 variables.update(variable)
     
-    for ret_variables in ret_variables:
-        if ret_variables in key_words:
-            remove_variables.add(ret_variables)
+    for ret_variable in ret_variables:
+        if ret_variable in key_words:
+            remove_variables.add(ret_variable)
+
     for remove_variable in remove_variables:
         ret_variables.remove(remove_variable)
+        
     return ret_variables
 
 

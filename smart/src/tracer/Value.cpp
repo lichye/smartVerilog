@@ -125,8 +125,29 @@ std::string Value::toSyGusString(){
             return "unknown";
     }
     else if(type == SignalType::BITS){
-        std::string str="#b";
         assert(value.bitVector != nullptr);
+        if(value.bitVector->size() == 1){
+            std::string str = "";
+            switch (value.bitVector->at(0))
+            {
+                case BitType::ZERO:
+                    str += "false";
+                    break;
+                case BitType::ONE:
+                    str += "true";
+                    break;
+                case BitType::X:
+                    str += "unknown";
+                    break;
+                case BitType::Z:
+                    str += "unknown";
+                    break;
+                default:
+                    break;
+            }
+            return str;
+        }
+        std::string str="#b";
         for(auto &bit : *value.bitVector){
             switch (bit)
             {

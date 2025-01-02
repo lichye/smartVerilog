@@ -1,6 +1,12 @@
 import re
 import configparser
 import sys
+def check_clock_signal(signals):
+    clock_signals = ["clk", "clock"]
+    for signal in signals:
+        if "clk" in signal:
+            return True
+    return False
 
 def split_modules(file_path):
     try:
@@ -133,14 +139,6 @@ def add_str_to_file(file_path, content):
         file.write("\n\n")
     except Exception as e:
         print(f"Error writing to file {file_path}: {e}")
-
-def check_clock_signal(signals):
-    
-    clock_signals = ["clk", "clock"]
-    for signal in signals:
-        if "clk" in signal:
-            return True
-    return False
 
 # Test the function
 if  __name__ == "__main__":

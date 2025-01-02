@@ -89,7 +89,7 @@ def preAnalysis(file_path,top_module,output_file):
     subprocess.run(cmd)
 
 if __name__ == "__main__":
-    sim_loop = 1
+    sim_loop = 3
     smart_loop = 5
     compile_cmd = 1
     mutant_cmd = 1
