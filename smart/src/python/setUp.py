@@ -6,7 +6,7 @@ def setup(current_path):
     if not os.path.exists(current_path+"/runtime"):
         os.makedirs(current_path+"/runtime")
 
-    runtime_ebmc_path = current_path+"/runtime/ebmc/"
+    runtime_formal_path = current_path+"/runtime/formal/"
 
     runtime_verilog_path = current_path+"/runtime/verilog/"
 
@@ -34,8 +34,8 @@ def setup(current_path):
         os.makedirs(smt_target_dir)
     if not os.path.exists(runtime_verilog_path):
         os.makedirs(runtime_verilog_path)
-    if not os.path.exists(runtime_ebmc_path):
-        os.makedirs(runtime_ebmc_path)
+    if not os.path.exists(runtime_formal_path):
+        os.makedirs(runtime_formal_path)
     if not os.path.exists(sim_build_path):
         os.makedirs(sim_build_path)
     if not os.path.exists(runtime_cocotb_path):
@@ -61,7 +61,7 @@ def get_sv_file_paths(directory):
     return sv_files
 
 def move_User_verilog(current_path):
-    runtime_ebmc_path = current_path+"/runtime/ebmc/"
+    runtime_ebmc_path = current_path+"/runtime/formal/"
     runtime_verilog_path = current_path+"/runtime/verilog/"
     user_verilog_path = current_path+"/User"
     sim_build_path = current_path+"/sim_build"

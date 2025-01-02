@@ -25,14 +25,15 @@ StateMaker* stateMaker;
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
 std::string config_path = "User/config.ini";
-std::string ebmcPath = "runtime/ebmc/formal.sv";
-std::string ebmcReachable = "runtime/ebmc/reachable.sv";
+std::string ebmcPath = "runtime/formal/formal.sv";
+std::string ebmcReachable = "runtime/formal/reachable.sv";
 std::string moduleName = "";
 std::string verilogSrcPath = "";
 std::string resultFileDir = "";
 std::string resultRemoveVariablesPath = "";
 std::string generateSMTResultPath();
 std::string initVariables = "";
+std::string currentDir = "";
 
 bool writeStringToFile(const std::string&, const std::string&);
 
@@ -42,27 +43,31 @@ void intersectionSignals(std::string);
 int main(int argc, char* argv[]){
   int timeOut = 0;
 
-  if(argc!=6){
-    print("Usage: ./smart <verilog_file_name> <module_name> <result_file_dir> <resultRemoveVariablesPath> <initVariables>\n");
+  if(argc!=4){
+    print("Usage: ./smart <currentDir> <topmodule> <result_file_dir>\n");
     return -1;
   }
   else{
-    verilogSrcPath = argv[1];
+    currentDir = argv[1];
     moduleName = argv[2];
     resultFileDir = argv[3];
-    resultRemoveVariablesPath = argv[4];
-    initVariables = argv[5];
   }
+
+  verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
+  resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
+  initVariables = currentDir + "/runtime/variables/initVariables.txt";
 
   StateMaker::setSeed(42);
   SmtFunctionParser parser;
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
 
-  checker = new VerilogChecker(verilogSrcPath,ebmcPath);
+  checker = new VerilogChecker(verilogSrcPath,BackEndSolver::SBY);
+  
   checker->setTopModule(moduleName);
+  checker->setHomePath(currentDir);
   // this means we does not care about the initial state
-  checker->setModuleTime("##1");
+  // checker->setModuleTime("##1");
   
   module->addTracesfromDir(SIM,sim_path);
   module->addTracesfromDir(SMT,smt_path);

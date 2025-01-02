@@ -25,6 +25,7 @@ def sim(current_path,file_name):
 
     if result.returncode != 0:
         print("Error in simulation")
+        exit(-1)
         return
 
     sourceVcdFile = current_path+"/sim_build/dump.vcd"
@@ -71,11 +72,8 @@ def setupMutants(sv_path,top_module_file,mutant_path,top_module):
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
-def smart(current_path, file_name,result_file,runtimeRemoveVariables,initVariables):
-    src_file = current_path+"/runtime/verilog/"+file_name
-    module_name = file_name.split(".")[0]
-    print("module name: ", module_name)
-    cmd = ["./smart.out",src_file,module_name,result_file,runtimeRemoveVariables,initVariables]
+def smart(current_path, top_module,result_file):
+    cmd = ["./smart.out",current_path,top_module,result_file]
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
@@ -91,7 +89,7 @@ def preAnalysis(file_path,top_module,output_file):
     subprocess.run(cmd)
 
 if __name__ == "__main__":
-    sim_loop = 2
+    sim_loop = 1
     smart_loop = 5
     compile_cmd = 1
     mutant_cmd = 1
@@ -101,7 +99,7 @@ if __name__ == "__main__":
     current_path = os.getcwd()
     user_path = current_path+"/user"
     cocotb_path = current_path+"/runtime/cocotb/"
-    ebmc_path = current_path+"/runtime/ebmc/"
+    formal_path = current_path+"/runtime/formal/"
     mutant_path = current_path+"/benchmarks/"
     mverilog_path = current_path+"/runtime/verilog/"
     
@@ -131,9 +129,9 @@ if __name__ == "__main__":
     sv_prep(user_path,mverilog_path) # this will prepare the system verilog files for cocotb
     print("Finish Initial Setup")
     
-    #before the simulation copy all the files from cocotb to runtime/ebmc
+    #before the simulation copy all the files from cocotb to runtime/formal
     copy_sv_files(mverilog_path, cocotb_path)
-    copy_sv_files(mverilog_path, ebmc_path)
+    copy_sv_files(mverilog_path, formal_path)
 
     #Start the simulation
     print("Start Simulation")
@@ -157,9 +155,9 @@ if __name__ == "__main__":
     # loop here:
     
     for i in range(smart_loop):
-        cmd = input("Run a smart loop?:")
         result_file = resultDir+"/result"+str(i)+".txt"
-        smart(current_path, main_file_name,result_file,runtimeRemoveVariables,initVariables)
+        smart(current_path, main_module,result_file)
+        cmd = input("Run a smart loop?:")
         #Result Analysis
         resultAnalysis(resultDir,runtimeRemoveVariables)
     

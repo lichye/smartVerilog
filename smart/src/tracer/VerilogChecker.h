@@ -24,14 +24,20 @@ enum PropertyType{
     //  Ensures that a certain state is reachable from the initial state.
     //  (a == 0 && b == 1)
 };
+
+enum BackEndSolver{
+    EBMC,
+    SBY
+};
+
 class VerilogChecker {
     public:
         VerilogChecker();
-        VerilogChecker(std::string,std::string);
+        VerilogChecker(std::string, BackEndSolver);
         ~VerilogChecker();
         
         void setVerilogSrcPath(std::string);
-        void setEBMCPath(std::string);
+        void setformalFilePath(std::string);
         void setTracePath(std::string);
 
         void addProperty(State*,PropertyType);
@@ -44,23 +50,32 @@ class VerilogChecker {
         void setBound(int);
         void setTopModule(std::string);
         void setModuleTime(std::string);
+        void setHomePath(std::string);
     private:
         //parameters of ebmc
         std::string verilogSrcPath;
-        std::string ebmcPath;
+        std::string homePath;
+
+        //BackEndSolver
+        BackEndSolver solver;
+
+        std::string formalFilePath;
         std::string tracePath;
         int bound;
 
         std::vector<std::string> properties;
         std::vector<PropertyType> propertyTypes;
-        std::vector<std::string> ebmcPaths;
+        std::vector<std::string> formalFilePaths;
 
         void writeVerilogFile();
         bool runEBMC();
         bool runEBMC(std::string);
-        std::string generateEbmcPath(PropertyType);
+        bool runSby();
+
         std::string topModule;
         std::string moduleTime;
+
+        std::string generateFormalFilePath(PropertyType);
 };
 
 #endif

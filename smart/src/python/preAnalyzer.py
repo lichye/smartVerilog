@@ -53,7 +53,8 @@ def extract_variables(module_content):
                 "initial", "function", "task", "fork", "join", 
                 "disable", "wait", "disable", "repeat"]
 
-    variables = set()
+    ret_variables = set()
+    remove_variables = set()
     print("This is the module content")
     # Loop through each operation type and find all matches
     for line in module_content.split("\n"):
@@ -63,15 +64,16 @@ def extract_variables(module_content):
             matches = pattern.findall(line)
             if(matches):
                 # print("\t\t We found matches")
-                variable_pattern = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_\[\]\.]*\b')
+                variable_pattern = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
                 variable = variable_pattern.findall(line)
                 variables.update(variable)
     
-    for variable in variables:
-        if variable in key_words:
-            variables.remove(variable)
-        
-    return variables
+    for ret_variables in ret_variables:
+        if ret_variables in key_words:
+            remove_variables.add(ret_variables)
+    for remove_variable in remove_variables:
+        ret_variables.remove(remove_variable)
+    return ret_variables
 
 
 def write_to_file(output_file, data):
@@ -93,12 +95,12 @@ if __name__ == "__main__":
 
     modules = split_modules(input_file)
     
-    variables = []
+    variables = set()
 
     for module in modules:
         if(module["id"] == top_module):
             top_module_content = module["content"]
-            variables = extract_variables(top_module_content)
+            variables.update(extract_variables(top_module_content))
 
     write_to_file(output_file, "\n".join([f"{var}" for var in variables]))
     

@@ -25,15 +25,15 @@ std::string trim(const std::string &str) {
 
 VerilogChecker::VerilogChecker() {
     verilogSrcPath = "";
-    ebmcPath = "";
+    formalFilePath = "";
     tracePath = "";
     moduleTime = "";
     bound = 10;
 }
 
-VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string ebmcPath) {
+VerilogChecker::VerilogChecker(std::string verilogSrcPath, BackEndSolver solver) {
     this->verilogSrcPath = verilogSrcPath;
-    this->ebmcPath = ebmcPath;
+    this->solver = solver;
     moduleTime = "";
     bound = 10;
 }
@@ -45,8 +45,8 @@ void VerilogChecker::setVerilogSrcPath(std::string path) {
     verilogSrcPath = path;
 }
 
-void VerilogChecker::setEBMCPath(std::string path) {
-    ebmcPath = path;
+void VerilogChecker::setformalFilePath(std::string path) {
+    formalFilePath = path;
 }
 
 void VerilogChecker::setTracePath(std::string path) {
@@ -101,16 +101,16 @@ void VerilogChecker::writeVerilogFile() {
     }
     inputFile.close();
    
-    std::ofstream outputFile(ebmcPath);
+    std::ofstream outputFile(formalFilePath);
     if(!outputFile.is_open()) {
-        printError("Error: Unable to open output file "+ebmcPath+"\n");
+        printError("Error: Unable to open output file "+formalFilePath+"\n");
         exit(1);
     }
     for(auto &line : lines) {
         outputFile << line << std::endl;
     }
     outputFile.close();
-    printDebug("Modified Verilog file is stored in " + ebmcPath,3);
+    printDebug("Modified Verilog file is stored in " + formalFilePath,3);
 
     if(!insertProperties) {
         printError("Error: Unable to insert properties in the module "+topModule+"\n");
@@ -154,7 +154,7 @@ void VerilogChecker::cleanProperties() {
 
 bool VerilogChecker::runEBMC(){
     std::string command = "";
-    command += "ebmc "+ebmcPath;
+    command += "ebmc "+formalFilePath;
     command += " --bound "+std::to_string(bound);
     if(topModule != "")
         command += " --top "+topModule;
@@ -167,7 +167,7 @@ bool VerilogChecker::runEBMC(){
 
 bool VerilogChecker::runEBMC(std::string tracePath){
     std::string command = "";
-    command += "ebmc "+ebmcPath;
+    command += "ebmc "+formalFilePath;
     command += " --bound "+std::to_string(bound);
     if(topModule != "")
         command += " --top "+topModule;
@@ -177,31 +177,54 @@ bool VerilogChecker::runEBMC(std::string tracePath){
     int status = system(command.c_str());
     return status==0;
 }
+
 //The check function will return true if the state is reachable
 bool VerilogChecker::checkStateReachability(State* state) {
     cleanProperties();
-    generateEbmcPath(PropertyType::REACHABILITY_PROPERTY);
+    generateFormalFilePath(PropertyType::REACHABILITY_PROPERTY);
     addProperty(state,PropertyType::REACHABILITY_PROPERTY);
     writeVerilogFile();
-    bool result = runEBMC();
-    //if the property is verified, then the state is unreachable
-    // printDebug("The reachability result is: "+std::to_string(result),1);
+    bool result = false;
+    if(solver==BackEndSolver::EBMC) {
+        result = runEBMC();
+    }
+    else if(solver==BackEndSolver::SBY) {
+        result = runSby();
+    }
     return !result;
 }
 
 //The check function will return true if the property is verified/ the state is safe
 bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) {
     cleanProperties();
-    generateEbmcPath(PropertyType::SAFT_PROPERTY);
+    generateFormalFilePath(PropertyType::SAFT_PROPERTY);
     addProperty(func,PropertyType::SAFT_PROPERTY);
     writeVerilogFile();
-    bool result = runEBMC(tracePath);
+
+    bool result = false;
+    if(solver==BackEndSolver::EBMC) {
+        result = runEBMC(tracePath);
+    }
+    else if(solver==BackEndSolver::SBY) {
+        result = runSby();
+        if(!result){
+            //if the result is failure, we need to move vcd file to the right place
+            std::string vcdPath = homePath + "/runtime/formal/dis_task/engine_0/trace.vcd";
+            std::string command = "cp "+vcdPath+" "+tracePath;
+            int status = system(command.c_str());
+            if(status!=0) {
+                printError("Error: Unable to copy vcd file "+vcdPath+" to "+tracePath+"\n");
+                exit(1);
+            }
+        }
+    }
+    
     //if the property is verified, then the state is safe
     printDebug("The safety result is: "+std::to_string(result),1);
     return result;
 }
 
-std::string VerilogChecker::generateEbmcPath(PropertyType type) {
+std::string VerilogChecker::generateFormalFilePath(PropertyType type) {
 
     auto now = std::chrono::system_clock::now();
 
@@ -214,8 +237,7 @@ std::string VerilogChecker::generateEbmcPath(PropertyType type) {
     oss << std::put_time(std::localtime(&timeNow), "%Y%m%d_%H%M%S") 
         << "_" << std::setw(3) << std::setfill('0') << millis;
 
-    std::string filename="";
-    filename += "runtime/ebmc/";
+    std::string filename = homePath + "/runtime/formal";
     if(type == PropertyType::REACHABILITY_PROPERTY) {
         filename +="/reachability_";
     }
@@ -228,7 +250,7 @@ std::string VerilogChecker::generateEbmcPath(PropertyType type) {
     }
     filename += oss.str();
     filename +=".sv";
-    ebmcPath = filename;
+    formalFilePath = filename;
     return filename;
 }
 
@@ -242,4 +264,53 @@ void VerilogChecker::setTopModule(std::string topModule) {
 
 void VerilogChecker::setModuleTime(std::string moduleTime) {
     this->moduleTime = moduleTime;
+}
+
+bool VerilogChecker::runSby() {
+    //we should write an dis.sby file
+    std::string sbyFilePath = "runtime/formal/dis.sby";
+    std::ofstream sbyFile(sbyFilePath);
+    if(!sbyFile.is_open()) {
+        printError("Error: Unable to open sby file "+sbyFilePath+"\n");
+        exit(1);
+    }    
+    sbyFile << "[tasks]" << std::endl;
+    sbyFile << "task bmc_check files" << std::endl;
+    sbyFile << std::endl;
+
+    sbyFile << "[options]" << std::endl;
+    sbyFile << "bmc_check:" << std::endl;
+    sbyFile << "mode bmc" << std::endl;
+    sbyFile << "depth " << bound << std::endl;
+    sbyFile << "timeout 10000" << std::endl;
+    sbyFile << "vcd_sim on" << std::endl;
+    sbyFile << "append 3"<<std::endl;
+    sbyFile << std::endl;
+
+    sbyFile << "[engines]" << std::endl;
+    sbyFile << "bmc_check:" << std::endl;
+    sbyFile << "smtbmc cvc5" << std::endl;
+    sbyFile << std::endl;
+
+    sbyFile << "[script]" << std::endl;
+    sbyFile << "files:" << std::endl;
+    sbyFile << "read -formal " << formalFilePath << std::endl;
+    sbyFile << "prep -top " << topModule << std::endl;
+    sbyFile.close();
+
+    print("Successfully wrote sby file "+sbyFilePath+"\n");
+
+
+    std::string command = "";
+    command += "sby "+sbyFilePath;
+    command += " -f";
+
+    int status = system(command.c_str());
+    print("The command is "+command+"\n");
+    print("The status is "+std::to_string(status)+"\n");
+    return status==0;
+}
+
+void VerilogChecker::setHomePath(std::string path) {
+    homePath = path;
 }
