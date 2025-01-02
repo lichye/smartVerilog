@@ -343,6 +343,7 @@ def remove_files(file_list):
 
 if __name__ == "__main__":
     # Set the configuration
+    random.seed(42)
     if(len(sys.argv) != 5):
         print("Usage: python mutation.py <input_file> <filename>")
         exit(1)
