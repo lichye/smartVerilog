@@ -42,6 +42,7 @@ Trace::Trace(TraceType ctype, std::string path){
         }
         
     }
+    
 }
 
 Trace::~Trace(){
@@ -63,8 +64,13 @@ std::vector<Value*>* Trace::getSignalValue(Signal s){
         return signals_map[s];
     }
     else{
-        print("Signal not found: "+s.name+" in the trace "+vcdPath);
-        exit(1);
+        //if the signal is not found, we return an unknown value
+        std::vector<Value*>* values = new std::vector<Value*>();
+        for (int i =0; i<valueLength; i++){
+            Value* value = new Value();
+            values->push_back(value);
+        }
+        return values;
     }
 }
 
@@ -161,6 +167,7 @@ void Trace::readVCDFile(VCDFile* vcdFile){
                 }
             }
             signals_map[s] = values;
+            valueLength = values->size();
         }
     }
 

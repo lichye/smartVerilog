@@ -103,8 +103,10 @@ if __name__ == "__main__":
     mutant_path = current_path+"/benchmarks/"
     mverilog_path = current_path+"/runtime/verilog/"
     
-    resultDir = current_path+"/result"
+    resultDir = current_path+"/results"
+
     runtimeInitVariables = current_path+"/runtime/variables/initVariables.txt"
+
     runtimeRemoveVariables = current_path+"/runtime/variables/removeVariables.txt"
     initVariables = current_path+"/runtime/variables/initVariables.txt"
 
@@ -139,7 +141,6 @@ if __name__ == "__main__":
     for i in range(sim_loop):
         sim(current_path, main_file_name) # this will run the simulation
 
-
     # Start compile the smart compiler
     if(compile_cmd):
         subprocess.run(["make", "compile"]) # this will compile the smart compiler
@@ -159,5 +160,5 @@ if __name__ == "__main__":
         smart(current_path, main_module,result_file)
         cmd = input("Run a smart loop?:")
         #Result Analysis
-        resultAnalysis(resultDir,runtimeRemoveVariables)
+        # resultAnalysis(resultDir,runtimeRemoveVariables)
     

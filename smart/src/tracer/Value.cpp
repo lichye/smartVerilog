@@ -122,7 +122,7 @@ std::string Value::toSyGusString(){
         else if (value.bitValue == BitType::ONE)
             return "true";
         else
-            return "unknown";
+            return "unknown_Bool";
     }
     else if(type == SignalType::BITS){
         assert(value.bitVector != nullptr);
@@ -137,10 +137,10 @@ std::string Value::toSyGusString(){
                     str += "true";
                     break;
                 case BitType::X:
-                    str += "unknown";
+                    str += "unknown_bits";
                     break;
                 case BitType::Z:
-                    str += "unknown";
+                    str += "unknown_bits";
                     break;
                 default:
                     break;
@@ -173,7 +173,7 @@ std::string Value::toSyGusString(){
         return std::to_string(value.realValue);
     }
     else{
-        return "unknown";
+        return "unknown_value";
     }   
 }
 
@@ -195,7 +195,7 @@ std::string Value::toVerilogString(){
         return std::to_string(value.realValue);
     }
     else{
-        return "unknown";
+        return "unknown_value";
     }   
 }
 

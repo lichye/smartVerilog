@@ -284,6 +284,7 @@ bool VerilogChecker::runSby() {
     sbyFile << "depth " << bound << std::endl;
     sbyFile << "timeout 10000" << std::endl;
     sbyFile << "vcd_sim on"<<std::endl;
+    sbyFile << "append 10"<<std::endl;
     // sbyFile << "skip 5"<<std::endl;
     
     // sbyFile << "vcd_sim on" << std::endl;

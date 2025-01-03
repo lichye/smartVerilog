@@ -5,7 +5,7 @@ def check_clock_signal(signals):
     clock_signals = ["clk", "clock"]
     for signal in signals:
         if "clk" in signal:
-            return True
+            return False
     return False
 
 def split_modules(file_path):

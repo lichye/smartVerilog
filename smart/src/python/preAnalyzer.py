@@ -78,7 +78,6 @@ def extract_variables(module_content):
         
     return ret_variables
 
-
 def write_to_file(output_file, data):
     try:
         with open(output_file, 'w') as file:

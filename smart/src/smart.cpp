@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
 
   while(checker->checkStateReachability(randomState)){
     print("\tGenerating random state in "+std::to_string(loopTime)+" time");
-    print("\t The state is: "+randomState->toString());
+    // print("\t The state is: "+randomState->toString());
     randomState = stateMaker->makeRandomState();
     if(loopTime++>20){
       print("Time out\n");
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]){
     State* randomState = stateMaker->makeRandomState();
     while(checker->checkStateReachability(randomState)){
       print("\tGenerating random state in "+std::to_string(loopTime)+" time");
-      print("\t The state is: "+randomState->toString());
+      // print("\t The state is: "+randomState->toString());
       randomState = stateMaker->makeRandomState();
       if(loopTime++>100){
         print("Time out\n");

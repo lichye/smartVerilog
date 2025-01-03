@@ -48,6 +48,8 @@ class   Trace{
 
         std::string smtPath;
 
+        int valueLength;
+
         //major data structure to store the signal values
         std::map<Signal, std::vector<Value*>*> signals_map;
         
