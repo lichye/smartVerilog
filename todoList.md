@@ -1,8 +1,5 @@
 ----------------------------- 12/16
 Finish:
-# EBMC has claimed to fixed up bugs
-## write an email to make them make new release
-
 # Muatation test
 # We can evalute our result
 
@@ -12,14 +9,20 @@ Finish:
 # Variable picker
 
 TODO:
-
 # Benchmark comparing
 
-Problem:
+# SMT Bad edge fixup
 
-# Bad edge
+# SBY support of multiply file
+# SBY of evluator
 
------------------------------ 1/9
+----------------------------- 1/9 Meeting
+# EBMC
+## write an email to make them make new release && report of unsupport
+
+# Paper
+
+----------------------------- After 1/9
 # Run time Optimazation
 ## --sygus-stream
 
@@ -30,7 +33,9 @@ Problem:
 
 # Support for EBMC list of files
 
---------------------------- 1/16
+--------------------------- 1/16 Meeting
+
+---------------------------- 1/17-1/22
 
 --------------------------- 1/23
 

@@ -1,6 +1,7 @@
 import re
 import configparser
 import sys
+from itertools import combinations, chain
 
 def split_modules(file_path):
     try:
@@ -14,7 +15,7 @@ def split_modules(file_path):
         modules = []
         for match in matches:
             module_id = match.group(1)  # Extract module name
-            module_content = match.group(0)  # Extract full module content
+            module_content = match.group(0)  # Extract full module 
             modules.append({"id": module_id, "content": module_content})
         
         return modules
@@ -22,6 +23,10 @@ def split_modules(file_path):
     except FileNotFoundError:
         print(f"Error: File {file_path} not found.")
         return []
+
+def generate_subsets(my_set, max_size):
+    subsets = chain.from_iterable(combinations(my_set, r) for r in range(min(len(my_set), max_size), -1, -1))
+    return subsets
 
 def extract_variables(module_content):
     """
@@ -43,7 +48,8 @@ def extract_variables(module_content):
         "shift": re.compile(r'[\w\[\]\.]+(?:\s*(<<|>>)\s*[\w\[\]\.]+)+'),         # Shift operations
         "conditional": re.compile(r'[\w\[\]\.]+(?:\s*\?\s*[\w\[\]\.]+\s*:\s*[\w\[\]\.]+)'),  # Conditional operations
         "assignment": re.compile(r'[\w\[\]\.]+\s*(=|<=)\s*[\w\[\]\.]+'),                # Assignment operations
-        "module_instantiation": re.compile(r'^\s*(?!module\b)(\w+)\s+(\w+)\s*\(([^;]*)\);')
+        "module_instantiation": re.compile(r'^\s*(?!module\b)(\w+)\s+(\w+)\s*\(([^;]*)\);'),
+        "input": re.compile(r'input\s+(\w+)')
     }
     
     key_words = ["module", "endmodule", "input", "output", "inout", 
@@ -82,13 +88,13 @@ def write_to_file(output_file, data):
     try:
         with open(output_file, 'w') as file:
             file.write(data)
-        print(f"Data written to {output_file}")
+        # print(f"Data written to {output_file}")
     except Exception as e:
         print(f"Error writing to file: {e}")
 
 if __name__ == "__main__":
     if(len(sys.argv)!=4):
-        print("Usage: python3 preAnalyzer.py <input_file> <top_module> <output_file>")
+        print("Usage: python3 preAnalyzer.py <input_file> <top_module> <runtimeVariablesDir>")
         sys.exit(1)
     else:
         input_file = sys.argv[1]
@@ -104,6 +110,15 @@ if __name__ == "__main__":
             top_module_content = module["content"]
             variables.update(extract_variables(top_module_content))
 
-    write_to_file(output_file, "\n".join([f"{var}" for var in variables]))
+    # then we come to the a good variables sets
+    subsets = generate_subsets(variables, 5)
+    cnt = 0
+    for subset in subsets:
+        file_dir = output_file+"Init_"+str(cnt)+".txt"
+        write_to_file(file_dir, "\n".join([f"{var}" for var in subset]))
+        cnt += 1
+        # print(subset)
+    write_to_file(output_file+"All.txt", "\n".join([f"{var}" for var in variables]))
+    # write_to_file(output_file, "\n".join([f"{var}" for var in variables]))
     
     

@@ -113,6 +113,7 @@ if __name__ == "__main__":
 
     print("Found mutations: ",sorted(find_files))
     print("Found total mutations: ",len(find_files))
+    print("UnFound mutations: ",len(get_mutant_files(directory))-len(find_files))
     
     mutant_files = get_mutant_files(directory)
     print("Total mutations: ",len(mutant_files))

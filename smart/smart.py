@@ -72,10 +72,11 @@ def setupMutants(sv_path,top_module_file,mutant_path,top_module):
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
-def smart(current_path, top_module,result_file):
-    cmd = ["./smart.out",current_path,top_module,result_file]
+def smart(current_path, top_module,result_file,init_variables):
+    cmd = ["./smart.out",current_path,top_module,result_file,init_variables]
     print("Run cmd: ", cmd)
-    subprocess.run(cmd)
+    result = subprocess.run(cmd)
+    return result.returncode
 
 def resultAnalysis(resultDir,runtimeRemoveVariables):
     print("Result Analysis")
@@ -90,7 +91,7 @@ def preAnalysis(file_path,top_module,output_file):
 
 if __name__ == "__main__":
     sim_loop = 3
-    smart_loop = 5
+    smart_loop = 10
     compile_cmd = 1
     mutant_cmd = 1
     preAnalysis_cmd = 1
@@ -103,9 +104,9 @@ if __name__ == "__main__":
     mutant_path = current_path+"/benchmarks/"
     mverilog_path = current_path+"/runtime/verilog/"
     
-    resultDir = current_path+"/results"
+    resultDir = current_path+"/result"
 
-    runtimeInitVariables = current_path+"/runtime/variables/initVariables.txt"
+    runtimeVariablesDir = current_path+"/runtime/variables/"
 
     runtimeRemoveVariables = current_path+"/runtime/variables/removeVariables.txt"
     initVariables = current_path+"/runtime/variables/initVariables.txt"
@@ -151,14 +152,22 @@ if __name__ == "__main__":
 
     #Pre analysis of the code
     if(preAnalysis_cmd):
-        preAnalysis(mverilog_path+main_file_name,main_module,runtimeInitVariables)
+        preAnalysis(mverilog_path+main_file_name,main_module,runtimeVariablesDir)
 
     # loop here:
     
-    for i in range(smart_loop):
-        result_file = resultDir+"/result"+str(i)+".txt"
-        smart(current_path, main_module,result_file)
-        cmd = input("Run a smart loop?:")
+    # Smart
+    sucess = 0
+    for filename in os.listdir(runtimeVariablesDir):
+        # cmd = input("Run another smart loop?:")
+        result_file = resultDir+"/result"+str(sucess)+".txt"
+        init_variables = os.path.join(runtimeVariablesDir, filename)
+        result = smart(current_path, main_module,result_file,init_variables)
+        if result == 0:
+            sucess += 1
+        if sucess == smart_loop:
+            break
         #Result Analysis
         # resultAnalysis(resultDir,runtimeRemoveVariables)
+        
     

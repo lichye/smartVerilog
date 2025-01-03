@@ -43,7 +43,7 @@ void intersectionSignals(std::string);
 int main(int argc, char* argv[]){
   int timeOut = 0;
 
-  if(argc!=4){
+  if(argc!=5){
     print("Usage: ./smart <currentDir> <topmodule> <result_file_dir>\n");
     return -1;
   }
@@ -51,11 +51,12 @@ int main(int argc, char* argv[]){
     currentDir = argv[1];
     moduleName = argv[2];
     resultFileDir = argv[3];
+    initVariables = argv[4];
   }
 
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
   resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
-  initVariables = currentDir + "/runtime/variables/initVariables.txt";
+  // initVariables = currentDir + "/runtime/variables/initVariables.txt";
 
   StateMaker::setSeed(42);
   SmtFunctionParser parser;
@@ -92,18 +93,18 @@ int main(int argc, char* argv[]){
     sygus->addConstrainComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
 
-  print("In looptime "+std::to_string(timeOut)+":");
+  // print("In looptime "+std::to_string(timeOut)+":");
 
   State* randomState = stateMaker->makeRandomState();
   int loopTime = 0;
 
   while(checker->checkStateReachability(randomState)){
-    print("\tGenerating random state in "+std::to_string(loopTime)+" time");
+    // print("\tGenerating random state in "+std::to_string(loopTime)+" time");
     // print("\t The state is: "+randomState->toString());
     randomState = stateMaker->makeRandomState();
-    if(loopTime++>20){
+    if(loopTime++>3){
       print("Time out\n");
-      break;
+      return -1;
     }
   }
 
@@ -142,16 +143,16 @@ int main(int argc, char* argv[]){
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
 
-    State* randomState = stateMaker->makeRandomState();
-    while(checker->checkStateReachability(randomState)){
-      print("\tGenerating random state in "+std::to_string(loopTime)+" time");
-      // print("\t The state is: "+randomState->toString());
-      randomState = stateMaker->makeRandomState();
-      if(loopTime++>100){
-        print("Time out\n");
-        break;
-      }
-    }
+    // State* randomState = stateMaker->makeRandomState();
+    // while(checker->checkStateReachability(randomState)){
+    //   print("\tGenerating random state in "+std::to_string(loopTime)+" time");
+    //   // print("\t The state is: "+randomState->toString());
+    //   randomState = stateMaker->makeRandomState();
+    //   if(loopTime++>100){
+    //     print("Time out\n");
+    //     break;
+    //   }
+    // }
 
     sygus->addConstraints(randomState,false);
    
@@ -173,6 +174,7 @@ int main(int argc, char* argv[]){
     print("Last assertion is verified\n");
     print("The property is "+sygusfunc->getBodyVerilogExpr());
     writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr());
+    print("The property is written to "+resultFileDir);
   }
   else{
     print("All assertion is not verified\n");
