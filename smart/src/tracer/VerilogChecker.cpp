@@ -283,18 +283,20 @@ bool VerilogChecker::runSby() {
     sbyFile << "mode bmc" << std::endl;
     sbyFile << "depth " << bound << std::endl;
     sbyFile << "timeout 10000" << std::endl;
+    sbyFile << "vcd_sim on"<<std::endl;
+    // sbyFile << "skip 5"<<std::endl;
     
     // sbyFile << "vcd_sim on" << std::endl;
     sbyFile << std::endl;
 
     sbyFile << "[engines]" << std::endl;
     sbyFile << "bmc_check:" << std::endl;
-    sbyFile << "smtbmc --nopresat cvc5"<<std::endl;
+    sbyFile << "smtbmc --unroll --nopresat cvc5"<<std::endl;
     sbyFile << std::endl;
 
     sbyFile << "[script]" << std::endl;
     sbyFile << "files:" << std::endl;
-    sbyFile << "read -formal " << formalFilePath << std::endl;
+    sbyFile << "read -sv " << formalFilePath << std::endl;
     sbyFile << "prep -top " << topModule << std::endl;
     sbyFile.close();
 

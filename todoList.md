@@ -1,3 +1,4 @@
+----------------------------- 12/16
 Finish:
 # EBMC has claimed to fixed up bugs
 ## write an email to make them make new release
@@ -29,7 +30,12 @@ Problem:
 
 # Support for EBMC list of files
 
---------------------------- before paper review
+--------------------------- 1/16
+
+--------------------------- 1/23
+
+--------------------------- 1/30 Paper Submission DDL
+
 # Future work
 
 # make support 
