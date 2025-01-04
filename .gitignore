@@ -10,3 +10,7 @@ Experiment
 example/
 test/
 timeTable
+smart/runtime/
+smart/benchmarks/
+smart/sim_build/
+smart/result/

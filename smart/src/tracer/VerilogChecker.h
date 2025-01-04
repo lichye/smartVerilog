@@ -34,6 +34,7 @@ class VerilogChecker {
     public:
         VerilogChecker();
         VerilogChecker(std::string, BackEndSolver);
+        VerilogChecker(std::string,std::string,BackEndSolver);
         ~VerilogChecker();
         
         void setVerilogSrcPath(std::string);
@@ -65,7 +66,8 @@ class VerilogChecker {
 
         std::vector<std::string> properties;
         std::vector<PropertyType> propertyTypes;
-        std::vector<std::string> formalFilePaths;
+        // std::vector<std::string> formalFilePaths;
+        std::vector<std::string> relatedFilePaths;
 
         void writeVerilogFile();
         bool runEBMC();

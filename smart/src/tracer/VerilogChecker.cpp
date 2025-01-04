@@ -16,6 +16,11 @@
 #include <algorithm>
 #include <cctype>
 
+#include <filesystem>
+#include <iostream>
+
+namespace fs = std::filesystem;
+
 std::string trim(const std::string &str) {
     size_t first = str.find_first_not_of(" \t\r\n");
     if (first == std::string::npos) return "";
@@ -36,6 +41,26 @@ VerilogChecker::VerilogChecker(std::string verilogSrcPath, BackEndSolver solver)
     this->solver = solver;
     moduleTime = "";
     bound = 10;
+}
+
+VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string homePath,BackEndSolver solver) {
+    this->verilogSrcPath = verilogSrcPath;
+    this->homePath = homePath;
+    this->solver = solver;
+    moduleTime = "";
+    bound = 10;
+    std::string relatePath = homePath+"/runtime/verilog";
+
+    try {
+        for (const auto& entry : fs::directory_iterator(relatePath)) {
+            if (entry.is_regular_file()) {
+                if(entry.path()!=verilogSrcPath)
+                    relatedFilePaths.push_back(entry.path());
+            }
+        }
+    } catch (const fs::filesystem_error& e) {
+        ;
+    }
 }
 
 VerilogChecker::~VerilogChecker() {
@@ -298,6 +323,9 @@ bool VerilogChecker::runSby() {
     sbyFile << "[script]" << std::endl;
     sbyFile << "files:" << std::endl;
     sbyFile << "read -sv " << formalFilePath << std::endl;
+    for(auto &path : relatedFilePaths) {
+        sbyFile << "read -sv " << path << std::endl;
+    }
     sbyFile << "prep -top " << topModule << std::endl;
     sbyFile.close();
 

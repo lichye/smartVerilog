@@ -63,10 +63,9 @@ int main(int argc, char* argv[]){
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
 
-  checker = new VerilogChecker(verilogSrcPath,BackEndSolver::SBY);
+  checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
   
   checker->setTopModule(moduleName);
-  checker->setHomePath(currentDir);
   // this means we does not care about the initial state
   // checker->setModuleTime("##1");
   
@@ -103,8 +102,9 @@ int main(int argc, char* argv[]){
     // print("\t The state is: "+randomState->toString());
     randomState = stateMaker->makeRandomState();
     if(loopTime++>3){
-      print("Time out\n");
-      return -1;
+      // print("Time out\n");
+      break;
+      // return -1;
     }
   }
 

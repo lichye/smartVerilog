@@ -88,6 +88,7 @@ all_clean: clean
 	rm -rf $(SMART_TARGET)
 	rm -rf user/*
 	rm -rf sygus.sl
+	rm -rf benchmark/*
 
 clean:
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
@@ -95,7 +96,6 @@ clean:
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
 	rm -rf $(RUNTIME_DIR)
-	rm -rf benchmarks
 	rm -rf result/*
 	mkdir $(BUILD_DIR)
 

@@ -4,8 +4,11 @@
 #include <random>
 #include <cassert>
 
-std::random_device Value::rd;
-std::mt19937 Value::gen(rd());
+// std::random_device Value::rd;
+// std::random_device Value::rd;
+// std::mt19937 Value::gen(rd());
+
+std::mt19937 Value::gen(std::random_device{}());
 std::uniform_int_distribution<> Value::dis(0, 1);
 
 Value::Value(){

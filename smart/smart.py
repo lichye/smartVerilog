@@ -74,7 +74,7 @@ def setupMutants(sv_path,top_module_file,mutant_path,top_module):
 
 def smart(current_path, top_module,result_file,init_variables):
     cmd = ["./smart.out",current_path,top_module,result_file,init_variables]
-    print("Run cmd: ", cmd)
+    # print("Run cmd: ", cmd)
     result = subprocess.run(cmd)
     return result.returncode
 
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         subprocess.run(["make", "compile"]) # this will compile the smart compiler
 
     #Setup the mutants
-    if(mutant_cmd):
+    if(mutant_cmd and os.listdir(mutant_path)==0):
         setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
 
     #Pre analysis of the code

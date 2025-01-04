@@ -26,6 +26,7 @@ def setup(current_path):
 
     removeVariables = current_path+"/runtime/variables/removeVariables.txt"
 
+    mutant_path = current_path+"/benchmarks/"
 
     # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
     if not os.path.exists(sim_target_dir):
@@ -46,6 +47,8 @@ def setup(current_path):
         os.makedirs(variables_dir)
     if not os.path.exists(removeVariables):
         open(removeVariables, 'w').close()
+    if not os.path.exists(mutant_path):
+        os.makedirs(mutant_path)
 
     subprocess.run(["cp", user_verilog_path+"/sim.py",runtime_cocotb_path+"sim.py"])
 
