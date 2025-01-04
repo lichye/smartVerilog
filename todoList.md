@@ -15,9 +15,8 @@ Finish:
 TODO:
 # Benchmark comparing
 
-# SMT Bad edge fixup
+# SMT leakage solve
 
-# SBY support of multiply file
 # SBY of evluator
 
 ----------------------------- 1/9 Meeting

@@ -5,6 +5,7 @@
 #include <vector>
 #include "State.h"
 #include "SygusExpr.h"
+#include "Module.h"
 enum PropertyType{
     
     SAFT_PROPERTY,
@@ -52,6 +53,7 @@ class VerilogChecker {
         void setTopModule(std::string);
         void setModuleTime(std::string);
         void setHomePath(std::string);
+        Constrains fixupConstrains(Constrains);
     private:
         //parameters of ebmc
         std::string verilogSrcPath;

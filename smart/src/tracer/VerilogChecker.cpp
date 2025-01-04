@@ -309,7 +309,7 @@ bool VerilogChecker::runSby() {
     sbyFile << "depth " << bound << std::endl;
     sbyFile << "timeout 10000" << std::endl;
     sbyFile << "vcd_sim on"<<std::endl;
-    sbyFile << "append 10"<<std::endl;
+    // sbyFile << "append 10"<<std::endl;
     // sbyFile << "skip 5"<<std::endl;
     
     // sbyFile << "vcd_sim on" << std::endl;
@@ -346,4 +346,52 @@ bool VerilogChecker::runSby() {
 
 void VerilogChecker::setHomePath(std::string path) {
     homePath = path;
+}
+
+Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
+    //constrains.constraints[0] is the first Signal vector
+    int timeStamp = constrains.constraints[0].size();
+    int signalSize = constrains.constraints.size();
+    bool isUnDefined = false;
+
+    Constrains newConstrains;
+    
+    for(auto constraint : constrains.constraints) {
+        std::vector<Value*> newConstraint;
+        newConstrains.constraints.push_back(newConstraint);
+    }
+    newConstrains.tracePath = constrains.tracePath; 
+    newConstrains.isTrue = constrains.isTrue;
+
+    for(int time=0;time<timeStamp;time++) {
+        isUnDefined = false;
+        //time Stamp i
+        for(int signalIndex=0;signalIndex<signalSize;signalIndex++) {
+            //signal i
+            Value* value = constrains.constraints[signalIndex][time];
+            if(value->isUndefined()) {
+                isUnDefined = true;
+                break;
+            }
+        }
+        //if there is any undefined value, we should fix up the value
+        if(isUnDefined) {
+            //Time is time
+            // we know there there exists signal that is undefined
+            // we should fix up the value
+            continue;
+        //else we just use the original value
+        }else{
+            for(int signalIndex=0;signalIndex<signalSize;signalIndex++) {
+                //signal i
+                Value* value = constrains.constraints[signalIndex][time];
+                if(value->isUndefined()){
+                    print("Error: Undefined value in the constrains\n");
+                    exit(1);
+                }
+                newConstrains.constraints[signalIndex].push_back(value);
+            }
+        }
+    }
+    return newConstrains;
 }

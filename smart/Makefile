@@ -95,8 +95,12 @@ clean:
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
            position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
 		   sygus.sl
-	rm -rf $(RUNTIME_DIR)
+	rm -rf runtime/cocotb
+	rm -rf runtime/formal
+	rm -rf runtime/smt_results
+	rm -rf runtime/verilog
 	rm -rf result/*
+	rm -rf runtime/variables
 	mkdir $(BUILD_DIR)
 
 

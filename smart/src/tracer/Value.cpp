@@ -114,7 +114,7 @@ std::string Value::toString(){
         return std::to_string(value.realValue);
     }
     else{
-        return "unknown";
+        return "unknownType";
     }   
 }
 

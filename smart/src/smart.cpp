@@ -12,6 +12,7 @@
 #include "SmtFunctionParser.h"
 #include "Module.h"
 #include <fstream>
+#include <algorithm>
 namespace fs = std::filesystem;
 
 //global variables
@@ -21,6 +22,7 @@ SyGuSGenerater* sygus;
 Module* module;
 VerilogChecker* checker;
 StateMaker* stateMaker;
+
 
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
@@ -81,13 +83,15 @@ int main(int argc, char* argv[]){
   for(auto &signal : *signals){
     print("\t"+signal.name);
   }
-
+  std::sort(signals->begin(),signals->end());
   sygus->setSignals(signals);
 
   stateMaker = new StateMaker(signals);
 
   std::vector<Constrains> constraints = module->getAllConstraints(signals);
   for(auto &constrain : constraints){
+    //check will help
+    constrain = checker->fixupConstrains(constrain);
     sygus->addConstraints(constrain.constraints,constrain.isTrue);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
@@ -100,19 +104,17 @@ int main(int argc, char* argv[]){
   while(checker->checkStateReachability(randomState)){
     // print("\tGenerating random state in "+std::to_string(loopTime)+" time");
     // print("\t The state is: "+randomState->toString());
+    sygus->addConstraints(randomState,true);
+    sygus->addConstrainComments("Getting constraints from the random state",true);
     randomState = stateMaker->makeRandomState();
     if(loopTime++>3){
-      // print("Time out\n");
       break;
-      // return -1;
     }
   }
 
   sygus->addConstraints(randomState,false);
 
   print("\tFinish generating random state");
-
-  sygus->addConstraints(randomState,false);
 
   sygus->printSysgusPath("sygus.sl");
   print("\tFinish generating sygus file");
@@ -129,7 +131,7 @@ int main(int argc, char* argv[]){
   print("\tTrace goes to VCD file: "+SMTVCDfilePath);
 
   while(!verifiedResult){
-    if(timeOut++>20||verifiedResult){
+    if(timeOut++>3||verifiedResult){
       print("Time out\n");
       break;
     }
@@ -138,8 +140,8 @@ int main(int argc, char* argv[]){
     module->addTrace(SMT,SMTVCDfilePath);
     
     Constrains c = module->getConstrain(SMTVCDfilePath,signals);
-
-    sygus->addConstraints(c.constraints,c.isTrue);
+    Constrains new_c = checker->fixupConstrains(c);
+    sygus->addConstraints(new_c.constraints,c.isTrue);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
 
@@ -154,7 +156,7 @@ int main(int argc, char* argv[]){
     //   }
     // }
 
-    sygus->addConstraints(randomState,false);
+    // sygus->addConstraints(randomState,false);
    
     sygus->printSysgusPath("sygus.sl");
     print("\tFinish generating sygus file");

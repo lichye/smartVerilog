@@ -139,12 +139,19 @@ if __name__ == "__main__":
     #Start the simulation
     print("Start Simulation")
 
-    for i in range(sim_loop):
-        sim(current_path, main_file_name) # this will run the simulation
+    sim_target_dir = current_path+"/runtime/sim_results"
+    if(len(os.listdir(sim_target_dir))==0):
+        for i in range(sim_loop):
+            sim(current_path, main_file_name) # this will run the simulation
+    else:
+        print("Simulation already done")
 
     # Start compile the smart compiler
     if(compile_cmd):
-        subprocess.run(["make", "compile"]) # this will compile the smart compiler
+        ret = subprocess.run(["make", "compile"]) # this will compile the smart compiler
+        if ret.returncode != 0:
+            print("Error in compiling")
+            exit(-1)
 
     #Setup the mutants
     if(mutant_cmd and os.listdir(mutant_path)==0):
