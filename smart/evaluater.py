@@ -27,6 +27,7 @@ def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
     ]
 
     if not verilog_files:
+        print("In the directory: ",directory)
         print("No matching Verilog files found in the specified directory.")
         return
 

@@ -7,13 +7,11 @@
 module dff (CK,Q,D);
 input CK,D;
 output Q;
-
   wire NM,NCK;
   reg NQ,M; // trireg -> reg
-
-  nmos N7 (M,D,NCK);
+  assign M = D ? NCK : 1'bz; //nmos N7 (M,D,NCK);
+  assign NQ = NM ? CK : 1'bz; //nmos N9 (NQ,NM,CK);
   not P3 (NM,M);
-  nmos N9 (NQ,NM,CK);
   not P5 (Q,NQ);
   not P1 (NCK,CK);
 

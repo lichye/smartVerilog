@@ -88,20 +88,21 @@ all_clean: clean
 	rm -rf $(SMART_TARGET)
 	rm -rf user/*
 	rm -rf sygus.sl
-	rm -rf benchmark/*
-
-clean:
+	rm -rf benchmarks/*
 	rm -rf $(BUILD_DIR) $(LEX_OUT) $(LEX_HEADER) $(LEX_OBJ) \
            $(YAC_OUT) $(YAC_HEADER) $(YAC_OBJ) \
-           position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET) \
-		   sygus.sl
+           position.hh stack.hh location.hh VCDParser.output $(TEST_TARGET) $(SMART_TARGET)
+	mkdir $(BUILD_DIR)
+
+clean:
+	rm -rf sygus.sl
 	rm -rf runtime/cocotb
 	rm -rf runtime/formal
 	rm -rf runtime/smt_results
 	rm -rf runtime/verilog
 	rm -rf result/*
 	rm -rf runtime/variables
-	mkdir $(BUILD_DIR)
+	
 
 
 sim_clean:

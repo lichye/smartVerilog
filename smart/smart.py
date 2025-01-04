@@ -154,7 +154,7 @@ if __name__ == "__main__":
             exit(-1)
 
     #Setup the mutants
-    if(mutant_cmd and os.listdir(mutant_path)==0):
+    if(mutant_cmd and len(os.listdir(mutant_path))==0):
         setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
 
     #Pre analysis of the code

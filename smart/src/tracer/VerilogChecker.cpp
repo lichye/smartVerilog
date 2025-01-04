@@ -1,5 +1,6 @@
 #include "VerilogChecker.h"
 #include "State.h"
+#include "StateMaker.h"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -364,6 +365,7 @@ Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
     newConstrains.isTrue = constrains.isTrue;
 
     for(int time=0;time<timeStamp;time++) {
+        int count = 0;
         isUnDefined = false;
         //time Stamp i
         for(int signalIndex=0;signalIndex<signalSize;signalIndex++) {
@@ -371,14 +373,31 @@ Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
             Value* value = constrains.constraints[signalIndex][time];
             if(value->isUndefined()) {
                 isUnDefined = true;
+                count++;
                 break;
             }
         }
         //if there is any undefined value, we should fix up the value
         if(isUnDefined) {
             //Time is time
-            // we know there there exists signal that is undefined
-            // we should fix up the value
+            std::vector<Value*> values;
+            for(int signalIndex=0;signalIndex<signalSize;signalIndex++) {
+                //signal i
+                Value* value = constrains.constraints[signalIndex][time];
+                values.push_back(value);
+            }
+
+            // print("\t\tSMT File constains "+std::to_string(count)+" undefined values");
+
+            //make the state reachable
+            State* state = makeReachableState(values);
+            std::vector<Value*> newValues = state->getValues();
+            
+            //add the new values to the new constrains
+            for(int signalIndex=0;signalIndex<signalSize;signalIndex++) {
+                newConstrains.constraints[signalIndex].push_back(newValues[signalIndex]);
+            }
+
             continue;
         //else we just use the original value
         }else{
@@ -394,4 +413,25 @@ Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
         }
     }
     return newConstrains;
+}
+
+void VerilogChecker::setSignals(std::vector<Signal>* setSignals) {
+    this->signals = setSignals;
+}
+
+State* VerilogChecker::makeReachableState(std::vector<Value*> values){
+    // print("\t\tTry to fix up the state\n");
+    StateMaker sm(signals);
+    State* state = sm.fixUpState(values);
+    if(checkStateReachability(state)) {
+        return state;
+    }
+    else{
+        state = sm.fixUpState(state,values);
+        if(checkStateReachability(state))
+            return state;
+        else
+            return makeReachableState(values);
+        
+    }
 }

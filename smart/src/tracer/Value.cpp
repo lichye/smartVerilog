@@ -276,3 +276,26 @@ Value* Value::makeRandomValue(SignalType type,int bitWidth){
     return value;
 }
 
+Value* Value::makeNewValue(Value* oldValue,SignalType type,int bitWidth){
+    Value* newValue = new Value();
+    newValue->type = type;
+    if(type == SignalType::BOOLEAN){
+        if(oldValue->value.bitValue == BitType::ZERO)
+            newValue->value.bitValue = BitType::ONE;
+        else if(oldValue->value.bitValue == BitType::ONE)
+            newValue->value.bitValue = BitType::ZERO;
+        else
+            newValue->value.bitValue = BitType::X;
+    }
+    else if(type == SignalType::BITS){
+        newValue->value.bitVector = new std::vector<BitType>();
+        for(int i = 0; i < bitWidth; i++){
+            newValue->value.bitVector->push_back(dis(gen) == 0 ? BitType::ZERO : BitType::ONE);
+        }
+    }
+    else if(type == SignalType::DOUBLE){
+        newValue->value.realValue = dis(gen);
+    }
+    return newValue;
+}
+

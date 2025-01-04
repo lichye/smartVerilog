@@ -54,32 +54,35 @@ class VerilogChecker {
         void setModuleTime(std::string);
         void setHomePath(std::string);
         Constrains fixupConstrains(Constrains);
+        void setSignals(std::vector<Signal>*);
     private:
+        int bound;
+        //BackEndSolver
+        BackEndSolver solver;
+
         //parameters of ebmc
         std::string verilogSrcPath;
         std::string homePath;
 
-        //BackEndSolver
-        BackEndSolver solver;
-
+        
         std::string formalFilePath;
         std::string tracePath;
-        int bound;
+        std::string topModule;
+        std::string moduleTime;
 
         std::vector<std::string> properties;
         std::vector<PropertyType> propertyTypes;
         // std::vector<std::string> formalFilePaths;
         std::vector<std::string> relatedFilePaths;
+        std::vector<Signal>* signals;
 
         void writeVerilogFile();
         bool runEBMC();
         bool runEBMC(std::string);
         bool runSby();
 
-        std::string topModule;
-        std::string moduleTime;
-
         std::string generateFormalFilePath(PropertyType);
+        State* makeReachableState(std::vector<Value*>);
 };
 
 #endif

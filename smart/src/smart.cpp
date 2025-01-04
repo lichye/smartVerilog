@@ -68,6 +68,7 @@ int main(int argc, char* argv[]){
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
   
   checker->setTopModule(moduleName);
+  
   // this means we does not care about the initial state
   // checker->setModuleTime("##1");
   
@@ -84,19 +85,21 @@ int main(int argc, char* argv[]){
     print("\t"+signal.name);
   }
   std::sort(signals->begin(),signals->end());
+
   sygus->setSignals(signals);
+  checker->setSignals(signals);
 
   stateMaker = new StateMaker(signals);
 
   std::vector<Constrains> constraints = module->getAllConstraints(signals);
   for(auto &constrain : constraints){
     //check will help
-    constrain = checker->fixupConstrains(constrain);
+    // constrain = checker->fixupConstrains(constrain);
     sygus->addConstraints(constrain.constraints,constrain.isTrue);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
 
-  // print("In looptime "+std::to_string(timeOut)+":");
+  print("In looptime "+std::to_string(timeOut)+":");
 
   State* randomState = stateMaker->makeRandomState();
   int loopTime = 0;
@@ -136,12 +139,12 @@ int main(int argc, char* argv[]){
       break;
     }
     print("In looptime "+std::to_string(timeOut)+":");
-
+    print("\tGatehering signals from the SMT traces");
     module->addTrace(SMT,SMTVCDfilePath);
-    
     Constrains c = module->getConstrain(SMTVCDfilePath,signals);
     Constrains new_c = checker->fixupConstrains(c);
     sygus->addConstraints(new_c.constraints,c.isTrue);
+    // print("\tFinish getting constraints from SMT trace: "+c.tracePath);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
 

@@ -11,6 +11,8 @@ class StateMaker
         StateMaker(std::vector<Signal>*);
         ~StateMaker();
         State* makeRandomState();
+        State* fixUpState(std::vector<Value*>);
+        State* fixUpState(State*,std::vector<Value*>);
         static void setSeed(int);
 
     private:

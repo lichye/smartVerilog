@@ -41,3 +41,37 @@ State* StateMaker::makeRandomState(){
 void StateMaker::setSeed(int seed){
     Value::setSeed(seed);
 }
+
+State* StateMaker::fixUpState(std::vector<Value*> values){
+    assert(values.size() == signals->size());
+    State* ret_state = new State();
+    ret_state->setSignals(signals);
+    for(int i = 0; i < values.size(); i++){
+        if(values[i]->isUndefined()){
+            Value *value = Value::makeRandomValue((*signals)[i].type,(*signals)[i].lindex - (*signals)[i].rindex + 1);
+            ret_state->addValue(value);
+            delete value;
+        }
+        else{
+            ret_state->addValue(values[i]);
+        }
+    }
+    return ret_state;
+}
+
+State* StateMaker::fixUpState(State* state,std::vector<Value*> values){
+    assert(values.size() == signals->size());
+    State* ret_state = new State();
+    ret_state->setSignals(signals);
+    for(int i = 0; i < values.size(); i++){
+        if(values[i]->isUndefined()){
+            Value* nowValue = state->getValues()[i];
+            Value *newValue = Value::makeNewValue(nowValue,(*signals)[i].type,(*signals)[i].lindex - (*signals)[i].rindex + 1);
+            ret_state->addValue(newValue);
+        }
+        else{
+            ret_state->addValue(values[i]);
+        }
+    }
+    return ret_state;
+}

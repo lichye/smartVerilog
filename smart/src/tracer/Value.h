@@ -9,6 +9,7 @@ class Value{
     public:
         static Value* makeXValue(SignalType,int);
         static Value* makeRandomValue(SignalType,int);
+        static Value* makeNewValue(Value*,SignalType,int);
         static void setSeed(int);
 
         Value(VCDValue* value);
