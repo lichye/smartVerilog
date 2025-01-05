@@ -91,7 +91,10 @@ def preAnalysis(file_path,top_module,output_file):
 
 if __name__ == "__main__":
     sim_loop = 3
-    smart_loop = 10
+    
+    #this decide many assertions we want
+    smart_loop = 5
+
     compile_cmd = 1
     mutant_cmd = 1
     preAnalysis_cmd = 1
@@ -170,6 +173,7 @@ if __name__ == "__main__":
         result_file = resultDir+"/result"+str(sucess)+".txt"
         init_variables = os.path.join(runtimeVariablesDir, filename)
         result = smart(current_path, main_module,result_file,init_variables)
+        subprocess.run(["rm","-rf","runtime/smt_results/*"])
         if result == 0:
             sucess += 1
         if sucess == smart_loop:

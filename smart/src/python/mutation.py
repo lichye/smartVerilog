@@ -17,9 +17,6 @@ class VerilogMutation:
         with open(self.input_file, 'r') as file:
             self.code_lines = file.readlines()
 
-
-    import random
-
     def mutate_localparam(self,localparam_str):
         match = re.match(
             r"localparam\s+(?P<range>\[\d+:\d+\])\s+(?P<variable>[a-zA-Z_]\w*)\s*=\s*(?P<value>\d+);",
@@ -35,7 +32,6 @@ class VerilogMutation:
         max_value = (1 << bit_width) - 1
         mutated_value = random.choice([v for v in range(0, max_value + 1) if v != current_value])
         return f"localparam {match.group('range')} {match.group('variable')} = {mutated_value};"
-
 
     def define_mutations(self):    
         # define muation operations
@@ -293,7 +289,7 @@ def run_ebmc_on_verilog_files(directory, property,bound,top_module,ebmc_path="eb
             error_files.append(verilog_file)    
     return error_files
 
-def move_files(src_folder, dest_folder):
+def move_files(src_folder, dest_folder,delete_file):
     """
     Move all files from the source folder to the destination folder.
 
@@ -325,6 +321,8 @@ def move_files(src_folder, dest_folder):
         src_path = os.path.join(src_folder, file)
         dest_path = os.path.join(dest_folder, file)
         try:
+            if(src_path == delete_file):
+                continue
             shutil.copy(src_path, dest_path)
             print(f"Moved: {file}")
         except Exception as e:
@@ -365,7 +363,7 @@ if __name__ == "__main__":
     file_count = mutation_tool.run()
     
     # Setup the environment
-    move_files(input_file_dir, output_dir)
+    move_files(input_file_dir, output_dir,input_file)
 
     # Run ebmc on the generated mutants and remove error files
     bad_files=run_ebmc_on_verilog_files(output_dir,"1==1",10,top_module)

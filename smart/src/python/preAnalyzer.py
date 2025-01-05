@@ -114,13 +114,13 @@ if __name__ == "__main__":
     subsets = generate_subsets(variables, 5)
     cnt = 0
     
-    # for subset in subsets:
-    #     file_dir = output_file+"Init_"+str(cnt)+".txt"
-    #     write_to_file(file_dir, "\n".join([f"{var}" for var in subset]))
-    #     cnt += 1
-    #     # print(subset)
-    #     if(cnt>=100):
-    #         break
+    for subset in subsets:
+        file_dir = output_file+"Init_"+str(cnt)+".txt"
+        write_to_file(file_dir, "\n".join([f"{var}" for var in subset]))
+        cnt += 1
+        # print(subset)
+        if(cnt>=100):
+            break
 
     write_to_file(output_file+"All.txt", "\n".join([f"{var}" for var in variables]))
     # write_to_file(output_file, "\n".join([f"{var}" for var in variables]))

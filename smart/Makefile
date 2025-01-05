@@ -102,6 +102,8 @@ clean:
 	rm -rf runtime/verilog
 	rm -rf result/*
 	rm -rf runtime/variables
+	rm -rf dis.sby
+	rm -rf dis_task
 	
 
 

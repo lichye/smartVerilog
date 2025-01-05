@@ -183,6 +183,7 @@ int main(int argc, char* argv[]){
   }
   else{
     print("All assertion is not verified\n");
+    return -1;
   }
   return 0;
 }
