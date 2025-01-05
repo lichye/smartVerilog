@@ -20,7 +20,7 @@ State* StateMaker::makeRandomState(){
     //check there is signals to make the state
     printDebug("Call StateMaker::makeRandomState",2);
     assert(signals != nullptr);
-    printDebug("Signals are not null",2);
+    // printDebug("Signals are not null",2);
     if(signals->size() == 0){
         printDebug("No signals to make state",1);
         exit(1);

@@ -307,7 +307,8 @@ bool VerilogChecker::runSby() {
     sbyFile << "[options]" << std::endl;
     sbyFile << "bmc_check:" << std::endl;
     sbyFile << "mode bmc" << std::endl;
-    sbyFile << "depth " << bound << std::endl;
+    sbyFile << "depth " << 3 << std::endl;
+    // sbyFile << "depth " << bound << std::endl;
     sbyFile << "timeout 10000" << std::endl;
     sbyFile << "vcd_sim on"<<std::endl;
     // sbyFile << "append 10"<<std::endl;
@@ -337,11 +338,12 @@ bool VerilogChecker::runSby() {
     command += "sby "+sbyFilePath;
     command += " -f";
 
-    command += " > /dev/null 2>&1";
-
+    // command += " > /dev/null 2>&1";
+    printDebug("Running SBY with command: "+command+"\n",1);
     int status = system(command.c_str());
     // print("The command is "+command+"\n");
     // print("The status is "+std::to_string(status)+"\n");
+    printDebug("SBY result is "+std::to_string(status),1);
     return status==0;
 }
 

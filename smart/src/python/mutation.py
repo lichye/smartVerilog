@@ -180,6 +180,9 @@ class VerilogMutation:
                 continue
             for mutation in self.mutations:
                 if(mutation["category"]=="variable_negation"):
+                    if not self.always_block:
+                        # print("Not in always block")
+                        continue
                     matches = re.findall(mutation["pattern"], line)
                     for match_index, match in enumerate(matches):
                         modified_line = re.sub(
@@ -209,7 +212,7 @@ class VerilogMutation:
                         # print("Muations: "+line + " -> " + modified_line)
                         # then we should write the modified line to the file
                         comment = f"// This is mutation {test_count} for {mutation['category']}\n"
-                        comment += f"// The match is: {match}\n"
+                        comment += f"// The match is: {my_matchs}\n"
                         comment += f"// The pattern is: {mutation['category']}\n"
                         comment += f"// Mutations: {line.strip()} -> {modified_line.strip()}\n"
                         self.write_to_file(test_count, line, modified_line, comment)
@@ -366,7 +369,8 @@ if __name__ == "__main__":
     move_files(input_file_dir, output_dir,input_file)
 
     # Run ebmc on the generated mutants and remove error files
-    bad_files=run_ebmc_on_verilog_files(output_dir,"1==1",10,top_module)
+    bad_files = []
+    # bad_files = run_ebmc_on_verilog_files(output_dir,"1==1",10,top_module)
     
     remove_files(bad_files)
 

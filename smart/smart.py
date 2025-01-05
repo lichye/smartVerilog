@@ -93,7 +93,7 @@ if __name__ == "__main__":
     sim_loop = 3
     
     #this decide many assertions we want
-    smart_loop = 5
+    smart_loop = 3
 
     compile_cmd = 1
     mutant_cmd = 1
@@ -168,6 +168,8 @@ if __name__ == "__main__":
     
     # Smart
     sucess = 0
+    if(smart_loop == 0):
+        exit(0)
     for filename in os.listdir(runtimeVariablesDir):
         # cmd = input("Run another smart loop?:")
         result_file = resultDir+"/result"+str(sucess)+".txt"
