@@ -2,13 +2,15 @@
 import os
 import sys
 import subprocess
-def write_assertion_file(input_file,output_file,assertion):
-    write_assertion = "assert property ("+assertion+");\n"
+def write_assertion_file(input_file,output_file,assertions):
+    
     with open(input_file, "r") as file:
         content = file.readlines()
         for i in range(len(content)):
             if content[i].startswith("module"):
-                content.insert(i+1,write_assertion)
+                for assertion in assertions:
+                    write_assertion = "assert property ("+assertion+");\n"
+                    content.insert(i+1,write_assertion)
                 break
     with open(output_file, "w") as file:
         file.writelines(content)
@@ -70,7 +72,7 @@ def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
             error_files.append(verilog_file)    
     return error_files
 
-def run_sby_on_verilog_files(directory, property, sby_path="sby"):
+def run_sby_on_verilog_files(directory, properties, sby_path="sby"):
     """
     Automatically runs `sby` on all Verilog files named mutant_*.sv in the specified directory.
 
@@ -116,15 +118,15 @@ def run_sby_on_verilog_files(directory, property, sby_path="sby"):
             sby_file = os.getcwd()+"/dis.sby"
             # print("The verilog file is: ",verilog_file)
 
-            dir_name = os.path.dirname(verilog_file)           # 提取目录
+            dir_name = os.path.dirname(verilog_file)         
             
-            file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))  # 提取文件名和扩展名
+            file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))
 
             new_file_name = f"{file_base}_assertion{file_ext}"
 
             new_file_path = os.path.join(dir_name, new_file_name)
 
-            write_assertion_file(verilog_file,new_file_path,property)
+            write_assertion_file(verilog_file,new_file_path,properties)
 
             try:
                 with open(sby_file, "w") as sby_run_file:
@@ -173,7 +175,6 @@ def run_sby_on_verilog_files(directory, property, sby_path="sby"):
             error_files.append(verilog_file)
             exit(1)
     return error_files
-
 
 def get_result_files(directory):
 
@@ -228,12 +229,13 @@ if __name__ == "__main__":
     print("Properties: ",properties)
 
     find_files = set()
-    for p in properties:
-        print("Property: ",p)
-        p_find_files = run_sby_on_verilog_files(directory,p)
-        # p_find_files = run_ebmc_on_verilog_files(directory,p,bound,ebmc_path)
-        for file in p_find_files:
-            find_files.add(file)
+    find_files = run_sby_on_verilog_files(directory,properties)
+    # for p in properties:
+    #     print("Property: ",p)
+    #     p_find_files = run_sby_on_verilog_files(directory,p)
+    #     # p_find_files = run_ebmc_on_verilog_files(directory,p,bound,ebmc_path)
+    #     for file in p_find_files:
+    #         find_files.add(file)
 
     # print("Found mutations: ",sorted(find_files))
     sorted(find_files)
@@ -246,11 +248,12 @@ if __name__ == "__main__":
         if file.startswith("mutant_") and file.endswith(".sv") and not file.endswith("_assertion.sv")
     ]
 
-    unfind_file = set(all_file) - find_files
+    unfind_file = set(all_file) - set(find_files)
 
     sorted(unfind_file)
-    print("UnFound mutations: ",len(unfind_file))
-    print("UnFound mutations: ",unfind_file)
+    if(len(unfind_file) != 0):
+        print("UnFound mutations: ",len(unfind_file))
+        print("UnFound mutations: ",unfind_file)
 
     print("Total mutations: ",len(unfind_file)+len(find_files))
     print("Coverage percentage: ",(len(find_files)/(len(unfind_file)+len(find_files)))*100)

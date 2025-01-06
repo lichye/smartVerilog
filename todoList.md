@@ -13,15 +13,15 @@ Finish:
 # SBY backend supports
 
 TODO:
-# Benchmark comparing
 
-# SMT leakage solve
+# Logfile
 
-# SBY of evluator
+# install shell and on-botton run shell
+
+#parameter 
+## variables sets = 100
 
 ----------------------------- 1/9 Meeting
-# EBMC
-## write an email to make them make new release && report of unsupport
 
 # Paper
 

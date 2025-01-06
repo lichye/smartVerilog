@@ -338,7 +338,7 @@ bool VerilogChecker::runSby() {
     command += "sby "+sbyFilePath;
     command += " -f";
 
-    // command += " > /dev/null 2>&1";
+    command += " > /dev/null 2>&1";
     printDebug("Running SBY with command: "+command+"\n",1);
     int status = system(command.c_str());
     // print("The command is "+command+"\n");
