@@ -1,6 +1,9 @@
 #include "VerilogChecker.h"
 #include "State.h"
 #include "StateMaker.h"
+#include "Timer.h"
+#include "utils.h"
+
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -11,9 +14,6 @@
 #include <iomanip>
 #include <sstream>
 #include <cstdlib>
-
-
-#include <string>
 #include <algorithm>
 #include <cctype>
 
@@ -340,9 +340,11 @@ bool VerilogChecker::runSby() {
 
     command += " > /dev/null 2>&1";
     printDebug("Running SBY with command: "+command+"\n",1);
+    timer->start(timerType::SBY_Timer);
     int status = system(command.c_str());
     // print("The command is "+command+"\n");
     // print("The status is "+std::to_string(status)+"\n");
+    timer->stop(timerType::SBY_Timer);
     printDebug("SBY result is "+std::to_string(status),1);
     return status==0;
 }
@@ -436,4 +438,8 @@ State* VerilogChecker::makeReachableState(std::vector<Value*> values){
             return makeReachableState(values);
         
     }
+}
+
+void VerilogChecker::setTimer(Timer* timer) {
+    this->timer = timer;
 }

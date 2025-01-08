@@ -84,27 +84,42 @@ def resultAnalysis(resultDir,runtimeRemoveVariables):
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
-def preAnalysis(file_path,top_module,output_file):
-    cmd = ["python", "src/python/preAnalyzer.py", file_path, top_module, output_file]
+def preAnalysis(work_dir,file_path,top_module,output_file):
+    cmd = ["python", "src/python/preAnalyzer.py",work_dir,file_path, top_module, output_file]
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
+    return 0
+
+def writeLog(file,content):
+    with open(file, "a") as f:
+        f.write(content)
+    f.close()
+
 
 if __name__ == "__main__":
-    sim_loop = 3
-    
-    #this decide many assertions we want
-    smart_loop = 3
+    all_start_time = time.time()
 
-    compile_cmd = 1
+    # parameters
+
+    sim_loop = 3    
+    assertion = 3
+
+
+    compile_cmd = 1    
     mutant_cmd = 1
     preAnalysis_cmd = 1
 
 
     current_path = os.getcwd()
+    
     user_path = current_path+"/user"
+    
     cocotb_path = current_path+"/runtime/cocotb/"
+    
     formal_path = current_path+"/runtime/formal/"
+    
     mutant_path = current_path+"/benchmarks/"
+
     mverilog_path = current_path+"/runtime/verilog/"
     
     resultDir = current_path+"/result"
@@ -141,14 +156,23 @@ if __name__ == "__main__":
 
     #Start the simulation
     print("Start Simulation")
+    
+    sim_start_time = time.time()
 
     sim_target_dir = current_path+"/runtime/sim_results"
+
     if(len(os.listdir(sim_target_dir))==0):
         for i in range(sim_loop):
             sim(current_path, main_file_name) # this will run the simulation
     else:
         print("Simulation already done")
+    
+    sim_end_time = time.time()
 
+    sim_time = sim_end_time - sim_start_time
+    
+    compile_start_time = time.time()
+    
     # Start compile the smart compiler
     if(compile_cmd):
         ret = subprocess.run(["make", "compile"]) # this will compile the smart compiler
@@ -156,31 +180,80 @@ if __name__ == "__main__":
             print("Error in compiling")
             exit(-1)
 
+    compile_end_time = time.time()
+    
+    compile_time = compile_end_time - compile_start_time 
+
     #Setup the mutants
     if(mutant_cmd and len(os.listdir(mutant_path))==0):
         setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
 
     #Pre analysis of the code
     if(preAnalysis_cmd):
-        preAnalysis(mverilog_path+main_file_name,main_module,runtimeVariablesDir)
-
-    # loop here:
+        preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir)
     
     # Smart
     sucess = 0
-    if(smart_loop == 0):
+    loop_count = 0
+    if(assertion == 0):
         exit(0)
-    for filename in os.listdir(runtimeVariablesDir):
+    
+    smart_start_time = time.time()
+    # Each init variable file is a different smart loop
+    for filename in sorted(os.listdir(runtimeVariablesDir)):
+        writeLog("log.txt","Run Smart Loop "+str(loop_count)+"\n")
+
+        loop_count += 1
         # cmd = input("Run another smart loop?:")
+        
         result_file = resultDir+"/result"+str(sucess)+".txt"
+        
         init_variables = os.path.join(runtimeVariablesDir, filename)
         result = smart(current_path, main_module,result_file,init_variables)
         subprocess.run(["rm","-rf","runtime/smt_results/*"])
+
         if result == 0:
+            writeLog("log.txt", "Smart Loop " + str(loop_count)+" is successful\n\n")
             sucess += 1
-        if sucess == smart_loop:
+        else:
+            writeLog("log.txt","Smart Loop " + str(loop_count)+" is failure\n\n")
+            continue
+        
+        if sucess == assertion:
+            writeLog("log.txt","Finish all the assertion\n")
             break
-        #Result Analysis
+
+        # loop_count += 1
+        # result_file = resultDir+"/result"+str(sucess)+".txt"
         # resultAnalysis(resultDir,runtimeRemoveVariables)
+        # result = smart(current_path, main_module,result_file,init_variables)
+
+        # if result == 0:
+        #     writeLog("log.txt", "Remover Smart Loop " + str(loop_count)+" is successful\n\n")
+        #     sucess += 1
+        # else:
+        #     writeLog("log.txt","Remover Smart Loop " + str(loop_count)+" is failure\n\n")
+        #     # writeLog("its result is "+result+"\n\n")
+        # if sucess == assertion:
+        #     writeLog("log.txt","Finish all the assertion\n")
+        #     break
+        
+        # #clean the removeVariables pipe
+        # subprocess.run(["rm","-rf","runtime/removeVariables.txt"])
+        # subprocess.run(["mkdir","runtime/removeVariables.txt"])
+
+        
+
+    smart_end_time = time.time()
+    smart_time = smart_end_time - smart_start_time
+
+    all_end_time = time.time()
+    all_time = all_end_time - all_start_time
+
+    print("Simulation Time: ", sim_time)
+    print("Compile Time: ", compile_time)
+    print("Smart Time: ", smart_time)
+    print("Overall Time: ", all_time)
+
         
     

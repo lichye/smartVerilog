@@ -6,6 +6,7 @@
 #include "State.h"
 #include "SygusExpr.h"
 #include "Module.h"
+#include "Timer.h"
 enum PropertyType{
     
     SAFT_PROPERTY,
@@ -33,6 +34,7 @@ enum BackEndSolver{
 
 class VerilogChecker {
     public:
+        
         VerilogChecker();
         VerilogChecker(std::string, BackEndSolver);
         VerilogChecker(std::string,std::string,BackEndSolver);
@@ -55,7 +57,9 @@ class VerilogChecker {
         void setHomePath(std::string);
         Constrains fixupConstrains(Constrains);
         void setSignals(std::vector<Signal>*);
+        void setTimer(Timer*);
     private:
+        Timer* timer;
         int bound;
         //BackEndSolver
         BackEndSolver solver;

@@ -111,7 +111,7 @@ def run_sby_on_verilog_files(directory, properties, sby_path="sby"):
     error_files = []  # List to track files with errors
 
     for verilog_file in verilog_files:
-        # print(f"Running sby on: {verilog_file}")
+        print(f"Running sby on: {verilog_file}")
         try:
             # Run sby command
             # firstly we should build .sby file

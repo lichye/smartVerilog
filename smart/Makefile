@@ -33,7 +33,7 @@ SMART_SRC      	= ./src/smart.cpp
 
 ASSERTION_SRC   = ./src/assertion.cpp
 
-SRC_DIRS        = ./src/parser ./src/tracer
+SRC_DIRS        = ./src/parser ./src/tracer ./src/support
 
 SRC_FILES       = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.cpp))
 
@@ -104,6 +104,7 @@ clean:
 	rm -rf runtime/variables
 	rm -rf dis.sby
 	rm -rf dis_task
+	rm -rf log.txt
 	
 
 

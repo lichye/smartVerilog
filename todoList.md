@@ -2,47 +2,35 @@
 Finish:
 # Muatation test
 
-# We can evalute our result
-
 # Variable remover
-
-## We can generate different assertions
 
 # Variable picker
 
 # SBY backend supports
 
-TODO:
+----------------------------- 1/9 Meeting
+# Paper
 
-# Logfile
+# Log file and Timer
 
 # install shell and on-botton run shell
 
-#parameter 
-## variables sets = 100
+# parameter 
 
------------------------------ 1/9 Meeting
-
-# Paper
-
------------------------------ After 1/9
+----------------------------- 1/10 -1/15
 # Run time Optimazation
 ## --sygus-stream
 
 # Dockerfile
-## Late Feb?
-
-# Write the paper
-
-# Support for EBMC list of files
-
 --------------------------- 1/16 Meeting
 
 ---------------------------- 1/17-1/22
 
 --------------------------- 1/23
 
---------------------------- 1/30 Paper Submission DDL
+--------------------------- 1/30
+
+--------------------------- 1/31 Paper Submission DDL
 
 # Future work
 

@@ -3,6 +3,48 @@ import configparser
 import sys
 from itertools import combinations, chain
 
+verilog_keywords = [
+    # Module and Ports
+    "module", "endmodule", "input", "output", "inout",
+    
+    # Data Types
+    "wire", "reg", "integer", "real", "time", "parameter", "localparam",
+    "genvar", "logic", "bit", "tri", "tri0", "tri1", "supply0", "supply1",
+    "trireg", "vectored", "scalared", "signed", "unsigned", "event",
+    
+    # Control Flow
+    "always", "initial", "if", "else", "for", "while", "do", "repeat", 
+    "forever", "case", "endcase", "casex", "casez", "default", "disable",
+    "wait", "fork", "join",
+    
+    # Procedural Blocks
+    "begin", "end", "assign", "deassign", "force", "release",
+    
+    # Timing
+    "posedge", "negedge", "edge", "specify", "endspecify", 
+    "timeunit", "timeprecision",
+    
+    # Operators
+    "and", "or", "nand", "nor", "xor", "xnor", "not",
+    
+    # Compiler Directives
+    "`define", "`undef", "`ifdef", "`else", "`elsif", "`endif", 
+    "`include", "`timescale", "`default_nettype", "`celldefine", 
+    "`endcelldefine", "`unconnected_drive", "`nounconnected_drive", 
+    "`resetall", "`line",
+    
+    # Assertions and Simulation Control
+    "assert", "assume", "cover", "posedge", "negedge", 
+    "$display", "$monitor", "$stop", "$finish", "$time", "$random", 
+    "$realtime",
+    
+    # Functions and Tasks
+    "function", "endfunction", "task", "endtask",
+    
+    # Generate Blocks
+    "generate", "endgenerate",
+]
+
 def split_modules(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -48,21 +90,15 @@ def extract_variables(module_content):
         "shift": re.compile(r'[\w\[\]\.]+(?:\s*(<<|>>)\s*[\w\[\]\.]+)+'),         # Shift operations
         "conditional": re.compile(r'[\w\[\]\.]+(?:\s*\?\s*[\w\[\]\.]+\s*:\s*[\w\[\]\.]+)'),  # Conditional operations
         "assignment": re.compile(r'[\w\[\]\.]+\s*(=|<=)\s*[\w\[\]\.]+'),                # Assignment operations
-        "module_instantiation": re.compile(r'^\s*(?!module\b)(\w+)\s+(\w+)\s*\(([^;]*)\);'),
-        "input": re.compile(r'input\s+(\w+)')
+        # "module_instantiation": re.compile(r'^\s*(?!module\b)(\w+)\s+(\w+)\s*\(([^;]*)\);'),
+        "input": re.compile(r'input\s+(\w+)'),
+        "output": re.compile(r'output\s+(\w+)'),
+        "inout": re.compile(r'inout\s+(\w+)'),
+        "module": re.compile(r'module\s+(\w+)'),
     }
     
-    key_words = ["module", "endmodule", "input", "output", "inout", 
-                "wire", "reg", "assign", "always", "posedge", 
-                "negedge", "if", "else", "begin", "end", "case", 
-                "default", "for", "while", "repeat", "forever", 
-                "initial", "function", "task", "fork", "join", 
-                "disable", "wait", "disable", "repeat"]
-    key_words += ["clk","clk_copy"]
-
-    ret_variables = set()
-    remove_variables = set()
-    print("This is the module content")
+    variables = set()
+    # print("This is the module content")
     # Loop through each operation type and find all matches
     for line in module_content.split("\n"):
         # print("This line is "+line)
@@ -73,16 +109,10 @@ def extract_variables(module_content):
                 # print("\t\t We found matches")
                 variable_pattern = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
                 variable = variable_pattern.findall(line)
+                # print("\t\t\t We found variables "+str(variable))
                 variables.update(variable)
-    
-    for ret_variable in ret_variables:
-        if ret_variable in key_words:
-            remove_variables.add(ret_variable)
-
-    for remove_variable in remove_variables:
-        ret_variables.remove(remove_variable)
-        
-    return ret_variables
+            
+    return variables
 
 def write_to_file(output_file, data):
     try:
@@ -92,25 +122,49 @@ def write_to_file(output_file, data):
     except Exception as e:
         print(f"Error writing to file: {e}")
 
+def readFile(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
+        return content
+    except:
+        print(f"Error: File {file_path} not found.")
+        return []
+
 if __name__ == "__main__":
-    if(len(sys.argv)!=4):
+    if(len(sys.argv)!=5):
         print("Usage: python3 preAnalyzer.py <input_file> <top_module> <runtimeVariablesDir>")
         sys.exit(1)
     else:
-        input_file = sys.argv[1]
-        top_module = sys.argv[2]
-        output_file = sys.argv[3]
+        work_dir = sys.argv[1]
+        input_file = sys.argv[2]
+        top_module = sys.argv[3]
+        output_file = sys.argv[4]
+
+    vcd_file = readFile(work_dir+"/runtime/sim_results/sim1.vcd")
 
     modules = split_modules(input_file)
     
     variables = set()
+    
+    verilog_variables = set()
+    vcd_variables = set()
 
+    vcd_variables = extract_variables(vcd_file)
     for module in modules:
         if(module["id"] == top_module):
             top_module_content = module["content"]
-            variables.update(extract_variables(top_module_content))
+            vari = extract_variables(top_module_content)
+            verilog_variables.update(vari)
 
+    for var in verilog_variables:
+        if var in vcd_variables and var not in verilog_keywords:
+            variables.add(var)
+    # vcd_variables = extract_variables(vcd_file)
+    # print("vcd_variables is "+str(vcd_variables))
     # then we come to the a good variables sets
+    print("The final variables are "+str(variables))
+    
     subsets = generate_subsets(variables, 5)
     cnt = 0
     

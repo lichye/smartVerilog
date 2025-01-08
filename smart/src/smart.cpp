@@ -4,6 +4,10 @@
 #include <vector>
 #include <cassert>
 #include <ctime>
+#include <fstream>
+#include <algorithm>
+namespace fs = std::filesystem;
+
 #include "Trace.h"
 #include "SyGuSGenerater.h"
 #include "State.h"
@@ -11,9 +15,7 @@
 #include "VerilogChecker.h"
 #include "SmtFunctionParser.h"
 #include "Module.h"
-#include <fstream>
-#include <algorithm>
-namespace fs = std::filesystem;
+#include "Timer.h"
 
 //global variables
 
@@ -22,6 +24,7 @@ SyGuSGenerater* sygus;
 Module* module;
 VerilogChecker* checker;
 StateMaker* stateMaker;
+Timer* timer;
 
 
 std::string sim_path    = "runtime/sim_results";
@@ -64,11 +67,12 @@ int main(int argc, char* argv[]){
   SmtFunctionParser parser;
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
-
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
-  
+  timer = new Timer();  
+
   checker->setTopModule(moduleName);
-  
+  checker->setTimer(timer);
+
   // this means we does not care about the initial state
   // checker->setModuleTime("##1");
   
@@ -122,8 +126,22 @@ int main(int argc, char* argv[]){
   sygus->printSysgusPath("sygus.sl");
   print("\tFinish generating sygus file");
 
-  std::string Cvc5result = sygus->runCVC5Sygus("sygus.sl");
-  SygusFunction* sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
+  timer->start(CVC5_Timer);
+  std::string Cvc5result;
+  SygusFunction* sygusfunc; 
+  try{
+    Cvc5result = sygus->runCVC5Sygus("sygus.sl");
+    timer->stop(CVC5_Timer);
+    sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
+  }
+  catch(const std::exception& e){
+    timer->stop(CVC5_Timer);
+    writeStringToFile("log.txt",timer->printTime());
+    return -1;
+  }
+ 
+  
+  
   
   
   print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
@@ -147,26 +165,20 @@ int main(int argc, char* argv[]){
     // print("\tFinish getting constraints from SMT trace: "+c.tracePath);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
-
-    // State* randomState = stateMaker->makeRandomState();
-    // while(checker->checkStateReachability(randomState)){
-    //   print("\tGenerating random state in "+std::to_string(loopTime)+" time");
-    //   // print("\t The state is: "+randomState->toString());
-    //   randomState = stateMaker->makeRandomState();
-    //   if(loopTime++>100){
-    //     print("Time out\n");
-    //     break;
-    //   }
-    // }
-
-    // sygus->addConstraints(randomState,false);
-   
     sygus->printSysgusPath("sygus.sl");
     print("\tFinish generating sygus file");
 
-    Cvc5result = sygus->runCVC5Sygus("sygus.sl");
-
-    sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
+    try{
+      Cvc5result = sygus->runCVC5Sygus("sygus.sl");
+      timer->stop(CVC5_Timer);
+      sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
+    }
+    catch(const std::exception& e){
+      timer->stop(CVC5_Timer);
+      writeStringToFile("log.txt",timer->printTime());
+      return -1;
+    }
+    
     print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
 
     SMTVCDfilePath = generateSMTResultPath();
@@ -179,12 +191,14 @@ int main(int argc, char* argv[]){
     print("Last assertion is verified\n");
     print("The property is "+sygusfunc->getBodyVerilogExpr());
     writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr());
+    
     print("The property is written to "+resultFileDir);
   }
   else{
     print("All assertion is not verified\n");
     return -1;
   }
+  writeStringToFile("log.txt",timer->printTime());
   return 0;
 }
 
@@ -209,7 +223,10 @@ std::string generateSMTResultPath(){
 }
 
 bool writeStringToFile(const std::string& filename, const std::string& content) {
-    std::ofstream outfile(filename); 
+    std::ios::openmode mode = std::ios::out | std::ios::app;
+    std::ofstream outfile(filename, mode);
+
+    // std::ofstream outfile(filename); 
     if (!outfile.is_open()) {        
         std::cerr << "Error: Unable to open file " << filename << " for writing." << std::endl;
         return false;
