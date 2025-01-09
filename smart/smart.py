@@ -32,7 +32,7 @@ if __name__ == "__main__":
     all_start_time = time.time()
 
     # parameters
-    assertion = 5 
+    assertion = 5
     removeVariables = True
 
     # Set up the file path
@@ -129,12 +129,6 @@ if __name__ == "__main__":
             else:
                 writeLog("log.txt","Remover Smart Loop  is failure\n\n")
             
-            
-
-           
-
-        
-
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time
 
@@ -144,9 +138,10 @@ if __name__ == "__main__":
     print("Smart Time: ", smart_time)
     print("Overall Time: ", all_time)
     print("all Assertion: ", verified_assertion)
-    with open("result.txt","w") as f:
+    with open("result.txt","a") as f:
         f.write("Smart Time: "+str(smart_time)+"\n")
         f.write("Overall Time: "+str(all_time)+"\n")
+        f.write("We found "+str(len(verified_assertion))+" assertions\n")
         for assertion in verified_assertion:
             f.write(str(assertion)+"\n")
         

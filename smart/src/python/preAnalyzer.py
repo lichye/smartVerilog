@@ -94,7 +94,7 @@ def extract_variables(module_content):
         "input": re.compile(r'input\s+(\w+)'),
         "output": re.compile(r'output\s+(\w+)'),
         "inout": re.compile(r'inout\s+(\w+)'),
-        "module": re.compile(r'module\s+(\w+)'),
+        # "module": re.compile(r'module\s+(\w+)'),
     }
     
     variables = set()
@@ -164,6 +164,12 @@ if __name__ == "__main__":
     # print("vcd_variables is "+str(vcd_variables))
     # then we come to the a good variables sets
     print("The final variables are "+str(variables))
+
+    with open("result.txt", "a") as f:
+        f.write("There is "+str(len(variables))+" variables\n")
+        f.write("The variables are\n")
+        f.write(" ".join([f"{var}" for var in variables]))
+        f.write("\n")
     
     subsets = generate_subsets(variables, 5)
     cnt = 0

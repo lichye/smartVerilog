@@ -32,7 +32,7 @@ def parse_variables_from_directory(directory):
     for root, _, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
-            print(f"Parsing file: {file_path}")
+            # print(f"Parsing file: {file_path}")
             variables = parse_variables_from_file(file_path)
             all_variables[file_path] = variables
 

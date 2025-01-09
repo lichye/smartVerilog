@@ -58,7 +58,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     error_files = []  # List to track files with errors
 
     for verilog_file in verilog_files:
-        print(f"Running sby on: {verilog_file}")
+        print(f"Running Formal Checker on: {verilog_file}")
         try:
             # Run sby command
             # firstly we should build .sby file
@@ -207,3 +207,6 @@ if __name__ == "__main__":
     print("Total mutations: ",len(unfind_file)+len(find_files))
     print("Coverage percentage: ",(len(find_files)/(len(unfind_file)+len(find_files)))*100)
     
+    with open("result.txt","a") as f:
+        f.write("Total mutations: "+str(len(unfind_file)+len(find_files))+"\n")
+        f.write("Coverage percentage: "+str((len(find_files)/(len(unfind_file)+len(find_files)))*100)+"\n")
