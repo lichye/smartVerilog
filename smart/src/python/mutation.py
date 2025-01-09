@@ -5,12 +5,55 @@ import sys
 import subprocess
 import shutil
 
+verilog_keywords = [
+    # Module and Ports
+    "module", "endmodule", "input", "output", "inout",
+    
+    # Data Types
+    "wire", "reg", "integer", "real", "time", "parameter", "localparam",
+    "genvar", "logic", "bit", "tri", "tri0", "tri1", "supply0", "supply1",
+    "trireg", "vectored", "scalared", "signed", "unsigned", "event",
+    
+    # Control Flow
+    "always", "initial", "if", "else", "for", "while", "do", "repeat", 
+    "forever", "case", "endcase", "casex", "casez", "default", "disable",
+    "wait", "fork", "join",
+    
+    # Procedural Blocks
+    "begin", "end", "assign", "deassign", "force", "release",
+    
+    # Timing
+    "posedge", "negedge", "edge", "specify", "endspecify", 
+    "timeunit", "timeprecision",
+    
+    # Operators
+    "and", "or", "nand", "nor", "xor", "xnor", "not",
+    
+    # Compiler Directives
+    "`define", "`undef", "`ifdef", "`else", "`elsif", "`endif", 
+    "`include", "`timescale", "`default_nettype", "`celldefine", 
+    "`endcelldefine", "`unconnected_drive", "`nounconnected_drive", 
+    "`resetall", "`line",
+    
+    # Assertions and Simulation Control
+    "assert", "assume", "cover", "posedge", "negedge", 
+    "$display", "$monitor", "$stop", "$finish", "$time", "$random", 
+    "$realtime",
+    
+    # Functions and Tasks
+    "function", "endfunction", "task", "endtask",
+    
+    # Generate Blocks
+    "generate", "endgenerate",
+]
+
 class VerilogMutation:
     def __init__(self, input_file, output_dir):
         self.input_file = input_file
         self.output_dir = output_dir
         self.code_lines = []
         self.mutations = []
+        self.unmatched_rules = []
         self.always_block = False 
 
     def load_verilog(self):
@@ -77,13 +120,13 @@ class VerilogMutation:
             })
         
         # Logical negation mutation
-        self.mutations.append(
-            {
-                "category": "logical_negation",
-                "pattern": r"(?<![a-zA-Z_])\b(0|1)\b(?![a-zA-Z_'])",  
-                "replacement": lambda m: "1" if m.group(1) == "0" else "0"  # 0 → 1, 1 → 0
-            }
-        )
+        # self.mutations.append(
+        #     {
+        #         "category": "logical_negation",
+        #         "pattern": r"(?<![a-zA-Z_])\b(0|1)\b(?![a-zA-Z_'])",  
+        #         "replacement": lambda m: "1" if m.group(1) == "0" else "0"  # 0 → 1, 1 → 0
+        #     }
+        # )
 
         # variable_negation mutation
         self.mutations.append({
@@ -134,6 +177,9 @@ class VerilogMutation:
         #     "replacement": lambda m: f"input wire {m.group(1)};"
         # })
 
+        # Below is unmatch rule
+        self.unmatched_rules.append("always")
+        self.unmatched_rules.append("//")
         print(f"Generated {len(self.mutations)} mutation rules.")
 
     def is_in_always_block(self, line):
@@ -176,8 +222,14 @@ class VerilogMutation:
         for line in self.code_lines:
             mutated_lines = []
             self.is_in_always_block(line)  # update always block status
-            if("//" in line):
+            unmatch_flag = False
+            for rule in self.unmatched_rules:
+                if rule in line:
+                    unmatch_flag = True
+                    break
+            if unmatch_flag:
                 continue
+
             for mutation in self.mutations:
                 if(mutation["category"]=="variable_negation"):
                     if not self.always_block:
@@ -369,8 +421,8 @@ if __name__ == "__main__":
     move_files(input_file_dir, output_dir,input_file)
 
     # Run ebmc on the generated mutants and remove error files
-    bad_files = []
-    # bad_files = run_ebmc_on_verilog_files(output_dir,"1==1",10,top_module)
+    # bad_files = []
+    bad_files = run_ebmc_on_verilog_files(output_dir,"1==1",1,top_module)
     
     remove_files(bad_files)
 

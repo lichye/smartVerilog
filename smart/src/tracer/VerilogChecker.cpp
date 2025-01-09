@@ -355,6 +355,7 @@ void VerilogChecker::setHomePath(std::string path) {
 
 Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
     //constrains.constraints[0] is the first Signal vector
+    print("Fix up the constrains\n");
     int timeStamp = constrains.constraints[0].size();
     int signalSize = constrains.constraints.size();
     bool isUnDefined = false;
@@ -427,16 +428,13 @@ State* VerilogChecker::makeReachableState(std::vector<Value*> values){
     // print("\t\tTry to fix up the state\n");
     StateMaker sm(signals);
     State* state = sm.fixUpState(values);
+
     if(checkStateReachability(state)) {
         return state;
     }
     else{
         state = sm.fixUpState(state,values);
-        if(checkStateReachability(state))
-            return state;
-        else
-            return makeReachableState(values);
-        
+        return state;
     }
 }
 

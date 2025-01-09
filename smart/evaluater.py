@@ -2,6 +2,10 @@
 import os
 import sys
 import subprocess
+#this is the list that ebmc does not support
+
+ebmc_unsupport_list = []
+
 def write_assertion_file(input_file,output_file,assertions):
     
     with open(input_file, "r") as file:
@@ -15,64 +19,7 @@ def write_assertion_file(input_file,output_file,assertions):
     with open(output_file, "w") as file:
         file.writelines(content)
 
-def run_ebmc_on_verilog_files(directory, property,bound,ebmc_path="ebmc"):
-    """
-    Automatically runs `ebmc` on all Verilog files named mutant_*.sv in the specified directory.
-
-    Parameters:
-        directory (str): Path to the directory containing Verilog files.
-        ebmc_path (str): Path to the `ebmc` executable (default: "ebmc").
-
-    Returns:
-        None
-    """
-    # Check if the directory exists
-    if not os.path.exists(directory):
-        print(f"Error: Directory '{directory}' does not exist.")
-        return
-
-    # Get all Verilog files matching mutant_*.sv in the directory
-    verilog_files = [
-        os.path.join(directory, file)
-        for file in os.listdir(directory)
-        if file.startswith("mutant_") and file.endswith(".sv")
-    ]
-
-    if not verilog_files:
-        print("In the directory: ",directory)
-        print("No matching Verilog files found in the specified directory.")
-        return
-
-    # print(f"Found {len(verilog_files)} Verilog files. Starting to process...")
-
-    error_files = []  # List to track files with errors
-
-    for verilog_file in verilog_files:
-        # print(f"Running ebmc on: {verilog_file}")
-        try:
-            # Run ebmc command
-            result = subprocess.run([ebmc_path, verilog_file,"-p",property,"--bound",str(bound)],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    text=True)
-            
-            # Print the output of the command
-            # print()
-            # print(f"Output for {verilog_file}:")
-            # print(result.stdout)
-
-            # Check for errors
-            if result.returncode != 0:
-                # print(f"Error for {verilog_file}:")
-                # print(result.stderr)
-                error_files.append(verilog_file)
-
-        except Exception as e:
-            print(f"Failed to run ebmc on {verilog_file}: {e}")
-            error_files.append(verilog_file)    
-    return error_files
-
-def run_sby_on_verilog_files(directory, properties, sby_path="sby"):
+def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     """
     Automatically runs `sby` on all Verilog files named mutant_*.sv in the specified directory.
 
@@ -156,10 +103,17 @@ def run_sby_on_verilog_files(directory, properties, sby_path="sby"):
                 cmd = [sby_path,"-f",sby_file,"task"]
                 # print("cmd: ",cmd)
                 
+                cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
+
                 result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
                 
+                if top_module in ebmc_unsupport_list:
+                    result2 = 0
+                else:
+                    result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+
                 # print("the return code is: ",result.returncode)                     
-                if(result.returncode != 0):
+                if(result.returncode != 0 or result2.returncode != 0):
                     error_files.append(verilog_file)
                 # else:
                 #     print("file: ",verilog_file," is verified")
@@ -229,13 +183,8 @@ if __name__ == "__main__":
     print("Properties: ",properties)
 
     find_files = set()
-    find_files = run_sby_on_verilog_files(directory,properties)
-    # for p in properties:
-    #     print("Property: ",p)
-    #     p_find_files = run_sby_on_verilog_files(directory,p)
-    #     # p_find_files = run_ebmc_on_verilog_files(directory,p,bound,ebmc_path)
-    #     for file in p_find_files:
-    #         find_files.add(file)
+    # find_files.update(run_ebmc_on_verilog_files(directory,properties,bound,ebmc_path))
+    find_files = run_fm_on_verilog_files(directory,properties)
 
     # print("Found mutations: ",sorted(find_files))
     sorted(find_files)

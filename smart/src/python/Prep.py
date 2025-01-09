@@ -2,10 +2,10 @@ import re
 import configparser
 import sys
 def check_clock_signal(signals):
-    clock_signals = ["clk", "clock"]
-    for signal in signals:
-        if "clk" in signal:
-            return False
+    # clock_signals = ["clk", "clock"]
+    # for signal in signals:
+    #     if "clk" in signal:
+    #         return True
     return False
 
 def split_modules(file_path):

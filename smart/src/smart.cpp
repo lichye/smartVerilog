@@ -40,7 +40,7 @@ std::string generateSMTResultPath();
 std::string initVariables = "";
 std::string currentDir = "";
 
-bool writeStringToFile(const std::string&, const std::string&);
+bool writeStringToFile(const std::string&, const std::string&,std::ios::openmode);
 
 void modifySignals(std::string,int mode);
 void intersectionSignals(std::string);
@@ -67,6 +67,7 @@ int main(int argc, char* argv[]){
   SmtFunctionParser parser;
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
+  // checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
   timer = new Timer();  
 
@@ -108,18 +109,27 @@ int main(int argc, char* argv[]){
   State* randomState = stateMaker->makeRandomState();
   int loopTime = 0;
 
+  // for(int i=0;i<5;i++){
+  //   bool reachable = checker->checkStateReachability(randomState);
+  //   if(reachable){
+  //     sygus->addConstraints(randomState,true);
+  //   }
+  //   else{
+  //     sygus->addConstraints(randomState,false);
+  //   }
+  // }
   while(checker->checkStateReachability(randomState)){
     // print("\tGenerating random state in "+std::to_string(loopTime)+" time");
     // print("\t The state is: "+randomState->toString());
-    sygus->addConstraints(randomState,true);
+    
     sygus->addConstrainComments("Getting constraints from the random state",true);
     randomState = stateMaker->makeRandomState();
     if(loopTime++>3){
       break;
     }
   }
-
   sygus->addConstraints(randomState,false);
+
 
   print("\tFinish generating random state");
 
@@ -136,14 +146,10 @@ int main(int argc, char* argv[]){
   }
   catch(const std::exception& e){
     timer->stop(CVC5_Timer);
-    writeStringToFile("log.txt",timer->printTime());
+    writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
     return -1;
   }
  
-  
-  
-  
-  
   print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
 
   std::string SMTVCDfilePath = generateSMTResultPath();
@@ -152,12 +158,12 @@ int main(int argc, char* argv[]){
   print("\tTrace goes to VCD file: "+SMTVCDfilePath);
 
   while(!verifiedResult){
-    if(timeOut++>3||verifiedResult){
+    if(timeOut++>20||verifiedResult){
       print("Time out\n");
       break;
     }
     print("In looptime "+std::to_string(timeOut)+":");
-    print("\tGatehering signals from the SMT traces");
+    print("\tGathering signals from the SMT traces");
     module->addTrace(SMT,SMTVCDfilePath);
     Constrains c = module->getConstrain(SMTVCDfilePath,signals);
     Constrains new_c = checker->fixupConstrains(c);
@@ -175,7 +181,7 @@ int main(int argc, char* argv[]){
     }
     catch(const std::exception& e){
       timer->stop(CVC5_Timer);
-      writeStringToFile("log.txt",timer->printTime());
+      writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
       return -1;
     }
     
@@ -190,7 +196,7 @@ int main(int argc, char* argv[]){
   if(verifiedResult){
     print("Last assertion is verified\n");
     print("The property is "+sygusfunc->getBodyVerilogExpr());
-    writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr());
+    writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr(),std::ios::out);
     
     print("The property is written to "+resultFileDir);
   }
@@ -198,7 +204,7 @@ int main(int argc, char* argv[]){
     print("All assertion is not verified\n");
     return -1;
   }
-  writeStringToFile("log.txt",timer->printTime());
+  writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
   return 0;
 }
 
@@ -222,8 +228,8 @@ std::string generateSMTResultPath(){
   return filename;
 }
 
-bool writeStringToFile(const std::string& filename, const std::string& content) {
-    std::ios::openmode mode = std::ios::out | std::ios::app;
+bool writeStringToFile(const std::string& filename, const std::string& content, std::ios::openmode mode) {
+    // std::ios::openmode mode = std::ios::out | std::ios::app;
     std::ofstream outfile(filename, mode);
 
     // std::ofstream outfile(filename); 
