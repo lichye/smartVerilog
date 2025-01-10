@@ -355,7 +355,7 @@ void VerilogChecker::setHomePath(std::string path) {
 
 Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
     //constrains.constraints[0] is the first Signal vector
-    print("Fix up the constrains\n");
+    print("\tFix up the constrains");
     int timeStamp = constrains.constraints[0].size();
     int signalSize = constrains.constraints.size();
     bool isUnDefined = false;

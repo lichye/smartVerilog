@@ -7,18 +7,52 @@ import subprocess
 
 ebmc_unsupport_list = []
 
-def write_assertion_file(input_file,output_file,assertions):
-    
-    with open(input_file, "r") as file:
-        content = file.readlines()
-        for i in range(len(content)):
-            if content[i].startswith("module"):
-                for assertion in assertions:
-                    write_assertion = "assert property ("+assertion+");\n"
-                    content.insert(i+1,write_assertion)
-                break
-    with open(output_file, "w") as file:
-        file.writelines(content)
+
+def write_assertion_file(input_file, output_file, assertions):
+    try:
+        with open(input_file, "r") as file:
+            content = file.readlines()
+        
+        module_start_found = False
+        module_end_found = False
+        modified_content = []
+
+        module_start_pattern = re.compile(r"^\s*module\s+\w+")
+        semicolon_pattern = re.compile(r";")
+
+        for i, line in enumerate(content):
+            # Check if the module declaration has been found
+            if not module_start_found and module_start_pattern.match(line):
+                module_start_found = True
+                modified_content.append(line)
+                continue
+            
+            if module_start_found and not module_end_found:
+                modified_content.append(line)
+                if semicolon_pattern.search(line):  
+                    module_end_found = True
+                    for assertion in assertions:
+                        modified_content.append(f"    assert property ({assertion});\n")
+                continue
+            
+
+            modified_content.append(line)
+
+        if not module_start_found:
+            print(f"Warning: {input_file} does not contain a module declaration.")
+        elif not module_end_found:
+            print(f"Warining: {input_file} does not contain a module end declaration.")
+
+        with open(output_file, "w") as file:
+            file.writelines(modified_content)
+
+        # print(f"Assertions sucess {output_file}")
+
+    except FileNotFoundError:
+        print(f"Erorr: File '{input_file}' not found.")
+    except IOError as e:
+        print(f"Erorr: {e}")
+
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     """
@@ -58,8 +92,16 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
 
     error_files = []  # List to track files with errors
 
+    cnt = 0
+    percentage = 0
+    total_files = len(verilog_files)
+
     for verilog_file in verilog_files:
-        print(f"Running Formal Checker on: {verilog_file}")
+        # print(f"Running Formal Checker on: {verilog_file}")
+        cnt += 1
+        if((cnt / total_files) * 100- percentage >10):
+            percentage = (cnt / total_files) * 100
+            print(f"Processing file {cnt}/{total_files} ({percentage:.2f}%)...")        
         try:
             # Run sby command
             # firstly we should build .sby file

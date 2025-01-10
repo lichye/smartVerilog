@@ -120,15 +120,14 @@ class VerilogMutation:
                 "pattern": escaped_op,
                 "replacement": random.choice([y for y in self.relational_ops.keys() if y != op])
             })
-        
-        # Logical negation mutation
-        # self.mutations.append(
-        #     {
-        #         "category": "logical_negation",
-        #         "pattern": r"(?<![a-zA-Z_])\b(0|1)\b(?![a-zA-Z_'])",  
-        #         "replacement": lambda m: "1" if m.group(1) == "0" else "0"  # 0 → 1, 1 → 0
-        #     }
-        # )
+
+        self.mutations.append(
+            {
+                "category": "logical_negation",
+                "pattern": r"(?<![a-zA-Z_])\b(0|1)\b(?![a-zA-Z_'])",  
+                "replacement": lambda m: "1" if m.group(1) == "0" else "0"  # 0 → 1, 1 → 0
+            }
+        )
 
         # variable_negation mutation
         self.mutations.append({
@@ -165,19 +164,19 @@ class VerilogMutation:
             "replacement": lambda m: f"{m.group(1)}'{m.group(2)}{''.join(random.choice(['0', '1']) for _ in range(int(m.group(1))))}"
         })
 
-        # # Logical mutation for changing input to output
-        # self.mutations.append({
-        #     "category": "verilog_io_mutation",
-        #     "pattern": r"\binput\s+wire\s+(\w+);",
-        #     "replacement": lambda m: f"output wire {m.group(1)};"
-        # })
+        # Logical mutation for changing input to output
+        self.mutations.append({
+            "category": "verilog_io_mutation",
+            "pattern": r"\binput\s+wire\s+(\w+);",
+            "replacement": lambda m: f"output wire {m.group(1)};"
+        })
 
-        # # Logical mutation for changing output to input
-        # self.mutations.append({
-        #     "category": "verilog_io_mutation",
-        #     "pattern": r"\boutput\s+wire\s+(\w+);",
-        #     "replacement": lambda m: f"input wire {m.group(1)};"
-        # })
+        # Logical mutation for changing output to input
+        self.mutations.append({
+            "category": "verilog_io_mutation",
+            "pattern": r"\boutput\s+wire\s+(\w+);",
+            "replacement": lambda m: f"input wire {m.group(1)};"
+        })
 
         # Below is unmatch rule
         self.unmatched_rules.append("always")
@@ -282,18 +281,50 @@ class VerilogMutation:
         file_count=self.generate_mutants()
         return file_count
 
-def write_assertion_file(input_file,output_file,assertions):
-    
-    with open(input_file, "r") as file:
-        content = file.readlines()
-        for i in range(len(content)):
-            if content[i].startswith("module"):
-                for assertion in assertions:
-                    write_assertion = "assert property ("+assertion+");\n"
-                    content.insert(i+1,write_assertion)
-                break
-    with open(output_file, "w") as file:
-        file.writelines(content)
+def write_assertion_file(input_file, output_file, assertions):
+    try:
+        with open(input_file, "r") as file:
+            content = file.readlines()
+        
+        module_start_found = False
+        module_end_found = False
+        modified_content = []
+
+        module_start_pattern = re.compile(r"^\s*module\s+\w+")
+        semicolon_pattern = re.compile(r";")
+
+        for i, line in enumerate(content):
+            # Check if the module declaration has been found
+            if not module_start_found and module_start_pattern.match(line):
+                module_start_found = True
+                modified_content.append(line)
+                continue
+            
+            if module_start_found and not module_end_found:
+                modified_content.append(line)
+                if semicolon_pattern.search(line):  
+                    module_end_found = True
+                    for assertion in assertions:
+                        modified_content.append(f"    assert property ({assertion});\n")
+                continue
+            
+
+            modified_content.append(line)
+
+        if not module_start_found:
+            print(f"Warning: {input_file} does not contain a module declaration.")
+        elif not module_end_found:
+            print(f"Warining: {input_file} does not contain a module end declaration.")
+
+        with open(output_file, "w") as file:
+            file.writelines(modified_content)
+
+        # print(f"Assertions sucess {output_file}")
+
+    except FileNotFoundError:
+        print(f"Erorr: File '{input_file}' not found.")
+    except IOError as e:
+        print(f"Erorr: {e}")
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     """
@@ -400,7 +431,12 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
                 # print("the return code is: ",result.returncode)                     
                 if(result.returncode != 0 or result2.returncode != 0):
                     error_files.append(verilog_file)
-                    subprocess.run(["rm",new_file_path])
+                
+                subprocess.run(["rm",new_file_path])
+                    # print("file: ",verilog_file," is not verified")
+                    # print("result: ",result.stdout)
+                    # print("result2: ",result2.stdout)
+                    # exit(1)
                 # else:
                 #     print("file: ",verilog_file," is verified")
                 # subprocess.run(["rm",new_file_path])
@@ -494,7 +530,7 @@ if __name__ == "__main__":
 
     # Run ebmc on the generated mutants and remove error files
     # bad_files = []
-    bad_files = run_fm_on_verilog_files(output_dir,["1==1"])
+    bad_files = run_fm_on_verilog_files(output_dir,["1'b1"])
     
     remove_files(bad_files)
 

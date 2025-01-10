@@ -94,6 +94,7 @@ def extract_variables(module_content):
         "input": re.compile(r'input\s+(\w+)'),
         "output": re.compile(r'output\s+(\w+)'),
         "inout": re.compile(r'inout\s+(\w+)'),
+        "VCDvar": re.compile(r'\$var\s+(\w+)\s+(\d+)\s+([^\s]+)\s+([\w_]+)\s+\[([\d:]+)\]\s+\$end'),
         # "module": re.compile(r'module\s+(\w+)'),
     }
     
@@ -151,6 +152,7 @@ if __name__ == "__main__":
     vcd_variables = set()
 
     vcd_variables = extract_variables(vcd_file)
+    
     for module in modules:
         if(module["id"] == top_module):
             top_module_content = module["content"]
@@ -163,7 +165,12 @@ if __name__ == "__main__":
     # vcd_variables = extract_variables(vcd_file)
     # print("vcd_variables is "+str(vcd_variables))
     # then we come to the a good variables sets
+    print("The verilog variables are "+str(verilog_variables))
+    print("\n")
+    print("The vcd variables are "+str(vcd_variables))
+    print("\n")
     print("The final variables are "+str(variables))
+
 
     with open("result.txt", "a") as f:
         f.write("There is "+str(len(variables))+" variables\n")

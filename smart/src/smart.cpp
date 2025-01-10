@@ -157,8 +157,10 @@ int main(int argc, char* argv[]){
   print("\tFinish checking the assertion: "+std::to_string(verifiedResult));
   print("\tTrace goes to VCD file: "+SMTVCDfilePath);
 
+  int mostRun = signals->size();
+  print("This smart will run "+std::to_string(mostRun)+" times");
   while(!verifiedResult){
-    if(timeOut++>20||verifiedResult){
+    if(timeOut++>mostRun||verifiedResult){
       print("Time out\n");
       break;
     }

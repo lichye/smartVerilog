@@ -5,6 +5,15 @@ import subprocess
 import shutil
 import time
 
+def copy_sv_files(original_path, target_path):
+    for root, dirs, files in os.walk(original_path):
+        for file in files:
+            if file.endswith(".sv"):
+                shutil.copy(os.path.join(root, file), target_path)
+            elif file.endswith(".v"):
+                print("Please convert the verilog files to system verilog")
+                exit(1)
+
 def smart(current_path, top_module,result_file,init_variables):
     cmd = ["./smart.out",current_path,top_module,result_file,init_variables]
     # print("Run cmd: ", cmd)
@@ -32,7 +41,7 @@ if __name__ == "__main__":
     all_start_time = time.time()
 
     # parameters
-    assertion = 5
+    assertion = 1000
     removeVariables = True
 
     # Set up the file path
@@ -40,6 +49,8 @@ if __name__ == "__main__":
     mverilog_path = current_path+"/runtime/verilog/"
     resultDir = current_path+"/result"
     runtimeVariablesDir = current_path+"/runtime/variables/"
+    runtimeFormalDir = current_path+"/runtime/formal/"
+    runtimeVerilogDir = current_path+"/runtime/verilog/"
     runtimeRemoveVariables = current_path+"/runtime/variables/removeVariables.txt"
     initVariables = current_path+"/runtime/variables/initVariables.txt"
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -57,7 +68,8 @@ if __name__ == "__main__":
         print("No files in User directory")
         print("Stop running")
         exit(1)
-
+    
+    copy_sv_files(mverilog_path, runtimeFormalDir)
     #Pre analysis of the code
     preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir)
     
