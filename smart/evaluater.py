@@ -1,6 +1,7 @@
 
 import os
 import sys
+import re
 import subprocess
 #this is the list that ebmc does not support
 
@@ -162,6 +163,38 @@ def read_file(file):
         content = file.read()
     return content
 
+def count_logfile():
+    with open('log.txt', 'r') as file:
+        logfile_content = file.read()
+    
+    # 定义正则表达式
+    fm_checker_pattern = re.compile(r"FM checker are called (\d+) times")
+    fm_timer_pattern = re.compile(r"FM checker Timer: ([\d\.]+) seconds")
+    cvc5_pattern = re.compile(r"CVC5 are called (\d+) times")
+    cvc5_timer_pattern = re.compile(r"CVC5 Timer: ([\d\.]+) seconds")
+
+    # 初始化统计数据
+    fm_checker_calls = 0
+    fm_checker_time = 0.0
+    cvc5_calls = 0
+    cvc5_time = 0.0
+
+    # 统计数据
+    for match in fm_checker_pattern.finditer(logfile_content):
+        fm_checker_calls += int(match.group(1))
+    for match in fm_timer_pattern.finditer(logfile_content):
+        fm_checker_time += float(match.group(1))
+    for match in cvc5_pattern.finditer(logfile_content):
+        cvc5_calls += int(match.group(1))
+    for match in cvc5_timer_pattern.finditer(logfile_content):
+        cvc5_time += float(match.group(1))
+
+    result = "FM Checker Total Calls: " + str(fm_checker_calls) + "\n"
+    result += "FM Checker Total Time: " + str(fm_checker_time) + " seconds\n"
+    result += "CVC5 Total Calls: " + str(cvc5_calls) + "\n"
+    result += "CVC5 Total Time: " + str(cvc5_time) + " seconds\n"
+    return result
+
 if __name__ == "__main__":
     if(len(sys.argv) < 2):
         print("Usage: python3 evaluater.py top_module")
@@ -207,6 +240,10 @@ if __name__ == "__main__":
     print("Total mutations: ",len(unfind_file)+len(find_files))
     print("Coverage percentage: ",(len(find_files)/(len(unfind_file)+len(find_files)))*100)
     
+    log_result = count_logfile()
+
     with open("result.txt","a") as f:
+        f.write(log_result)
+        f.write("\n")
         f.write("Total mutations: "+str(len(unfind_file)+len(find_files))+"\n")
         f.write("Coverage percentage: "+str((len(find_files)/(len(unfind_file)+len(find_files)))*100)+"\n")

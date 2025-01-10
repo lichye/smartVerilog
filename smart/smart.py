@@ -139,8 +139,8 @@ if __name__ == "__main__":
     print("Overall Time: ", all_time)
     print("all Assertion: ", verified_assertion)
     with open("result.txt","a") as f:
+        f.write("\n")
         f.write("Smart Time: "+str(smart_time)+"\n")
-        f.write("Overall Time: "+str(all_time)+"\n")
         f.write("We found "+str(len(verified_assertion))+" assertions\n")
         for assertion in verified_assertion:
             f.write(str(assertion)+"\n")

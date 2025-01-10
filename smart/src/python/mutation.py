@@ -5,6 +5,8 @@ import sys
 import subprocess
 import shutil
 
+ebmc_unsupport_list = []
+
 verilog_keywords = [
     # Module and Ports
     "module", "endmodule", "input", "output", "inout",
@@ -280,34 +282,47 @@ class VerilogMutation:
         file_count=self.generate_mutants()
         return file_count
 
-def run_ebmc_on_verilog_files(directory, property,bound,top_module,ebmc_path="ebmc"):
+def write_assertion_file(input_file,output_file,assertions):
+    
+    with open(input_file, "r") as file:
+        content = file.readlines()
+        for i in range(len(content)):
+            if content[i].startswith("module"):
+                for assertion in assertions:
+                    write_assertion = "assert property ("+assertion+");\n"
+                    content.insert(i+1,write_assertion)
+                break
+    with open(output_file, "w") as file:
+        file.writelines(content)
+
+def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     """
-    Automatically runs `ebmc` on all Verilog files named mutant_*.sv in the specified directory.
+    Automatically runs `sby` on all Verilog files named mutant_*.sv in the specified directory.
 
     Parameters:
         directory (str): Path to the directory containing Verilog files.
-        ebmc_path (str): Path to the `ebmc` executable (default: "ebmc").
+        sby_path (str): Path to the `sby` executable (default: "sby").
 
     Returns:
         None
     """
+    print("The directory is: ",directory)
     # Check if the directory exists
     if not os.path.exists(directory):
         print(f"Error: Directory '{directory}' does not exist.")
         return
-    
 
     # Get all Verilog files matching mutant_*.sv in the directory
     verilog_files = [
         os.path.join(directory, file)
         for file in os.listdir(directory)
-        if file.startswith("mutant_") and file.endswith(".sv")
+        if file.startswith("mutant_") and file.endswith(".sv") and not file.endswith("_assertion.sv")
     ]
 
-    relate_files = [
+    verilog_related_files =[
         os.path.join(directory, file)
         for file in os.listdir(directory)
-        if not file.startswith("mutant_") and file.endswith(".sv")
+        if not file.startswith("mutant_") and file.endswith(".sv") and not file.endswith("_assertion.sv")
     ]
 
     if not verilog_files:
@@ -315,33 +330,90 @@ def run_ebmc_on_verilog_files(directory, property,bound,top_module,ebmc_path="eb
         return
 
     print(f"Found {len(verilog_files)} Verilog files. Starting to process...")
-    print(f"Found {len(relate_files)} relate files.")
 
     error_files = []  # List to track files with errors
 
-    for verilog_file in verilog_files:
-        # print(f"Running ebmc on: {verilog_file}")
-        try:
-            # Run ebmc command
-            cmd = [ebmc_path, verilog_file, 
-                    "-p", property, 
-                    "--bound", str(bound), 
-                    "--module", top_module]
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            
-            # print()
-            # print(f"Output for {verilog_file}:")
-            # print(result.stdout)
+    cnt = 0
+    percentage = 0
+    total_files = len(verilog_files)
 
-            # Check for errors
-            if result.returncode != 0:
-                # print(f"Error for {verilog_file}:")
-                # print(result.stderr)
+    for verilog_file in verilog_files:
+        cnt += 1
+        if((cnt / total_files) * 100- percentage >10):
+            percentage = (cnt / total_files) * 100
+            print(f"Processing file {cnt}/{total_files} ({percentage:.2f}%)...")
+            
+        # print(f"Running Formal Checker on: {verilog_file}")
+        try:
+            # Run sby command
+            # firstly we should build .sby file
+            sby_file = os.getcwd()+"/dis.sby"
+            # print("The verilog file is: ",verilog_file)
+
+            dir_name = os.path.dirname(verilog_file)         
+            
+            file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))
+
+            new_file_name = f"{file_base}_assertion{file_ext}"
+
+            new_file_path = os.path.join(dir_name, new_file_name)
+
+            write_assertion_file(verilog_file,new_file_path,properties)
+
+            try:
+                with open(sby_file, "w") as sby_run_file:
+                    sby_run_file.write("[tasks]\n")
+                    sby_run_file.write("task bmc_check files\n")
+                    sby_run_file.write("\n")
+                    sby_run_file.write("[options]\n")
+                    sby_run_file.write("bmc_check:\n")
+                    sby_run_file.write("mode bmc\n")
+                    sby_run_file.write("depth 10\n")
+                    sby_run_file.write("timeout 10000\n")
+                    sby_run_file.write("vcd_sim on\n")
+                    sby_run_file.write("\n")
+                    sby_run_file.write("[engines]\n")
+                    sby_run_file.write("bmc_check:\n")
+                    sby_run_file.write("smtbmc --unroll --nopresat cvc5\n")
+                    sby_run_file.write("\n")
+                    sby_run_file.write("[script]\n")
+                    sby_run_file.write("files:\n")
+                    sby_run_file.write("read -sv "+new_file_path+"\n")
+                    for file in verilog_related_files:
+                        sby_run_file.write("read -sv "+file+"\n")
+                    # file.write("prep -top "+)
+                    sby_run_file.write("prep -top "+top_module+"\n")
+                    
+
+                cmd = [sby_path,"-f",sby_file,"task"]
+                # print("cmd: ",cmd)
+                
+                cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
+
+                result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+                
+                if top_module in ebmc_unsupport_list:
+                    result2 = 0
+                else:
+                    result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+
+                # print("the return code is: ",result.returncode)                     
+                if(result.returncode != 0 or result2.returncode != 0):
+                    error_files.append(verilog_file)
+                    subprocess.run(["rm",new_file_path])
+                # else:
+                #     print("file: ",verilog_file," is verified")
+                # subprocess.run(["rm",new_file_path])
+
+            except Exception as e:
+                print(f"Failed to create .sby file: {e}")
                 error_files.append(verilog_file)
+                exit(1)
 
         except Exception as e:
-            print(f"Failed to run ebmc on {verilog_file}: {e}")
-            error_files.append(verilog_file)    
+            print(f"Failed to run sby on {verilog_file}: {e}")
+            error_files.append(verilog_file)
+            exit(1)
     return error_files
 
 def move_files(src_folder, dest_folder,delete_file):
@@ -422,7 +494,7 @@ if __name__ == "__main__":
 
     # Run ebmc on the generated mutants and remove error files
     # bad_files = []
-    bad_files = run_ebmc_on_verilog_files(output_dir,"1==1",1,top_module)
+    bad_files = run_fm_on_verilog_files(output_dir,["1==1"])
     
     remove_files(bad_files)
 
