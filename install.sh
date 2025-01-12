@@ -34,8 +34,8 @@ git checkout cvc5-1.2.0
 
 sudo ./configure.sh --auto-download
 cd build         
-sudo make            
-sudo make check      
+yes | sudo make            
+yes | sudo make check      
 yes | sudo make install
 cd ..
 cd ..
