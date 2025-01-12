@@ -167,5 +167,12 @@ if __name__ == "__main__":
     print("Simulation time: ", sim_time)
     print("Compile time: ", compile_time)
     print("Setup time: ", all_end_time - all_start_time)
+
+    logfile = current_path+"/log_"+main_module+".txt"
+    writeLog(logfile, "Simulation time: "+str(sim_time)+"\n")
+    writeLog(logfile, "Compile time: "+str(compile_time)+"\n")
+    writeLog(logfile, "Setup time: "+str(all_end_time - all_start_time)+"\n")
+    writeLog(logfile, "--------------------------------------\n")
+
         
     

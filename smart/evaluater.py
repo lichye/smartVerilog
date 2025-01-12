@@ -284,7 +284,10 @@ if __name__ == "__main__":
     
     log_result = count_logfile()
 
-    with open("result.txt","a") as f:
+    current_path = os.getcwd()
+    resultfile = current_path+"/result_"+top_module+".txt"
+
+    with open(resultfile,"a") as f:
         f.write(log_result)
         f.write("\n")
         f.write("Total mutations: "+str(len(unfind_file)+len(find_files))+"\n")
