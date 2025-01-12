@@ -6,15 +6,15 @@
 # cd smartVerilog
 
 #install basic libary
-yes | apt-get update
-yes | apt-get install cmake gcc g++ bison flex
-yes | apt-get install python3 python-is-python3 pytest
-yes | apt-get install pip
-yes | apt-get install python3-venv
-yes | pip3 install pytest
-# Install cocotb
+yes | sudo apt-get update
+yes | sudo apt-get install cmake gcc g++ bison flex
+yes | sudo apt-get install python3 python-is-python3
+yes | sudo apt-get install pip
+yes | sudo apt-get install python3-venv
+yes | sudo pip3 install pytest
 yes | pip install "cocotb==1.8.0"
 
+# Install other tools
 mkdir otherTools
 cd otherTools
 
@@ -32,11 +32,13 @@ git clone https://github.com/cvc5/cvc5.git
 cd cvc5
 git checkout cvc5-1.2.0
 
-./configure.sh --auto-download
-cd build         # default is ./build
-make             # use -jN for parallel build with N threads
-make check       # to run default set of tests
-yes | sudo make install     # to install into the prefix specified above
+sudo ./configure.sh --auto-download
+cd build         
+sudo make            
+sudo make check      
+yes | sudo make install
 cd ..
 cd ..
 cd ..
+cd smart
+mkdir user/
