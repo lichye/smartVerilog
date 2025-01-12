@@ -1,6 +1,20 @@
+# firstly system verision
+# ubuntu-20.04.6-desktop-amd64.iso
+
+mkdir otherTools
+cd otherTools
+
 # Install cvc5
 git clone https://github.com/cvc5/cvc5.git
-#This is cvc5 version 1.0.1-dev.2.77d0bec48 [git 77d0bec48 on branch main with local modifications]
+cd cvc5
+git checkout cvc5-1.2.0
+
+./configure.sh
+cd build         # default is ./build
+make             # use -jN for parallel build with N threads
+make check       # to run default set of tests
+make install     # to install into the prefix specified above
+
 
 # Install cocotb
 pip install "cocotb==1.8.0"
