@@ -1,12 +1,16 @@
 # Basic setup
 # ubuntu-20.04.6-desktop-amd64.iso with git
+# sudo apt-get install git
 # git clone https://github.com/lichye/smartVerilog.git
 # cd smartVerilog
 
 #install basic libary
+sudo apt-get update
 sudo apt-get install cmake gcc g++ bison flex
-sudo apt-get install python3 python-is-python3 pip python3-venv pytest
-
+sudo apt-get install python3 python-is-python3 pytest
+sudo apt-get install pip
+sudo apt-get install python3-venv
+pip3 install pytest
 # Install cocotb
 pip install "cocotb==1.8.0"
 
@@ -29,7 +33,9 @@ git checkout cvc5-1.2.0
 
 ./configure.sh --auto-download
 cd build         # default is ./build
-make -j8             # use -jN for parallel build with N threads
+make             # use -jN for parallel build with N threads
 make check       # to run default set of tests
 sudo make install     # to install into the prefix specified above
+cd ..
+cd ..
 cd ..
