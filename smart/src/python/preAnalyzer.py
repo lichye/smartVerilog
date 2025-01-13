@@ -2,6 +2,7 @@ import re
 import configparser
 import sys
 import math
+import random
 from itertools import combinations, chain
 
 verilog_keywords = [
@@ -71,16 +72,9 @@ def generate_subsets(my_set, max_size):
     subsets = chain.from_iterable(combinations(my_set, r) for r in range(min(len(my_set), max_size), -1, -1))
     return subsets
 
-def generate_combinations(my_set, max_size):
-    subsets = combinations(my_set, max_size)
-    return subsets
-
-def generate_combinations2(my_set, max_size,subset_limit):
-    subsets = list(combinations(my_set, max_size))
-    random.seed(42)
-    sampled_subsets = random.sample(subsets, subset_limit)
-    return sampled_subsets
-
+def get_random_subset(variables, subset_size):
+    return random.sample(variables, subset_size)
+    
 def extract_variables(module_content):
     """
     Extract all variables involved in operations within a Verilog module.
@@ -193,33 +187,14 @@ if __name__ == "__main__":
         f.write("\n")
     
     subset_size = 5
-    subsets = generate_combinations(variables, subset_size)
-    
-    cnt = 0
     init_cnt = 0
-    group_number = 100
-    group_size = math.ceil(math.comb(len(variables), subset_size)/group_number)
-
-    little_group = []
-    # print("The group size is "+str(group_size))
-    # print("The all size is "+str(math.comb(len(variables), subset_size)))
-    # exit(1)
-    for subset in subsets:
-        little_group.append(subset)
-        cnt += 1
-        if(cnt==group_size):
-            print("Generate the "+str(init_cnt)+" variable group")
-            init_cnt += 1
-            write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))
-            little_group = []
-            cnt = 0
+    subset_limit = len(variables)
     
-    # for subset in subsets:
-    #     init_cnt += 1
-    #     print("Generate the "+str(init_cnt)+" variable group")
-    #     write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))
+    # subsets = generate_combinations(variables, subset_size)
+    for i in range(0,subset_limit):
+        subset = get_random_subset(variables, subset_size)
+        write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
 
-    # write_to_file(output_file+"All.txt", "\n".join([f"{var}" for var in variables]))
-    # write_to_file(output_file, "\n".join([f"{var}" for var in variables]))
+
     
     

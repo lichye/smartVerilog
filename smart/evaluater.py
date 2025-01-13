@@ -7,6 +7,7 @@ import subprocess
 #this is the list that ebmc does not support
 
 ebmc_unsupport_list = []
+timeout_list =[]
 
 
 def write_assertion_file(input_file, output_file, assertions):
@@ -142,11 +143,11 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
                     sby_run_file.write("prep -top "+top_module+"\n")
                     
 
-                cmd = ["timeout","10",sby_path,"-f",sby_file,"task"]
+                cmd = ["timeout","20",sby_path,"-f",sby_file,"task"]
                 # print("cmd: ",cmd)
                 # cmd = [sby_path,"-f",sby_file,"task"]
                 
-                cmd2 = ["timeout","10","ebmc",new_file_path,"--bound","10","--top",top_module]
+                cmd2 = ["timeout","20","ebmc",new_file_path,"--bound","10","--top",top_module]
 
                 # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
@@ -159,7 +160,10 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
 
                 # print("the return code is: ",result.returncode)                     
                 if(result.returncode != 0 or result2.returncode != 0):
-                    error_files.append(verilog_file)
+                    if(result.returncode ==124 or result2.returncode == 124):
+                        timeout_list.append(verilog_file)
+                    else:
+                        error_files.append(verilog_file)
                 # else:
                 #     print("file: ",verilog_file," is verified")
                 # subprocess.run(["rm",new_file_path])
@@ -176,7 +180,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
         
         cnt += 1
         time_end = time.time()
-        print("Finish "+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start))
+        print("Finish "+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start)+" on the file: "+verilog_file)
 
     return error_files
 
@@ -216,19 +220,16 @@ def count_logfile():
     with open('log.txt', 'r') as file:
         logfile_content = file.read()
     
-    # 定义正则表达式
     fm_checker_pattern = re.compile(r"FM checker are called (\d+) times")
     fm_timer_pattern = re.compile(r"FM checker Timer: ([\d\.]+) seconds")
     cvc5_pattern = re.compile(r"CVC5 are called (\d+) times")
     cvc5_timer_pattern = re.compile(r"CVC5 Timer: ([\d\.]+) seconds")
 
-    # 初始化统计数据
     fm_checker_calls = 0
     fm_checker_time = 0.0
     cvc5_calls = 0
     cvc5_time = 0.0
 
-    # 统计数据
     for match in fm_checker_pattern.finditer(logfile_content):
         fm_checker_calls += int(match.group(1))
     for match in fm_timer_pattern.finditer(logfile_content):
@@ -271,23 +272,28 @@ if __name__ == "__main__":
     # print("Found mutations: ",sorted(find_files))
     sorted(find_files)
     # print("Found mutations: ",find_files)
-    print("Found total mutations: ",len(find_files))
-        
+
     all_file = [
         os.path.join(directory, file)
         for file in os.listdir(directory)
         if file.startswith("mutant_") and file.endswith(".sv") and not file.endswith("_assertion.sv")
     ]
 
-    unfind_file = set(all_file) - set(find_files)
+    unfind_file = set(all_file) - set(find_files) - set(timeout_list)
 
     sorted(unfind_file)
     if(len(unfind_file) != 0):
         print("UnFound mutations: ",len(unfind_file))
         print("UnFound mutations: ",unfind_file)
 
-    print("Total mutations: ",len(unfind_file)+len(find_files))
-    print("Coverage percentage: ",(len(find_files)/(len(unfind_file)+len(find_files)))*100)
+    total_mutations = len(unfind_file)+len(find_files)
+
+    print("Found mutations: ",len(find_files))
+    print("UnFound mutations: ",len(unfind_file))
+    print("Timeout mutations: ",len(timeout_list))
+    print("Total mutations: ",total_mutations+len(timeout_list))
+    print("Total mutations(Without timeout file): ",total_mutations)
+    print("Coverage percentage: ",(len(find_files)/total_mutations)*100)
     
     log_result = count_logfile()
 
@@ -297,5 +303,8 @@ if __name__ == "__main__":
     with open(resultfile,"a") as f:
         f.write(log_result)
         f.write("\n")
-        f.write("Total mutations: "+str(len(unfind_file)+len(find_files))+"\n")
-        f.write("Coverage percentage: "+str((len(find_files)/(len(unfind_file)+len(find_files)))*100)+"\n")
+        f.write("Found mutations: "+str(len(find_files))+"\n")
+        f.write("UnFound mutations: "+str(len(unfind_file))+"\n")
+        f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
+        f.write("Total mutations(Without timeout file): "+str(total_mutations)+"\n")
+        f.write("Coverage percentage: "+str((len(find_files)/total_mutations)*100)+"\n")
