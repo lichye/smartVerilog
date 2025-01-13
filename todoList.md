@@ -1,12 +1,12 @@
 ----------------------------- 1/10 -1/15
-# Logfile
-## variables in the verilog
-# Runtime shell
+# Install shell polish-up
 
-# install shell and on-botton run shell
+# ssh key
 
 # Run time Optimazation
 ## --sygus-stream
+## Multiply layer
+
 --------------------------- 1/16 Meeting
 # We will have first run data
 ---------------------------- 1/17-1/22
