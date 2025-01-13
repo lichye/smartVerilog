@@ -190,6 +190,7 @@ if __name__ == "__main__":
     init_cnt = 0
     subset_limit = len(variables)
     
+    variables = sorted(list(variables))
     # subsets = generate_combinations(variables, subset_size)
     for i in range(0,subset_limit):
         subset = get_random_subset(variables, subset_size)
