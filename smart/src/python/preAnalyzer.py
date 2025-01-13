@@ -1,6 +1,7 @@
 import re
 import configparser
 import sys
+import math
 from itertools import combinations, chain
 
 verilog_keywords = [
@@ -70,6 +71,16 @@ def generate_subsets(my_set, max_size):
     subsets = chain.from_iterable(combinations(my_set, r) for r in range(min(len(my_set), max_size), -1, -1))
     return subsets
 
+def generate_combinations(my_set, max_size):
+    subsets = combinations(my_set, max_size)
+    return subsets
+
+def generate_combinations2(my_set, max_size,subset_limit):
+    subsets = list(combinations(my_set, max_size))
+    random.seed(42)
+    sampled_subsets = random.sample(subsets, subset_limit)
+    return sampled_subsets
+
 def extract_variables(module_content):
     """
     Extract all variables involved in operations within a Verilog module.
@@ -94,6 +105,8 @@ def extract_variables(module_content):
         "input": re.compile(r'input\s+(\w+)'),
         "output": re.compile(r'output\s+(\w+)'),
         "inout": re.compile(r'inout\s+(\w+)'),
+        "wire": re.compile(r'wire\s+(\w+)'),
+        "wire2": re.compile(r'\w+(?=,|$)'),
         "VCDvar": re.compile(r'\$var\s+(\w+)\s+(\d+)\s+([^\s]+)\s+([\w_]+)\s+\[([\d:]+)\]\s+\$end'),
         # "module": re.compile(r'module\s+(\w+)'),
     }
@@ -107,7 +120,7 @@ def extract_variables(module_content):
             # print("\t We check rule "+operation_type)
             matches = pattern.findall(line)
             if(matches):
-                # print("\t\t We found matches")
+            # print("\t\t We found matches")
                 variable_pattern = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
                 variable = variable_pattern.findall(line)
                 # print("\t\t\t We found variables "+str(variable))
@@ -165,10 +178,11 @@ if __name__ == "__main__":
     # vcd_variables = extract_variables(vcd_file)
     # print("vcd_variables is "+str(vcd_variables))
     # then we come to the a good variables sets
-    print("The verilog variables are "+str(verilog_variables))
-    print("\n")
-    print("The vcd variables are "+str(vcd_variables))
-    print("\n")
+
+    # print("The verilog variables are "+str(verilog_variables))
+    # print("\n")
+    # print("The vcd variables are "+str(vcd_variables))
+    # print("\n")
     print("The final variables are "+str(variables))
 
 
@@ -178,18 +192,34 @@ if __name__ == "__main__":
         f.write(" ".join([f"{var}" for var in variables]))
         f.write("\n")
     
-    subsets = generate_subsets(variables, 5)
-    cnt = 0
+    subset_size = 5
+    subsets = generate_combinations(variables, subset_size)
     
-    for subset in subsets:
-        file_dir = output_file+"Init_"+str(cnt)+".txt"
-        write_to_file(file_dir, "\n".join([f"{var}" for var in subset]))
-        cnt += 1
-        # print(subset)
-        if(cnt>=100):
-            break
+    cnt = 0
+    init_cnt = 0
+    group_number = 100
+    group_size = math.ceil(math.comb(len(variables), subset_size)/group_number)
 
-    write_to_file(output_file+"All.txt", "\n".join([f"{var}" for var in variables]))
+    little_group = []
+    # print("The group size is "+str(group_size))
+    # print("The all size is "+str(math.comb(len(variables), subset_size)))
+    # exit(1)
+    for subset in subsets:
+        little_group.append(subset)
+        cnt += 1
+        if(cnt==group_size):
+            print("Generate the "+str(init_cnt)+" variable group")
+            init_cnt += 1
+            write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))
+            little_group = []
+            cnt = 0
+    
+    # for subset in subsets:
+    #     init_cnt += 1
+    #     print("Generate the "+str(init_cnt)+" variable group")
+    #     write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))
+
+    # write_to_file(output_file+"All.txt", "\n".join([f"{var}" for var in variables]))
     # write_to_file(output_file, "\n".join([f"{var}" for var in variables]))
     
     

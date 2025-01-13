@@ -6,12 +6,22 @@ if [ $# -lt 1 ]; then
     echo "Usage: $0 <benchmark_name>"
     exit 1
 fi
+src_benchmarks="Benchmark/$1"
+
+if [ -d "$src_benchmarks" ]; then
+    echo "Directory $src_benchmarks exists."
+else
+    echo "Directory $src_benchmarks does not exist."
+    exit 1
+fi
+
+source otherTools/oss-cad-suite/environment
 
 cd smart
 make all_clean
 cd ..
 
-src_benchmarks="Benchmark/$1"
+
 DEST_DIR="smart/user"
 echo "Full path: $src_benchmarks"
 cp "$src_benchmarks"/* "$DEST_DIR"

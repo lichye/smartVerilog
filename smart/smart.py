@@ -4,6 +4,7 @@ import os
 import subprocess
 import shutil
 import time
+import glob
 
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
@@ -17,7 +18,8 @@ def copy_sv_files(original_path, target_path):
 def smart(current_path, top_module,result_file,init_variables):
     cmd = ["./smart.out",current_path,top_module,result_file,init_variables]
     # print("Run cmd: ", cmd)
-    result = subprocess.run(cmd)
+    # result = subprocess.run(cmd)
+    result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return result.returncode
 
 def resultAnalysis(resultDir,runtimeRemoveVariables):
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     
     # parameters
     assertion = 1000
-    removeVariables = True
+    removeVariables = False
 
     # Set up the file path
     current_path = os.getcwd()
@@ -75,8 +77,11 @@ if __name__ == "__main__":
     
     copy_sv_files(mverilog_path, runtimeFormalDir)
     #Pre analysis of the code
+    pre_start_time = time.time()
+    
     preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir)
     
+    pre_end_time = time.time()  
     # Smart
     smart_sucess = 0
 
@@ -90,12 +95,20 @@ if __name__ == "__main__":
     
     verified_assertion = []
 
+    cnt = 0
+    all_work = len(os.listdir(runtimeVariablesDir))
     # Each init variable file is a different smart loop
     for filename in sorted(os.listdir(runtimeVariablesDir)):
+        time_start = time.time()
         #clean the removeVariables pipe
         subprocess.run(["rm","-rf",runtimeRemoveVariables])
         subprocess.run(["touch",runtimeRemoveVariables])
 
+        # /home/magna/smartVerilog/smart/runtime/smt_results
+        smt_results = os.path.join(os.getcwd(), "runtime/smt_results", "*.vcd")
+        for file in glob.glob(smt_results):
+            os.remove(file)
+        
         writeLog(logfile,"Run with variables: "+filename+"\n")
         writeLog(logfile,"Run Smart Loop "+str(loop_count)+"\n")
         loop_count += 1
@@ -103,8 +116,6 @@ if __name__ == "__main__":
         result_file = resultDir+"/result"+str(assertion_founded)+".txt"
         init_variables = os.path.join(runtimeVariablesDir, filename)
         result = smart(current_path, main_module,result_file,init_variables)
-
-        subprocess.run(["rm","-rf","runtime/smt_results/*"])
 
         if result == 0:
             writeLog(logfile, "Smart Loop " + str(loop_count)+" is successful\n\n")
@@ -121,10 +132,8 @@ if __name__ == "__main__":
                 break
         else:
             writeLog(logfile,"Smart Loop " + str(loop_count)+" is failure\n\n")
-            continue
         
-            
-        if removeVariables:
+        if removeVariables and result == 0:
             result_file = resultDir+"/result"+str(assertion_founded)+".txt"
             resultAnalysis(resultDir,runtimeRemoveVariables)
             result = smart(current_path, main_module,result_file,init_variables)
@@ -144,7 +153,13 @@ if __name__ == "__main__":
                     break
             else:
                 writeLog(logfile,"Remover Smart Loop  is failure\n\n")
-            
+
+        
+        time_end = time.time()
+        cnt += 1
+        print("Finish "+str(cnt)+"/"+str(all_work)+" smart run in "+str(time_end-time_start)+" seconds")
+
+
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time
 
@@ -157,6 +172,7 @@ if __name__ == "__main__":
     with open(resultfile,"a") as f:
         f.write("\n")
         f.write("Smart Time: "+str(smart_time)+"\n")
+        f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
         f.write("We found "+str(len(verified_assertion))+" assertions\n")
         for assertion in verified_assertion:
             f.write(str(assertion)+"\n")

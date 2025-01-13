@@ -2,6 +2,7 @@
 import os
 import sys
 import re
+import time
 import subprocess
 #this is the list that ebmc does not support
 
@@ -98,10 +99,8 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
 
     for verilog_file in verilog_files:
         # print(f"Running Formal Checker on: {verilog_file}")
-        cnt += 1
-        if((cnt / total_files) * 100- percentage >10):
-            percentage = (cnt / total_files) * 100
-            print(f"Processing file {cnt}/{total_files} ({percentage:.2f}%)...")        
+        time_start = time.time()
+            
         try:
             # Run sby command
             # firstly we should build .sby file
@@ -143,10 +142,13 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
                     sby_run_file.write("prep -top "+top_module+"\n")
                     
 
-                cmd = [sby_path,"-f",sby_file,"task"]
+                cmd = ["timeout","10",sby_path,"-f",sby_file,"task"]
                 # print("cmd: ",cmd)
+                # cmd = [sby_path,"-f",sby_file,"task"]
                 
-                cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
+                cmd2 = ["timeout","10","ebmc",new_file_path,"--bound","10","--top",top_module]
+
+                # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
                 result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
                 
@@ -171,6 +173,11 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
             print(f"Failed to run sby on {verilog_file}: {e}")
             error_files.append(verilog_file)
             exit(1)
+        
+        cnt += 1
+        time_end = time.time()
+        print("Finish "+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start))
+
     return error_files
 
 def get_result_files(directory):
