@@ -14,6 +14,9 @@ yes | sudo apt-get install python3-venv
 yes | sudo pip3 install pytest
 yes | pip install "cocotb==1.8.0"
 
+cd smart
+mkdir user/
+
 # Install other tools
 mkdir otherTools
 cd otherTools
@@ -28,19 +31,27 @@ wget https://github.com/diffblue/hw-cbmc/releases/download/ebmc-5.4/ebmc_5.4_amd
 sudo dpkg -i ebmc_5.4_amd64.deb
 
 # Install cvc5
-git clone https://github.com/cvc5/cvc5.git
-cd cvc5
-git checkout cvc5-1.2.0
+# git clone https://github.com/cvc5/cvc5.git
+# cd cvc5
+# git checkout cvc5-1.2.0
 
-sudo ./configure.sh --auto-download
-cd build         
-yes | sudo make            
-yes | sudo make check      
-yes | sudo make install
+# sudo ./configure.sh --auto-download
+# cd build         
+# yes | sudo make            
+# yes | sudo make check      
+# yes | sudo make install
+# cd ..
+# cd ..
+# cd ..
+
+
+wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static.zip
+unzip cvc5-Linux-x86_64-static.zip
+cd cvc5-Linux-x86_64-static
+cd bin
+chmod +x cvc5
+sudo mv cvc5 /usr/local/bin/
 cd ..
 cd ..
-cd ..
-cd smart
-mkdir user/
 
 # wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static-gpl.zip
