@@ -157,16 +157,19 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
                 result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
                 
                 if top_module in ebmc_unsupport_list:
-                    result2 = 0
+                    if(result.returncode != 0):
+                        if(result.returncode ==124):
+                            timeout_list.append(verilog_file)
+                        else:
+                            error_files.append(verilog_file)
                 else:
                     result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-
-                # print("the return code is: ",result.returncode)                     
-                if(result.returncode != 0 or result2.returncode != 0):
-                    if(result.returncode ==124 or result2.returncode == 124):
-                        timeout_list.append(verilog_file)
-                    else:
-                        error_files.append(verilog_file)
+                    # print("the return code is: ",result.returncode)                     
+                    if(result.returncode != 0 or result2.returncode != 0):
+                        if(result.returncode ==124 or result2.returncode == 124):
+                            timeout_list.append(verilog_file)
+                        else:
+                            error_files.append(verilog_file)
                 # else:
                 #     print("file: ",verilog_file," is verified")
                 # subprocess.run(["rm",new_file_path])
