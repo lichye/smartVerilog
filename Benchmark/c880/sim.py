@@ -161,11 +161,6 @@ def runner():
     sources = glob.glob(os.path.join(dir_path, "*.sv"))
     working_dir = os.getcwd()
     
-    # move ibex_pkg.sv to sim_build
-    if not os.path.exists(working_dir+"/sim_build"):
-        subprocess.run(["mkdir", "sim_build"])
-    if not os.path.exists(working_dir+"/sim_build/ibex_pkg.sv"):
-        subprocess.run(["cp",dir_path+"/ibex_pkg.sv",working_dir+"/sim_build/ibex_pkg.sv"])
 
     # set parameters
     extra_args = []
