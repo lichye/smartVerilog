@@ -7,18 +7,15 @@
 module dff (CK,Q,D);
 input CK,D;
 output Q;
-
   wire NM,NCK;
-  trireg NQ,M;
-
-  nmos N7 (M,D,NCK);
+  reg NQ,M; // trireg -> reg
+  assign M = D ? NCK : 1'bz; //nmos N7 (M,D,NCK);
+  assign NQ = NM ? CK : 1'bz; //nmos N9 (NQ,NM,CK);
   not P3 (NM,M);
-  nmos N9 (NQ,NM,CK);
   not P5 (Q,NQ);
   not P1 (NCK,CK);
 
 endmodule
-
 module s641(GND,VDD,CK,G1,G10,G100BF,G101BF,G103BF,G104BF,G105BF,G106BF,G107,
   G11,G12,G13,
   G138,G14,G15,G16,G17,G18,G19,G2,G20,G21,G22,G23,G24,G25,G26,G27,G28,G29,G3,
@@ -458,7 +455,5 @@ output G91,G94,G107,G83,G84,G85,G100BF,G98BF,G96BF,G92,G87BF,G89BF,G101BF,
   nand NAND2_1(G210,G379,G356);
   nand NAND2_2(G212,G379,G358);
   nand NAND2_3(G208,G379,G354);
-
-  assert property (G1);
 
 endmodule

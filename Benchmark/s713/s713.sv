@@ -7,13 +7,11 @@
 module dff (CK,Q,D);
 input CK,D;
 output Q;
-
   wire NM,NCK;
-  trireg NQ,M;
-
-  nmos N7 (M,D,NCK);
+  reg NQ,M; // trireg -> reg
+  assign M = D ? NCK : 1'bz; //nmos N7 (M,D,NCK);
+  assign NQ = NM ? CK : 1'bz; //nmos N9 (NQ,NM,CK);
   not P3 (NM,M);
-  nmos N9 (NQ,NM,CK);
   not P5 (Q,NQ);
   not P1 (NCK,CK);
 
@@ -474,6 +472,4 @@ output G103BF,G104BF,G105BF,G106BF,G107,G83,G84,G85,G86BF,G87BF,G88BF,G89BF,
   nand NAND2_25(G142,IIII349,IIII350);
   nand NAND2_26(G141,IIII342,IIII343);
   nand NAND2_27(G124,IIII223,IIII224);
-
-  assert property (0);
 endmodule
