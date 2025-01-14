@@ -16,6 +16,7 @@ yes | pip install "cocotb==1.8.0"
 
 cd smart
 mkdir user/
+cd ..
 
 # Install other tools
 mkdir otherTools
