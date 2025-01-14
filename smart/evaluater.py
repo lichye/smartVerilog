@@ -186,7 +186,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
         
         cnt += 1
         time_end = time.time()
-        print("Finish evaluate"+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+        print("Finish evaluate "+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start)+" on the file: "+verilog_file)
 
     return error_files
 
