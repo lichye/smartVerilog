@@ -1,6 +1,6 @@
 #!/bin/bash
-# $1 is the name of the file
 
+# Check $1 is the name of the file
 if [ $# -lt 1 ]; then
     echo "Lack of arguments."
     echo "Usage: $0 <benchmark_name>"
@@ -21,7 +21,6 @@ cd smart
 make all_clean
 cd ..
 
-
 DEST_DIR="smart/user"
 echo "Full path: $src_benchmarks"
 cp "$src_benchmarks"/* "$DEST_DIR"
@@ -32,3 +31,6 @@ python setup.py $1
 python smart.py $1
 python evaluater.py $1
 cd ..
+
+mkdir $1
+mv smart/*.txt $1
