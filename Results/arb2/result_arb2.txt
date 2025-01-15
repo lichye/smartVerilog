@@ -1,0 +1,21 @@
+
+Smart Time: 11.069907903671265
+Pre analysis Time: 0.023047447204589844
+We found 6 assertions
+(! (gnt1 && gnt2))
+(! (gnt1 && (req2 && state)))
+(req1 || (gnt2 == req2))
+(! (rst && state))
+(state || (! (gnt2 && req1)))
+(gnt2 == (gnt2 && req2))
+
+FM Checker Total Calls: 42
+FM Checker Total Time: 10.315660000000001 seconds
+CVC5 Total Calls: 27
+CVC5 Total Time: 5.099011000000001 seconds
+
+Found mutations: 11
+UnFound mutations: 0
+Timeout mutations: 0
+Total mutations(Without timeout file): 11
+Coverage percentage: 100.0
