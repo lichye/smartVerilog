@@ -7,11 +7,14 @@
 
 #install basic libary
 yes | sudo apt-get update
-yes | sudo apt-get install cmake gcc g++ bison flex
+yes | sudo apt-get install cmake gcc g++ bison flex unzip wget make
 yes | sudo apt-get install python3 python-is-python3
 yes | sudo apt-get install pip
 yes | sudo apt-get install python3-venv
 yes | sudo pip3 install pytest
+
+python3 -m venv ~/venv
+source ~/venv/bin/activate
 yes | pip install "cocotb==1.8.0"
 
 cd smart
