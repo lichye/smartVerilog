@@ -4,6 +4,7 @@ import random
 import sys
 import subprocess
 import shutil
+import time
 
 ebmc_unsupport_list = []
 
@@ -369,10 +370,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     total_files = len(verilog_files)
 
     for verilog_file in verilog_files:
-        cnt += 1
-        if((cnt / total_files) * 100- percentage >10):
-            percentage = (cnt / total_files) * 100
-            print(f"Processing file {cnt}/{total_files} ({percentage:.2f}%)...")
+        time_start = time.time()
             
         # print(f"Running Formal Checker on: {verilog_file}")
         try:
@@ -450,6 +448,10 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
             print(f"Failed to run sby on {verilog_file}: {e}")
             error_files.append(verilog_file)
             exit(1)
+        cnt += 1
+        time_end = time.time()
+        print("Finish mutate "+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+
     return error_files
 
 def move_files(src_folder, dest_folder,delete_file):
