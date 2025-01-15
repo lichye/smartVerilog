@@ -1,0 +1,936 @@
+FM checker are called 8 times
+FM checker Timer: 3.083167 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.849002 seconds
+FM checker are called 7 times
+FM checker Timer: 2.777107 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.237527 seconds
+FM checker are called 4 times
+FM checker Timer: 1.551264 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.855897 seconds
+FM checker are called 7 times
+FM checker Timer: 2.927722 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.810000 seconds
+FM checker are called 5 times
+FM checker Timer: 2.016312 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.038079 seconds
+FM checker are called 5 times
+FM checker Timer: 1.946420 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.251476 seconds
+FM checker are called 6 times
+FM checker Timer: 2.347607 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.438144 seconds
+FM checker are called 5 times
+FM checker Timer: 1.940586 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.245266 seconds
+FM checker are called 6 times
+FM checker Timer: 2.365944 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.873719 seconds
+FM checker are called 6 times
+FM checker Timer: 2.377934 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.829988 seconds
+FM checker are called 7 times
+FM checker Timer: 2.808735 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.434209 seconds
+FM checker are called 8 times
+FM checker Timer: 3.071148 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.812531 seconds
+FM checker are called 5 times
+FM checker Timer: 1.919985 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.031707 seconds
+FM checker are called 5 times
+FM checker Timer: 1.951842 seconds
+CVC5 are called 1 times
+CVC5 Timer: 0.017551 seconds
+FM checker are called 7 times
+FM checker Timer: 2.817606 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.408579 seconds
+FM checker are called 6 times
+FM checker Timer: 2.334303 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.802171 seconds
+FM checker are called 3 times
+FM checker Timer: 1.145061 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.421279 seconds
+FM checker are called 8 times
+FM checker Timer: 3.183113 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.868443 seconds
+FM checker are called 5 times
+FM checker Timer: 2.094477 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.039077 seconds
+FM checker are called 8 times
+FM checker Timer: 3.386993 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.316835 seconds
+FM checker are called 7 times
+FM checker Timer: 2.690463 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.848837 seconds
+FM checker are called 5 times
+FM checker Timer: 1.997304 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.034050 seconds
+FM checker are called 9 times
+FM checker Timer: 3.542363 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.354211 seconds
+FM checker are called 4 times
+FM checker Timer: 1.564801 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.860960 seconds
+FM checker are called 3 times
+FM checker Timer: 1.365213 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.485958 seconds
+FM checker are called 8 times
+FM checker Timer: 3.261339 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.902183 seconds
+FM checker are called 6 times
+FM checker Timer: 2.366971 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.833240 seconds
+FM checker are called 8 times
+FM checker Timer: 3.227130 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.821873 seconds
+FM checker are called 6 times
+FM checker Timer: 2.387879 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.455176 seconds
+FM checker are called 6 times
+FM checker Timer: 2.303591 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.841153 seconds
+FM checker are called 5 times
+FM checker Timer: 2.021198 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033673 seconds
+FM checker are called 3 times
+FM checker Timer: 1.195183 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.448920 seconds
+FM checker are called 8 times
+FM checker Timer: 3.148515 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.669627 seconds
+FM checker are called 5 times
+FM checker Timer: 2.115125 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032943 seconds
+FM checker are called 7 times
+FM checker Timer: 2.704094 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.820047 seconds
+FM checker are called 8 times
+FM checker Timer: 3.134495 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.219183 seconds
+FM checker are called 9 times
+FM checker Timer: 3.529310 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.662215 seconds
+FM checker are called 6 times
+FM checker Timer: 2.356677 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.686378 seconds
+FM checker are called 8 times
+FM checker Timer: 3.135754 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.874733 seconds
+FM checker are called 5 times
+FM checker Timer: 1.990079 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.030819 seconds
+FM checker are called 9 times
+FM checker Timer: 3.480541 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.662987 seconds
+FM checker are called 5 times
+FM checker Timer: 1.931667 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033532 seconds
+FM checker are called 7 times
+FM checker Timer: 2.743312 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.265658 seconds
+FM checker are called 8 times
+FM checker Timer: 3.235371 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.299052 seconds
+FM checker are called 6 times
+FM checker Timer: 2.431133 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.487815 seconds
+FM checker are called 5 times
+FM checker Timer: 2.134159 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032468 seconds
+FM checker are called 6 times
+FM checker Timer: 2.334338 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.835678 seconds
+FM checker are called 2 times
+FM checker Timer: 0.732190 seconds
+CVC5 are called 1 times
+CVC5 Timer: 0.021628 seconds
+FM checker are called 8 times
+FM checker Timer: 3.442209 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.827967 seconds
+FM checker are called 6 times
+FM checker Timer: 2.466579 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.850159 seconds
+FM checker are called 5 times
+FM checker Timer: 1.996448 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.036112 seconds
+FM checker are called 5 times
+FM checker Timer: 2.036636 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033819 seconds
+FM checker are called 5 times
+FM checker Timer: 2.025673 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033148 seconds
+FM checker are called 2 times
+FM checker Timer: 0.753930 seconds
+CVC5 are called 1 times
+CVC5 Timer: 0.019628 seconds
+FM checker are called 6 times
+FM checker Timer: 2.329296 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.822099 seconds
+FM checker are called 6 times
+FM checker Timer: 2.353379 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.717442 seconds
+FM checker are called 5 times
+FM checker Timer: 1.958888 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.262663 seconds
+FM checker are called 6 times
+FM checker Timer: 2.470150 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.836789 seconds
+FM checker are called 11 times
+FM checker Timer: 4.447793 seconds
+CVC5 are called 8 times
+CVC5 Timer: 3.733930 seconds
+FM checker are called 3 times
+FM checker Timer: 1.207615 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.426251 seconds
+FM checker are called 8 times
+FM checker Timer: 3.285180 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.395312 seconds
+FM checker are called 3 times
+FM checker Timer: 1.117668 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.411660 seconds
+FM checker are called 7 times
+FM checker Timer: 2.778237 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.470838 seconds
+FM checker are called 11 times
+FM checker Timer: 4.245332 seconds
+CVC5 are called 8 times
+CVC5 Timer: 3.240468 seconds
+FM checker are called 4 times
+FM checker Timer: 1.647037 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.870862 seconds
+FM checker are called 8 times
+FM checker Timer: 3.164136 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.839631 seconds
+FM checker are called 9 times
+FM checker Timer: 3.755950 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.258104 seconds
+FM checker are called 7 times
+FM checker Timer: 2.824577 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.892901 seconds
+FM checker are called 5 times
+FM checker Timer: 1.952692 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033631 seconds
+FM checker are called 5 times
+FM checker Timer: 2.013204 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033658 seconds
+FM checker are called 6 times
+FM checker Timer: 2.333749 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.837967 seconds
+FM checker are called 5 times
+FM checker Timer: 2.061198 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.035721 seconds
+FM checker are called 6 times
+FM checker Timer: 2.551704 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.999512 seconds
+FM checker are called 8 times
+FM checker Timer: 3.183985 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.686515 seconds
+FM checker are called 7 times
+FM checker Timer: 2.722595 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.310574 seconds
+FM checker are called 4 times
+FM checker Timer: 1.541279 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.850225 seconds
+FM checker are called 6 times
+FM checker Timer: 2.371832 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.430799 seconds
+FM checker are called 6 times
+FM checker Timer: 2.370453 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.459332 seconds
+FM checker are called 7 times
+FM checker Timer: 2.755461 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.445627 seconds
+FM checker are called 5 times
+FM checker Timer: 1.995259 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033682 seconds
+FM checker are called 5 times
+FM checker Timer: 1.941726 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033325 seconds
+FM checker are called 9 times
+FM checker Timer: 3.518181 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.057510 seconds
+FM checker are called 2 times
+FM checker Timer: 0.759651 seconds
+CVC5 are called 1 times
+CVC5 Timer: 0.019996 seconds
+FM checker are called 4 times
+FM checker Timer: 1.561935 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.862097 seconds
+FM checker are called 7 times
+FM checker Timer: 2.866458 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.364168 seconds
+FM checker are called 5 times
+FM checker Timer: 1.966912 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.038655 seconds
+FM checker are called 7 times
+FM checker Timer: 2.758383 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.421642 seconds
+FM checker are called 9 times
+FM checker Timer: 3.532472 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.141098 seconds
+FM checker are called 3 times
+FM checker Timer: 1.192647 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.444069 seconds
+FM checker are called 5 times
+FM checker Timer: 2.150452 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033247 seconds
+FM checker are called 8 times
+FM checker Timer: 3.229361 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.842125 seconds
+FM checker are called 3 times
+FM checker Timer: 1.180262 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.458177 seconds
+FM checker are called 6 times
+FM checker Timer: 2.314395 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.422086 seconds
+FM checker are called 7 times
+FM checker Timer: 2.773451 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.429946 seconds
+FM checker are called 7 times
+FM checker Timer: 2.853554 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.314681 seconds
+FM checker are called 9 times
+FM checker Timer: 3.648272 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.645455 seconds
+FM checker are called 4 times
+FM checker Timer: 1.550374 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.862306 seconds
+FM checker are called 5 times
+FM checker Timer: 1.953680 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.266232 seconds
+FM checker are called 5 times
+FM checker Timer: 2.022401 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.031809 seconds
+FM checker are called 9 times
+FM checker Timer: 3.473186 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.043001 seconds
+FM checker are called 10 times
+FM checker Timer: 3.884648 seconds
+CVC5 are called 7 times
+CVC5 Timer: 2.776503 seconds
+FM checker are called 8 times
+FM checker Timer: 3.167858 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.660049 seconds
+FM checker are called 9 times
+FM checker Timer: 3.640112 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.682496 seconds
+FM checker are called 8 times
+FM checker Timer: 3.173950 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.850351 seconds
+FM checker are called 5 times
+FM checker Timer: 2.026004 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.034038 seconds
+FM checker are called 5 times
+FM checker Timer: 2.058119 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032751 seconds
+FM checker are called 7 times
+FM checker Timer: 2.813866 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.280767 seconds
+FM checker are called 8 times
+FM checker Timer: 3.221320 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.247110 seconds
+FM checker are called 8 times
+FM checker Timer: 3.117153 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.267667 seconds
+FM checker are called 11 times
+FM checker Timer: 4.438794 seconds
+CVC5 are called 8 times
+CVC5 Timer: 3.575670 seconds
+FM checker are called 5 times
+FM checker Timer: 1.927939 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.418419 seconds
+FM checker are called 7 times
+FM checker Timer: 2.756931 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.447511 seconds
+FM checker are called 6 times
+FM checker Timer: 2.347034 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.425614 seconds
+FM checker are called 7 times
+FM checker Timer: 2.731883 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.411414 seconds
+FM checker are called 10 times
+FM checker Timer: 4.152259 seconds
+CVC5 are called 7 times
+CVC5 Timer: 3.340588 seconds
+FM checker are called 4 times
+FM checker Timer: 1.601908 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.838661 seconds
+FM checker are called 6 times
+FM checker Timer: 2.373196 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.409308 seconds
+FM checker are called 4 times
+FM checker Timer: 1.599244 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.897210 seconds
+FM checker are called 8 times
+FM checker Timer: 3.165776 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.701931 seconds
+FM checker are called 7 times
+FM checker Timer: 2.832219 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.244523 seconds
+FM checker are called 9 times
+FM checker Timer: 3.519044 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.493874 seconds
+FM checker are called 9 times
+FM checker Timer: 3.564373 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.709214 seconds
+FM checker are called 6 times
+FM checker Timer: 2.310245 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.424009 seconds
+FM checker are called 5 times
+FM checker Timer: 1.967207 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.290688 seconds
+FM checker are called 5 times
+FM checker Timer: 1.987196 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032691 seconds
+FM checker are called 8 times
+FM checker Timer: 3.175166 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.849363 seconds
+FM checker are called 5 times
+FM checker Timer: 2.036398 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.031370 seconds
+FM checker are called 8 times
+FM checker Timer: 3.161762 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.835367 seconds
+FM checker are called 7 times
+FM checker Timer: 2.671327 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.241189 seconds
+FM checker are called 8 times
+FM checker Timer: 3.162159 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.899038 seconds
+FM checker are called 5 times
+FM checker Timer: 2.065378 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.037001 seconds
+FM checker are called 3 times
+FM checker Timer: 1.113960 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.446521 seconds
+FM checker are called 7 times
+FM checker Timer: 2.806234 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.249714 seconds
+FM checker are called 5 times
+FM checker Timer: 2.007595 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.314739 seconds
+FM checker are called 3 times
+FM checker Timer: 1.183969 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.447119 seconds
+FM checker are called 6 times
+FM checker Timer: 2.336155 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.428114 seconds
+FM checker are called 7 times
+FM checker Timer: 2.784646 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.407824 seconds
+FM checker are called 8 times
+FM checker Timer: 3.140370 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.840933 seconds
+FM checker are called 8 times
+FM checker Timer: 3.108178 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.858116 seconds
+FM checker are called 5 times
+FM checker Timer: 2.006497 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033769 seconds
+FM checker are called 9 times
+FM checker Timer: 3.712757 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.335191 seconds
+FM checker are called 8 times
+FM checker Timer: 3.203131 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.772391 seconds
+FM checker are called 8 times
+FM checker Timer: 3.158609 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.858221 seconds
+FM checker are called 4 times
+FM checker Timer: 1.565875 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.836766 seconds
+FM checker are called 5 times
+FM checker Timer: 1.984476 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.034132 seconds
+FM checker are called 6 times
+FM checker Timer: 2.398566 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.427486 seconds
+FM checker are called 5 times
+FM checker Timer: 2.087483 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.273928 seconds
+FM checker are called 4 times
+FM checker Timer: 1.578664 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.867019 seconds
+FM checker are called 5 times
+FM checker Timer: 2.078117 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.034623 seconds
+FM checker are called 8 times
+FM checker Timer: 3.134445 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.233496 seconds
+FM checker are called 3 times
+FM checker Timer: 1.170835 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.446602 seconds
+FM checker are called 5 times
+FM checker Timer: 2.027614 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.862826 seconds
+FM checker are called 9 times
+FM checker Timer: 3.522394 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.143863 seconds
+FM checker are called 7 times
+FM checker Timer: 2.826764 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.484942 seconds
+FM checker are called 7 times
+FM checker Timer: 2.773397 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.437368 seconds
+FM checker are called 9 times
+FM checker Timer: 3.654462 seconds
+CVC5 are called 6 times
+CVC5 Timer: 2.157205 seconds
+FM checker are called 7 times
+FM checker Timer: 2.822250 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.829328 seconds
+FM checker are called 6 times
+FM checker Timer: 2.597370 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.439929 seconds
+FM checker are called 5 times
+FM checker Timer: 1.969092 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.427794 seconds
+FM checker are called 3 times
+FM checker Timer: 1.270069 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.459989 seconds
+FM checker are called 5 times
+FM checker Timer: 1.977621 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.031311 seconds
+FM checker are called 8 times
+FM checker Timer: 3.152425 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.688497 seconds
+FM checker are called 5 times
+FM checker Timer: 2.039253 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.048334 seconds
+FM checker are called 7 times
+FM checker Timer: 2.716654 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.846442 seconds
+FM checker are called 4 times
+FM checker Timer: 1.591930 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.919790 seconds
+FM checker are called 8 times
+FM checker Timer: 3.316469 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.735709 seconds
+FM checker are called 7 times
+FM checker Timer: 2.863879 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.856739 seconds
+FM checker are called 8 times
+FM checker Timer: 4.325276 seconds
+CVC5 are called 5 times
+CVC5 Timer: 3.121435 seconds
+FM checker are called 2 times
+FM checker Timer: 1.041209 seconds
+CVC5 are called 1 times
+CVC5 Timer: 0.024570 seconds
+FM checker are called 4 times
+FM checker Timer: 2.305132 seconds
+CVC5 are called 3 times
+CVC5 Timer: 1.340856 seconds
+FM checker are called 4 times
+FM checker Timer: 2.462282 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.665417 seconds
+FM checker are called 4 times
+FM checker Timer: 1.832221 seconds
+CVC5 are called 3 times
+CVC5 Timer: 1.020334 seconds
+FM checker are called 4 times
+FM checker Timer: 1.590782 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.876252 seconds
+FM checker are called 7 times
+FM checker Timer: 2.776987 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.266227 seconds
+FM checker are called 5 times
+FM checker Timer: 1.979215 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.031745 seconds
+FM checker are called 11 times
+FM checker Timer: 4.309510 seconds
+CVC5 are called 8 times
+CVC5 Timer: 4.543010 seconds
+FM checker are called 5 times
+FM checker Timer: 1.959608 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.037789 seconds
+FM checker are called 7 times
+FM checker Timer: 2.781887 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.823624 seconds
+FM checker are called 4 times
+FM checker Timer: 1.545673 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.854090 seconds
+FM checker are called 4 times
+FM checker Timer: 1.620269 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.915259 seconds
+FM checker are called 8 times
+FM checker Timer: 3.281319 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.905614 seconds
+FM checker are called 7 times
+FM checker Timer: 2.753102 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.851740 seconds
+FM checker are called 5 times
+FM checker Timer: 1.986972 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032156 seconds
+FM checker are called 8 times
+FM checker Timer: 3.294921 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.771916 seconds
+FM checker are called 7 times
+FM checker Timer: 2.707109 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.250566 seconds
+FM checker are called 4 times
+FM checker Timer: 1.598283 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.856047 seconds
+FM checker are called 7 times
+FM checker Timer: 2.785531 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.816309 seconds
+FM checker are called 2 times
+FM checker Timer: 0.722489 seconds
+CVC5 are called 1 times
+CVC5 Timer: 0.017416 seconds
+FM checker are called 11 times
+FM checker Timer: 4.370462 seconds
+CVC5 are called 8 times
+CVC5 Timer: 3.546399 seconds
+FM checker are called 7 times
+FM checker Timer: 2.768793 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.234860 seconds
+FM checker are called 4 times
+FM checker Timer: 1.562060 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.839296 seconds
+FM checker are called 7 times
+FM checker Timer: 2.784229 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.831293 seconds
+FM checker are called 6 times
+FM checker Timer: 2.375873 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.921013 seconds
+FM checker are called 7 times
+FM checker Timer: 2.971919 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.451256 seconds
+FM checker are called 9 times
+FM checker Timer: 3.523331 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.674420 seconds
+FM checker are called 8 times
+FM checker Timer: 3.107398 seconds
+CVC5 are called 7 times
+CVC5 Timer: 2.545637 seconds
+FM checker are called 8 times
+FM checker Timer: 3.344506 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.869156 seconds
+FM checker are called 4 times
+FM checker Timer: 1.632169 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.900561 seconds
+FM checker are called 6 times
+FM checker Timer: 2.425933 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.459165 seconds
+FM checker are called 10 times
+FM checker Timer: 3.990339 seconds
+CVC5 are called 7 times
+CVC5 Timer: 3.162033 seconds
+FM checker are called 7 times
+FM checker Timer: 2.811797 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.425329 seconds
+FM checker are called 3 times
+FM checker Timer: 1.221719 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.422374 seconds
+FM checker are called 5 times
+FM checker Timer: 2.036592 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033226 seconds
+FM checker are called 5 times
+FM checker Timer: 1.950473 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.033053 seconds
+FM checker are called 11 times
+FM checker Timer: 4.349811 seconds
+CVC5 are called 8 times
+CVC5 Timer: 3.261040 seconds
+FM checker are called 5 times
+FM checker Timer: 1.994711 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.035978 seconds
+FM checker are called 7 times
+FM checker Timer: 2.788640 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.210530 seconds
+FM checker are called 7 times
+FM checker Timer: 2.761380 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.247618 seconds
+FM checker are called 8 times
+FM checker Timer: 3.083157 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.838152 seconds
+FM checker are called 5 times
+FM checker Timer: 2.030670 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.035761 seconds
+FM checker are called 9 times
+FM checker Timer: 3.645447 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.726228 seconds
+FM checker are called 4 times
+FM checker Timer: 1.552433 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.858987 seconds
+FM checker are called 9 times
+FM checker Timer: 3.517933 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.258398 seconds
+FM checker are called 7 times
+FM checker Timer: 2.796730 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.300754 seconds
+FM checker are called 9 times
+FM checker Timer: 3.494764 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.664427 seconds
+FM checker are called 5 times
+FM checker Timer: 1.978171 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032200 seconds
+FM checker are called 8 times
+FM checker Timer: 3.210256 seconds
+CVC5 are called 5 times
+CVC5 Timer: 1.706793 seconds
+FM checker are called 4 times
+FM checker Timer: 1.529227 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.830851 seconds
+FM checker are called 5 times
+FM checker Timer: 1.977364 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.032063 seconds
+FM checker are called 4 times
+FM checker Timer: 1.604185 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.875675 seconds
+FM checker are called 8 times
+FM checker Timer: 3.132996 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.246416 seconds
+FM checker are called 7 times
+FM checker Timer: 2.823604 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.282956 seconds
+FM checker are called 7 times
+FM checker Timer: 2.760272 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.416584 seconds
+FM checker are called 8 times
+FM checker Timer: 3.137949 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.835082 seconds
+FM checker are called 6 times
+FM checker Timer: 2.381677 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.895044 seconds
+FM checker are called 8 times
+FM checker Timer: 3.198562 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.873638 seconds
+FM checker are called 5 times
+FM checker Timer: 2.033596 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.048222 seconds
+FM checker are called 8 times
+FM checker Timer: 3.143986 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.824596 seconds
+FM checker are called 4 times
+FM checker Timer: 1.548930 seconds
+CVC5 are called 3 times
+CVC5 Timer: 0.847499 seconds
+FM checker are called 10 times
+FM checker Timer: 3.951111 seconds
+CVC5 are called 7 times
+CVC5 Timer: 3.033141 seconds
+FM checker are called 5 times
+FM checker Timer: 2.039646 seconds
+CVC5 are called 4 times
+CVC5 Timer: 1.345652 seconds
+FM checker are called 6 times
+FM checker Timer: 2.819005 seconds
+CVC5 are called 3 times
+CVC5 Timer: 1.283292 seconds
+FM checker are called 3 times
+FM checker Timer: 1.591556 seconds
+CVC5 are called 2 times
+CVC5 Timer: 0.598819 seconds
+FM checker are called 4 times
+FM checker Timer: 2.044198 seconds
+CVC5 are called 3 times
+CVC5 Timer: 1.220090 seconds

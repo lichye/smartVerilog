@@ -1,0 +1,24 @@
+
+Smart Time: 12.800741195678711
+Pre analysis Time: 0.03164052963256836
+We found 9 assertions
+(N1 || (N22 == (N11 && N2)))
+(! (N11 && (N16 == N2)))
+(N1 || N10)
+(N16 || N23)
+(N2 == (N2 && (N11 == N23)))
+(N16 || N22)
+(N19 || N23)
+(N10 || N3)
+(! (N10 && (N16 == N22)))
+
+FM Checker Total Calls: 48
+FM Checker Total Time: 12.079811 seconds
+CVC5 Total Calls: 24
+CVC5 Total Time: 3.6992970000000005 seconds
+
+Found mutations: 5
+UnFound mutations: 1
+Timeout mutations: 0
+Total mutations(Without timeout file): 6
+Coverage percentage: 83.33333333333334
