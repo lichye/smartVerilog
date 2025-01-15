@@ -172,6 +172,7 @@ if __name__ == "__main__":
     with open(resultfile,"a") as f:
         f.write("\n")
         f.write("Smart Time: "+str(smart_time)+"\n")
+        f.write("Overall Time: "+str(all_time)+"\n")
         f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
         f.write("We found "+str(len(verified_assertion))+" assertions\n")
         for assertion in verified_assertion:
