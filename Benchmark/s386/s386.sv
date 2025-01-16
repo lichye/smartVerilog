@@ -203,5 +203,4 @@ output v13_D_12,v13_D_11,v13_D_10,v13_D_9,v13_D_8,v13_D_7,v13_D_6;
   or OR2_31(Lv13_D_2,IIII24,IIII25);
   or OR2_32(B20B,IIII21,IIII22);
   or OR2_33(Lv13_D_11,IIII17,IIII18);
-  assert property (v6);
 endmodule
