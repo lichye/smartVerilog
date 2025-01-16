@@ -36,4 +36,12 @@ cd ..
 mkdir $1
 mv smart/*.txt $1
 
+
+cd smart
+rm -rf *.txt
+rm -rf *.sby
+rm -rf *task
+make all_clean
+cd ..
+
 echo "Done with $1"
