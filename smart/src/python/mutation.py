@@ -6,6 +6,7 @@ import subprocess
 import shutil
 import time
 import threading
+import uuid
 from concurrent.futures import ProcessPoolExecutor
 
 ebmc_unsupport_list = []
@@ -332,10 +333,10 @@ def write_assertion_file(input_file, output_file, assertions):
 def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     time_start = time.time()   
     try:
-        thread_id = threading.get_ident()  # get thread id
+        unique_id = uuid.uuid4() 
         
-        sby_file = os.path.join(os.getcwd(), f"dis_{thread_id}.sby")
-
+        sby_file = os.path.join(os.getcwd(), f"dis_{unique_id}.sby")
+    
         dir_name = os.path.dirname(verilog_file)         
         
         file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))
@@ -459,7 +460,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
         ]
         for future in futures:
             thread_result += future.result()
-    print("The result is: ",thread_result)
+    # print("The result is: ",thread_result)
 
     for result in thread_result:
         filename = result.keys()

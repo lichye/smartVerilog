@@ -1,25 +1,28 @@
+There is 12 variables
+The variables are
+N1 N2 N22 N11 N16 N7 N3 N6 N19 N10 N23 c17
 
-Smart Time: 11.68168830871582
-Pre analysis Time: 0.023735523223876953
-We found 10 assertions
-(N16 || N2)
-(! (N16 == (N2 && N23)))
-(N11 || (! N23))
-(N11 || N3)
+Smart Time: 10.629713773727417
+Overall Time: 10.655606508255005
+Pre analysis Time: 0.025629043579101562
+We found 9 assertions
 (N1 || N10)
-(N10 || N3)
-(! (N19 == (N23 && N7)))
-(N19 || N23)
-(N23 || (! (N10 == N22)))
+(N1 || (! (N16 == N22)))
 (! (N11 && (N19 == N7)))
+(N11 || N6)
+(N2 == (N2 && (N11 == N23)))
+(N19 || N23)
+(N10 || N3)
+(N3 || (N2 == N22))
+(N16 || N2)
 
-FM Checker Total Calls: 45
-FM Checker Total Time: 11.134482 seconds
-CVC5 Total Calls: 20
-CVC5 Total Time: 2.166797 seconds
+FM Checker Total Calls: 46
+FM Checker Total Time: 10.067051 seconds
+CVC5 Total Calls: 23
+CVC5 Total Time: 2.8898029999999997 seconds
 
-Found mutations: 5
-UnFound mutations: 1
+Found mutations: 6
+UnFound mutations: 0
 Timeout mutations: 0
 Total mutations(Without timeout file): 6
-Coverage percentage: 83.33333333333334
+Coverage percentage: 100.0

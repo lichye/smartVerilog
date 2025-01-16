@@ -1,3 +1,0 @@
-There is 8 variables
-The variables are
-req1 state gnt2 req2 clk arb2 gnt1 rst

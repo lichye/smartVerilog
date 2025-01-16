@@ -1,6 +1,6 @@
-Simulation time: 10.282829523086548
-Compile time: 13.341083765029907
-Setup time: 25.172842264175415
+Simulation time: 11.221672534942627
+Compile time: 11.634686708450317
+Setup time: 23.19977569580078
 --------------------------------------
 Run with variables: Init_0.txt
 Run Smart Loop 0
@@ -12,7 +12,7 @@ Smart Loop 2 is successful
 
 Run with variables: Init_10.txt
 Run Smart Loop 2
-Smart Loop 3 is failure
+Smart Loop 3 is successful
 
 Run with variables: Init_11.txt
 Run Smart Loop 3
