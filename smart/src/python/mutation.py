@@ -411,7 +411,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
         return_result.append({verilog_file:"error"})
 
     time_end = time.time()
-    print("Finish evaluate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+    print("Finish mutate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
     return return_result
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
