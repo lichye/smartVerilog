@@ -4,6 +4,8 @@ import sys
 import re
 import time
 import subprocess
+import threading
+from concurrent.futures import ProcessPoolExecutor
 #this is the list that ebmc does not support
 
 ebmc_unsupport_list = ["c432","c499","c880","c1355","c2670","c3540","c6288","c7552","s298","s344","s349",
@@ -58,6 +60,90 @@ def write_assertion_file(input_file, output_file, assertions):
     except IOError as e:
         print(f"Erorr: {e}")
 
+def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
+    time_start = time.time()   
+    try:
+        thread_id = threading.get_ident()  # get thread id
+        
+        sby_file = os.path.join(os.getcwd(), f"dis_{thread_id}.sby")
+
+        dir_name = os.path.dirname(verilog_file)         
+        
+        file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))
+
+        new_file_name = f"{file_base}_assertion{file_ext}"
+
+        new_file_path = os.path.join(dir_name, new_file_name)
+
+        write_assertion_file(verilog_file,new_file_path,properties)
+
+        return_result = []
+
+        try:
+            with open(sby_file, "w") as sby_run_file:
+                sby_run_file.write("[tasks]\n")
+                sby_run_file.write("task bmc_check files\n")
+                sby_run_file.write("\n")
+                sby_run_file.write("[options]\n")
+                sby_run_file.write("bmc_check:\n")
+                sby_run_file.write("mode bmc\n")
+                sby_run_file.write("depth 3\n")
+                sby_run_file.write("timeout 30\n")
+                sby_run_file.write("vcd_sim on\n")
+                sby_run_file.write("\n")
+                sby_run_file.write("[engines]\n")
+                sby_run_file.write("bmc_check:\n")
+                sby_run_file.write("smtbmc --unroll --nopresat cvc5\n")
+                sby_run_file.write("\n")
+                sby_run_file.write("[script]\n")
+                sby_run_file.write("files:\n")
+                sby_run_file.write("read -sv "+new_file_path+"\n")
+                for file in verilog_related_files:
+                    sby_run_file.write("read -sv "+file+"\n")
+                # file.write("prep -top "+)
+                sby_run_file.write("prep -top "+top_module+"\n")
+                
+
+            cmd = ["timeout","30","sby","-f",sby_file,"task"]
+            # print("cmd: ",cmd)
+            # cmd = [sby_path,"-f",sby_file,"task"]
+            
+            cmd2 = ["timeout","30","ebmc",new_file_path,"--bound","10","--top",top_module]
+
+            # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
+
+            result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+            
+            if top_module in ebmc_unsupport_list:
+                if(result.returncode != 0):
+                    if(result.returncode ==124):
+                        return_result.append({verilog_file:"timeout"})
+                    else:
+                        return_result.append({verilog_file:"error"})
+                else:
+                    return_result.append({verilog_file:"verified"})
+            else:
+                result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+                # print("the return code is: ",result.returncode)                     
+                if(result.returncode != 0 or result2.returncode != 0):
+                    if(result.returncode ==124 or result2.returncode == 124):
+                        return_result.append({verilog_file:"timeout"})
+                    else:
+                        return_result.append({verilog_file:"error"})
+                else:
+                    return_result.append({verilog_file:"verified"})
+
+        except Exception as e:
+            print(f"Failed to create .sby file: {e}")
+            return_result.append({verilog_file:"error"})
+
+    except Exception as e:
+        print(f"Failed to run sby on {verilog_file}: {e}")
+        return_result.append({verilog_file:"error"})
+
+    time_end = time.time()
+    print("Finish evaluate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+    return return_result
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     """
@@ -96,97 +182,24 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     print(f"Found {len(verilog_files)} Verilog files. Starting to process...")
 
     error_files = []  # List to track files with errors
+    thread_result = []
+    with ProcessPoolExecutor() as executor:
+        futures = [
+            executor.submit(run_fm_on_verilog_file, verilog_file, properties, verilog_related_files)
+            for verilog_file in verilog_files
+        ]
+        for future in futures:
+            thread_result += future.result()
+        print("Finish parallel processing")
+    # print("The result is: ",thread_result)
 
-    cnt = 0
-    percentage = 0
-    total_files = len(verilog_files)
-
-    for verilog_file in verilog_files:
-        # print(f"Running Formal Checker on: {verilog_file}")
-        time_start = time.time()
-            
-        try:
-            # Run sby command
-            # firstly we should build .sby file
-            sby_file = os.getcwd()+"/dis.sby"
-            # print("The verilog file is: ",verilog_file)
-
-            dir_name = os.path.dirname(verilog_file)         
-            
-            file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))
-
-            new_file_name = f"{file_base}_assertion{file_ext}"
-
-            new_file_path = os.path.join(dir_name, new_file_name)
-
-            write_assertion_file(verilog_file,new_file_path,properties)
-
-            try:
-                with open(sby_file, "w") as sby_run_file:
-                    sby_run_file.write("[tasks]\n")
-                    sby_run_file.write("task bmc_check files\n")
-                    sby_run_file.write("\n")
-                    sby_run_file.write("[options]\n")
-                    sby_run_file.write("bmc_check:\n")
-                    sby_run_file.write("mode bmc\n")
-                    sby_run_file.write("depth 10\n")
-                    sby_run_file.write("timeout 100\n")
-                    sby_run_file.write("vcd_sim on\n")
-                    sby_run_file.write("\n")
-                    sby_run_file.write("[engines]\n")
-                    sby_run_file.write("bmc_check:\n")
-                    sby_run_file.write("smtbmc --unroll --nopresat cvc5\n")
-                    sby_run_file.write("\n")
-                    sby_run_file.write("[script]\n")
-                    sby_run_file.write("files:\n")
-                    sby_run_file.write("read -sv "+new_file_path+"\n")
-                    for file in verilog_related_files:
-                        sby_run_file.write("read -sv "+file+"\n")
-                    # file.write("prep -top "+)
-                    sby_run_file.write("prep -top "+top_module+"\n")
-                    
-
-                cmd = ["timeout","30",sby_path,"-f",sby_file,"task"]
-                # print("cmd: ",cmd)
-                # cmd = [sby_path,"-f",sby_file,"task"]
-                
-                cmd2 = ["timeout","30","ebmc",new_file_path,"--bound","10","--top",top_module]
-
-                # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
-
-                result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-                
-                if top_module in ebmc_unsupport_list:
-                    if(result.returncode != 0):
-                        if(result.returncode ==124):
-                            timeout_list.append(verilog_file)
-                        else:
-                            error_files.append(verilog_file)
-                else:
-                    result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-                    # print("the return code is: ",result.returncode)                     
-                    if(result.returncode != 0 or result2.returncode != 0):
-                        if(result.returncode ==124 or result2.returncode == 124):
-                            timeout_list.append(verilog_file)
-                        else:
-                            error_files.append(verilog_file)
-                # else:
-                #     print("file: ",verilog_file," is verified")
-                # subprocess.run(["rm",new_file_path])
-
-            except Exception as e:
-                print(f"Failed to create .sby file: {e}")
-                error_files.append(verilog_file)
-                exit(1)
-
-        except Exception as e:
-            print(f"Failed to run sby on {verilog_file}: {e}")
-            error_files.append(verilog_file)
-            exit(1)
-        
-        cnt += 1
-        time_end = time.time()
-        print("Finish evaluate "+str(cnt)+"/"+str(total_files)+" time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+    for result in thread_result:
+        filename = result.keys()
+        value = result.values()
+        if list(value)[0] == "error":
+            error_files.append(list(filename)[0])
+        if list(value)[0] == "timeout":
+            timeout_list.append(list(filename)[0])
 
     return error_files
 
@@ -223,7 +236,9 @@ def read_file(file):
     return content
 
 def count_logfile():
-    with open('log.txt', 'r') as file:
+    
+    logfile = working_dir+"/log_"+top_module+".txt"
+    with open(logfile, 'r') as file:
         logfile_content = file.read()
     
     fm_checker_pattern = re.compile(r"FM checker are called (\d+) times")

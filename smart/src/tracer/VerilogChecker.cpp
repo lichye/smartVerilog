@@ -309,7 +309,7 @@ bool VerilogChecker::runSby() {
     sbyFile << "mode bmc" << std::endl;
     sbyFile << "depth " << 3 << std::endl;
     // sbyFile << "depth " << bound << std::endl;
-    sbyFile << "timeout 10000" << std::endl;
+    sbyFile << "timeout 30" << std::endl;
     sbyFile << "vcd_sim on"<<std::endl;
     // sbyFile << "append 10"<<std::endl;
     // sbyFile << "skip 5"<<std::endl;
