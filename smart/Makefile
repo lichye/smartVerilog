@@ -102,7 +102,6 @@ clean:
 	rm -rf result/*
 	rm -rf dis.sby
 	rm -rf dis_task
-	rm -rf log.txt
 	rm -rf result.txt
 	
 
