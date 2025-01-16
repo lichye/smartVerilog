@@ -29,6 +29,7 @@ cp "$src_benchmarks"/* "$DEST_DIR"
 cd smart
 mkdir user/
 python setup.py $1
+rm -rf *task
 python smart.py $1
 python evaluater.py $1
 cd ..
