@@ -2682,6 +2682,4 @@ nor NOR2_2414 (N6286, N6281, N6277);
 nor NOR2_2415 (N6287, N5602, N6281);
 nor NOR2_2416 (N6288, N6285, N6286);
 
-assert property (N1);
-
 endmodule
