@@ -236,9 +236,8 @@ def read_file(file):
     return content
 
 def count_logfile():
-    
-    logfile = working_dir+"/log_"+top_module+".txt"
-    with open(logfile, 'r') as file:
+
+    with open('log.txt', 'r') as file:
         logfile_content = file.read()
     
     fm_checker_pattern = re.compile(r"FM checker are called (\d+) times")
