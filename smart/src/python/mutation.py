@@ -331,11 +331,13 @@ def write_assertion_file(input_file, output_file, assertions):
         print(f"Erorr: {e}")
 
 def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
-    time_start = time.time()   
+    time_start = time.time()
+    unique_id = uuid.uuid4() 
+    sby_file = os.path.join(os.getcwd(), f"dis_{unique_id}.sby")
+    sby_result = os.path.join(os.getcwd(), f"dis_{unique_id}_task")
+
     try:
-        unique_id = uuid.uuid4() 
         
-        sby_file = os.path.join(os.getcwd(), f"dis_{unique_id}.sby")
     
         dir_name = os.path.dirname(verilog_file)         
         
@@ -410,7 +412,8 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     except Exception as e:
         print(f"Failed to run sby on {verilog_file}: {e}")
         return_result.append({verilog_file:"error"})
-
+    subprocess.run(["rm","-rf",sby_file])
+    subprocess.run(["rm","-rf",sby_result])
     time_end = time.time()
     print("Finish mutate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
     return return_result
@@ -550,7 +553,9 @@ if __name__ == "__main__":
 
     # Run ebmc on the generated mutants and remove error files
     # bad_files = []
-    bad_files = run_fm_on_verilog_files(output_dir,["1'b1"])
+    bad_files = set()
+    properties = ["1'b1"]
+    bad_files = run_fm_on_verilog_files(output_dir,properties)
     
     remove_files(bad_files)
 
