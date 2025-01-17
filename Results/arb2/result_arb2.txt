@@ -1,0 +1,24 @@
+There is 8 variables
+The variables are
+gnt1 clk req2 arb2 rst req1 gnt2 state
+
+Smart Time: 10.63221788406372
+Overall Time: 10.65819001197815
+Pre analysis Time: 0.025693178176879883
+We found 5 assertions
+(! (rst && state))
+(! (gnt2 && (req1 && rst)))
+(! (gnt1 && gnt2))
+(gnt2 || (! (req2 && state)))
+(gnt1 || (gnt2 == req2))
+
+FM Checker Total Calls: 43
+FM Checker Total Time: 9.880336 seconds
+CVC5 Total Calls: 33
+CVC5 Total Time: 6.231096000000001 seconds
+
+Found mutations: 31
+UnFound mutations: 0
+Timeout mutations: 0
+Total mutations(Without timeout file): 31
+Coverage percentage: 100.0
