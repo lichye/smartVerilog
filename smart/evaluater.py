@@ -89,7 +89,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
                 sby_run_file.write("bmc_check:\n")
                 sby_run_file.write("mode bmc\n")
                 sby_run_file.write("depth 3\n")
-                sby_run_file.write("timeout 60\n")
+                sby_run_file.write("timeout 120\n")
                 sby_run_file.write("vcd_sim on\n")
                 sby_run_file.write("\n")
                 sby_run_file.write("[engines]\n")
@@ -105,11 +105,11 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
                 sby_run_file.write("prep -top "+top_module+"\n")
                 
 
-            cmd = ["timeout","60","sby","-f",sby_file,"task"]
+            cmd = ["timeout","120","sby","-f",sby_file,"task"]
             # print("cmd: ",cmd)
             # cmd = [sby_path,"-f",sby_file,"task"]
             
-            cmd2 = ["timeout","60","ebmc",new_file_path,"--bound","10","--top",top_module]
+            cmd2 = ["timeout","120","ebmc",new_file_path,"--bound","10","--top",top_module]
 
             # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
