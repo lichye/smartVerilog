@@ -12,7 +12,7 @@ from concurrent.futures import ProcessPoolExecutor
 ebmc_unsupport_list = ["c432","c499","c880","c1355","c2670","c3540","c6288","c7552","s298","s344","s349",
                         "s382","s386","s400","s420","s444","s510","s641","s713","s832","s838","s953",
                         "s1196","s1238","s1432","s1488","s1494","s5378","s9234","s13207","s15850","s35932",
-                        "s38417","s38584"]
+                        "s38417","s38584","ibex_controller","ibex_decoder","ibex_id_stage","ibex_multdiv_slow"]
 timeout_list =[]
 
 
