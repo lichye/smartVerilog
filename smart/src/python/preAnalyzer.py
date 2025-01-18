@@ -187,13 +187,21 @@ if __name__ == "__main__":
         f.write(" ".join([f"{var}" for var in variables]))
         f.write("\n")
     
-    subset_size = 5
-    init_cnt = 0
-    subset_limit = len(variables)
+    
     
     variables = sorted(list(variables))
+    size_of_variables = len(variables)
+    if size_of_variables > 2500:
+        subset_size = math.ceil(math.log(size_of_variables))
+        smart_loop = 2500
+    else:
+        subset_size = 5
+        smart_loop = size_of_variables
+
+
+    init_cnt = 0
     # subsets = generate_combinations(variables, subset_size)
-    for i in range(0,subset_limit):
+    for i in range(0,smart_loop):
         subset = get_random_subset(variables, subset_size)
         write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
 
