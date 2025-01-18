@@ -468,10 +468,10 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
     for result in thread_result:
         filename = result.keys()
         value = result.values()
-        if value == 'error':
-            error_files.append(filename)
-        if value == 'timeout':
-            timeout_list.append(filename)
+        if list(value)[0] == "error":
+            error_files.append(list(filename)[0])
+        if list(value)[0] == "timeout":
+            timeout_list.append(list(filename)[0])
 
     return error_files
 

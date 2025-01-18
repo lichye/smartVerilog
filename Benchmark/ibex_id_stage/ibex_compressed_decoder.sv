@@ -8,7 +8,7 @@ module ibex_compressed_decoder (
 	output reg [31:0] instr_o;
 	output wire is_compressed_o;
 	output reg illegal_instr_o;
-	`include "ibex_pkg.v"
+	`include "ibex_pkg.sv"
 	always @(*) begin
 		illegal_instr_o = 1'b0;
 		instr_o = 1'bX;
