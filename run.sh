@@ -31,6 +31,8 @@ mkdir user/
 python setup.py $1
 rm -rf *task
 python smart.py $1
+rm -rf *.sby
+rm -rf *task
 python evaluater.py $1
 cd ..
 
