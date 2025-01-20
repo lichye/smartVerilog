@@ -140,6 +140,7 @@ def readFile(file_path):
         return []
 
 if __name__ == "__main__":
+    random.seed(42)
     if(len(sys.argv)!=5):
         print("Usage: python3 preAnalyzer.py <input_file> <top_module> <runtimeVariablesDir>")
         sys.exit(1)
