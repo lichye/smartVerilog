@@ -99,9 +99,10 @@ clean:
 	rm -rf runtime/cocotb/*
 	rm -rf runtime/formal/*
 	rm -rf runtime/smt_results/*
+	rm -rf runtime/variables/*
 	rm -rf result/*
-	rm -rf dis.sby
-	rm -rf dis_task
+	rm -rf *sby
+	rm -rf *task
 	rm -rf result.txt
 	
 
