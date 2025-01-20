@@ -359,7 +359,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
                 sby_run_file.write("[options]\n")
                 sby_run_file.write("bmc_check:\n")
                 sby_run_file.write("mode bmc\n")
-                sby_run_file.write("depth 10\n")
+                sby_run_file.write("depth 1\n")
                 sby_run_file.write("timeout 100\n")
                 sby_run_file.write("vcd_sim on\n")
                 sby_run_file.write("\n")

@@ -99,6 +99,13 @@ if __name__ == "__main__":
     all_work = len(os.listdir(runtimeVariablesDir))
     # Each init variable file is a different smart loop
     for filename in sorted(os.listdir(runtimeVariablesDir)):
+        now_time = time.time()
+        all_runtime = now_time - all_start_time
+
+        if(all_runtime > 24*3600):
+            print("Time out")
+            break
+
         time_start = time.time()
         #clean the removeVariables pipe
         subprocess.run(["rm","-rf",runtimeRemoveVariables])
