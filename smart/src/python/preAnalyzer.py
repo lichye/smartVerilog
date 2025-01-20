@@ -193,7 +193,7 @@ if __name__ == "__main__":
     variables = sorted(list(variables))
     size_of_variables = len(variables)
     if size_of_variables >= 1500:
-        subset_size = math.ceil(size_of_variables/100)
+        subset_size = math.ceil(size_of_variables/50)
         smart_loop = size_of_variables
     else:
         subset_size = 5
