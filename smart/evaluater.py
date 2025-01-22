@@ -185,7 +185,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
 
     error_files = []  # List to track files with errors
     thread_result = []
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=10) as executor:
         futures = [
             executor.submit(run_fm_on_verilog_file, verilog_file, properties, verilog_related_files)
             for verilog_file in verilog_files
