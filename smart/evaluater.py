@@ -26,31 +26,22 @@ def write_assertion_file(input_file, output_file, assertions):
         modified_content = []
 
         module_start_pattern = re.compile(r"^\s*module\s+\w+")
+        module_end_pattern = re.compile(r"^\s*endmodule")
         semicolon_pattern = re.compile(r";")
 
+        found_module = False
+        
         for i, line in enumerate(content):
-            # Check if the module declaration has been found
-            if not module_start_found and module_start_pattern.match(line):
-                module_start_found = True
-                modified_content.append(line)
-                continue
+            if top_module in line:
+                found_module = True
             
-            if module_start_found and not module_end_found:
-                modified_content.append(line)
-                if semicolon_pattern.search(line):  
-                    module_end_found = True
-                    for assertion in assertions:
+            if module_end_pattern.match(line) and found_module:
+                for assertion in assertions:
                         modified_content.append(f"    assert property ({assertion});\n")
-                continue
-            
-
+                found_module = False
+                
             modified_content.append(line)
-
-        if not module_start_found:
-            print(f"Warning: {input_file} does not contain a module declaration.")
-        elif not module_end_found:
-            print(f"Warining: {input_file} does not contain a module end declaration.")
-
+        
         with open(output_file, "w") as file:
             file.writelines(modified_content)
 
@@ -60,6 +51,7 @@ def write_assertion_file(input_file, output_file, assertions):
         print(f"Erorr: File '{input_file}' not found.")
     except IOError as e:
         print(f"Erorr: {e}")
+
 
 def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     time_start = time.time()
