@@ -365,7 +365,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
                 sby_run_file.write("\n")
                 sby_run_file.write("[engines]\n")
                 sby_run_file.write("bmc_check:\n")
-                sby_run_file.write("smtbmc --unroll --nopresat cvc5\n")
+                sby_run_file.write("smtbmc --unroll\n")
                 sby_run_file.write("\n")
                 sby_run_file.write("[script]\n")
                 sby_run_file.write("files:\n")
