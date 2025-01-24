@@ -43,7 +43,7 @@ if __name__ == "__main__":
     all_start_time = time.time()
     
     # parameters
-    assertion = 1000
+    assertion = 10000000
     removeVariables = False
 
     # Set up the file path
