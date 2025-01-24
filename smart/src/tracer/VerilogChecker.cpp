@@ -319,7 +319,7 @@ bool VerilogChecker::runSby() {
 
     sbyFile << "[engines]" << std::endl;
     sbyFile << "bmc_check:" << std::endl;
-    sbyFile << "smtbmc --unroll --nopresat cvc5"<<std::endl;
+    sbyFile << "smtbmc --unroll"<<std::endl;
     sbyFile << std::endl;
 
     sbyFile << "[script]" << std::endl;
