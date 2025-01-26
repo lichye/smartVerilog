@@ -194,8 +194,6 @@ if __name__ == "__main__":
     size_of_variables = len(variables)
     if size_of_variables >= 1500:
         subset_size = 10
-        if subset_size > 100:
-            subset_size = 100
         smart_loop = size_of_variables
     else:
         subset_size = 5
