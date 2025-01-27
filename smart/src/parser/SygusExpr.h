@@ -19,6 +19,14 @@ enum SygusOperatorType
     BOOLNOT = 10,
     BOOLOR = 11,
     BOOLAND = 12,
+    BVULT = 13,
+    BVULE = 14,
+    BVUGT = 15,
+    BVGUE = 16,
+    BVSLT = 17,
+    BVSLE = 18,
+    BVSGT = 19,
+    BVSGE = 20,
 };
 
 enum SygusExprType

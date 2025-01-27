@@ -125,13 +125,13 @@ class VerilogMutation:
                 "replacement": random.choice([y for y in self.relational_ops.keys() if y != op])
             })
 
-        self.mutations.append(
-            {
-                "category": "logical_negation",
-                "pattern": r"(?<![a-zA-Z_])\b(0|1)\b(?![a-zA-Z_'])",  
-                "replacement": lambda m: "1" if m.group(1) == "0" else "0"  # 0 → 1, 1 → 0
-            }
-        )
+        # self.mutations.append(
+        #     {
+        #         "category": "logical_negation",
+        #         "pattern": r"(?<![a-zA-Z_])\b(0|1)\b(?![a-zA-Z_'])",  
+        #         "replacement": lambda m: "1" if m.group(1) == "0" else "0"  # 0 → 1, 1 → 0
+        #     }
+        # )
 
         # variable_negation mutation
         self.mutations.append({
@@ -150,7 +150,7 @@ class VerilogMutation:
         # if negation mutation
         self.mutations.append({
             "category": "if_negation",
-            "pattern": r"if\s*\(\s*(csr_mfip_i\[\d+\])\s*\)",  # 匹配 if 条件中的数组元素
+            "pattern": r"if\s*\(\s*(csr_mfip_i\[\d+\])\s*\)",
             "replacement": lambda m: f"if (!{m.group(1)})"
         })
         

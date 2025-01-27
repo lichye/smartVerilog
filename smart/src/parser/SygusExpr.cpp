@@ -46,6 +46,30 @@ SygusOperatorType getOperatorType(std::string op)
     else if(op=="and"){
         return BOOLAND;
     }
+    else if(op=="bvult"){
+        return BVULT;
+    }
+    else if(op=="bvule"){
+        return BVULE;
+    }
+    else if(op=="bvugt"){
+        return BVUGT;
+    }
+    else if(op=="bvuge"){
+        return BVGUE;
+    }
+    else if(op=="bvslt"){
+        return BVSLT;
+    }
+    else if(op=="bvsle"){
+        return BVSLE;
+    }
+    else if(op=="bvsgt"){
+        return BVSGT;
+    }
+    else if(op=="bvsge"){
+        return BVSGE;
+    }
     else
         return UNKNOWOPERATOR;
 }
@@ -147,6 +171,22 @@ std::string SygusOperator::toString()
             return "||";
         case BOOLAND:
             return "&&";
+        case BVULT:
+            return "<";
+        case BVULE:
+            return "<=";
+        case BVUGT:
+            return ">";
+        case BVGUE:
+            return ">=";
+        case BVSLT:
+            return "s<";
+        case BVSLE:
+            return "s<=";
+        case BVSGT:
+            return "s>";
+        case BVSGE:
+            return "s>=";
         default:
             return "Unknown Operator";
     }
@@ -181,6 +221,22 @@ int SygusOperator::getOperandsNumber()
         case BOOLOR:
             return 2;
         case BOOLAND:
+            return 2;
+        case BVULT:
+            return 2;
+        case BVULE:
+            return 2;
+        case BVUGT:
+            return 2;
+        case BVGUE:
+            return 2;
+        case BVSLT:
+            return 2;
+        case BVSLE:
+            return 2;
+        case BVSGT:
+            return 2;
+        case BVSGE:
             return 2;
         default:
             throw std::invalid_argument("Unknown operator type: " + std::to_string(op));
