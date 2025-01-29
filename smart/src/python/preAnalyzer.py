@@ -193,7 +193,7 @@ if __name__ == "__main__":
     variables = sorted(list(variables))
     size_of_variables = len(variables)
     if size_of_variables >= 400:
-        subset_size = 15
+        subset_size = 20
         smart_loop = size_of_variables
     elif size_of_variables >10:
         subset_size = 5
