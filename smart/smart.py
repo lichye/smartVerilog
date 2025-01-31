@@ -186,5 +186,7 @@ if __name__ == "__main__":
         for assertion in verified_assertion:
             f.write(str(assertion)+"\n")
         f.write("\n")
-        
+    
+    
+    
     

@@ -197,10 +197,10 @@ if __name__ == "__main__":
         smart_loop = size_of_variables
     elif size_of_variables >10:
         subset_size = 5
-        smart_loop = size_of_variables
+        smart_loop = size_of_variables*2
     else:
         subset_size = 2
-        smart_loop = size_of_variables*2
+        smart_loop = 20
 
 
     init_cnt = 0

@@ -448,16 +448,6 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
         ]
         for future in futures:
             thread_result += future.result()
-    # print("The result is: ",thread_result)
-
-    for result in thread_result:
-        filename = result.keys()
-        value = result.values()
-        if list(value)[0] == "error":
-            error_files.append(list(filename)[0])
-        if list(value)[0] == "timeout":
-            timeout_list.append(list(filename)[0])
-
     return error_files
 
 def move_files(src_folder, dest_folder,delete_file):

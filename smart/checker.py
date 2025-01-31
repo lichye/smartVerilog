@@ -126,10 +126,12 @@ if __name__ == "__main__":
    
     working_dir = os.getcwd()
 
-    property_file = working_dir+"/result.txt"
+    property_file = working_dir+"/invariants.txt"
     
     properties = read_file(property_file)
 
-    runfile = working_dir+"/s9234.sv"
+    filename = "/"+top_module+".sv"
+
+    runfile = working_dir + filename
 
     run_fm_on_verilog_file(runfile,properties,[])
