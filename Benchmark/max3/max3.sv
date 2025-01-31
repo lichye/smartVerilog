@@ -1,10 +1,14 @@
 module max3(
-input [7:0] a,
-input [7:0] b,
-input [7:0] c,
-output [7:0] max_val
+  input  [7:0] a,
+  input  [7:0] b,
+  input  [7:0] c,
+  output [7:0] result
 );
-wire [7:0] ab_max;
-assign ab_max = (a >= b) ? a : b;
-assign max_val = (ab_max >= c) ? ab_max : c;
+  wire   [7:0] d;
+  // d = max(a, b)
+  assign d = (a>=b) ? a:b;
+  // result = max(d, c)
+  assign result = (d>=c) ? d:c;
+  
+
 endmodule
