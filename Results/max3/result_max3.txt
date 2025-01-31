@@ -1,0 +1,23 @@
+There is 5 variables
+The variables are
+c a b ab_max max_val
+
+Smart Time: 3.16606068611145
+Overall Time: 3.198667287826538
+Pre analysis Time: 0.03214454650878906
+We found 4 assertions
+(a <= max_val)
+(b <= ab_max)
+(ab_max <= max_val)
+(c <= max_val)
+
+FM Checker Total Calls: 11
+FM Checker Total Time: 2.798175 seconds
+CVC5 Total Calls: 5
+CVC5 Total Time: 0.287835 seconds
+
+Found mutations: 4
+UnFound mutations: 0
+Timeout mutations: 0
+Total mutations(Without timeout file): 4
+Coverage percentage: 100.0
