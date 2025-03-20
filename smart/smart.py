@@ -73,7 +73,10 @@ if __name__ == "__main__":
         exit(1)
 
     logfile = current_path+"/log_"+main_module+".txt"
+
     resultfile = current_path+"/result_"+main_module+".txt"
+
+    invariantsfile = current_path+"/invariants.txt"
     
     copy_sv_files(mverilog_path, runtimeFormalDir)
     #Pre analysis of the code
@@ -187,6 +190,11 @@ if __name__ == "__main__":
             f.write(str(assertion)+"\n")
         f.write("\n")
     
+    with open(invariantsfile,"a") as f:
+        for assertion in verified_assertion:
+            f.write(str(assertion)+"\n")
+        f.write("\n")
+    print("Finish all the work")
     
     
     

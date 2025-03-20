@@ -34,9 +34,12 @@ python smart.py $1
 rm -rf *.sby
 rm -rf *task
 python evaluater.py $1
+python checker.py $1
 cd ..
 
 mkdir $1
 mv smart/*.txt $1
+mv smart/*.sby $1
+mv smart/user/* $1
 
 echo "Done with $1"

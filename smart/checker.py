@@ -54,6 +54,7 @@ def write_assertion_file(input_file, output_file, assertions):
 
 
 def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
+    print("verilog_file: "+verilog_file)
     time_start = time.time()
     unique_id = uuid.uuid4() 
     sby_file = os.path.join(os.getcwd(), f"dis.sby")
@@ -67,6 +68,9 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
         new_file_name = f"{file_base}_assertion{file_ext}"
 
         new_file_path = os.path.join(dir_name, new_file_name)
+
+        print(f"verilog_file: {verilog_file}")
+        print(f"New file path: {new_file_path}")
 
         write_assertion_file(verilog_file,new_file_path,properties)
 
@@ -130,8 +134,6 @@ if __name__ == "__main__":
     
     properties = read_file(property_file)
 
-    filename = "/"+top_module+".sv"
+    verilogDir = working_dir+"/user/"+top_module+".sv"
 
-    runfile = working_dir + filename
-
-    run_fm_on_verilog_file(runfile,properties,[])
+    run_fm_on_verilog_file(verilogDir,properties,[])
