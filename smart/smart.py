@@ -39,6 +39,17 @@ def writeLog(file,content):
         f.write(content)
     f.close()
 
+def merge_txt_files(folder_path, output_file='invariants.txt'):
+    with open(output_file, 'w', encoding='utf-8') as out_file:
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.txt'):
+                file_path = os.path.join(folder_path, filename)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    out_file.write(content + '\n')
+    print(f"All .txt files in '{folder_path}' merged into '{output_file}'.")
+
+
 if __name__ == "__main__":
     all_start_time = time.time()
     
@@ -75,8 +86,6 @@ if __name__ == "__main__":
     logfile = current_path+"/log_"+main_module+".txt"
 
     resultfile = current_path+"/result_"+main_module+".txt"
-
-    invariantsfile = current_path+"/invariants.txt"
     
     copy_sv_files(mverilog_path, runtimeFormalDir)
     #Pre analysis of the code
@@ -189,11 +198,7 @@ if __name__ == "__main__":
         for assertion in verified_assertion:
             f.write(str(assertion)+"\n")
         f.write("\n")
-    
-    with open(invariantsfile,"a") as f:
-        for assertion in verified_assertion:
-            f.write(str(assertion)+"\n")
-        f.write("\n")
+    merge_txt_files(resultDir, "invariants.txt")
     print("Finish all the work")
     
     

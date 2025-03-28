@@ -230,9 +230,11 @@ def read_file(file):
     return content
 
 def count_logfile():
-
-    with open('log.txt', 'r') as file:
-        logfile_content = file.read()
+    try:
+        with open('log.txt', 'r') as file:
+            logfile_content = file.read()
+    except FileNotFoundError:
+        exit(1)
     
     fm_checker_pattern = re.compile(r"FM checker are called (\d+) times")
     fm_timer_pattern = re.compile(r"FM checker Timer: ([\d\.]+) seconds")
@@ -266,17 +268,17 @@ if __name__ == "__main__":
     else:
         top_module = sys.argv[1]
 
-    property_dir = "result"
+    property_dir = "invariants.txt"
     bound = 10
     ebmc_path = "ebmc"
     working_dir = os.getcwd()
     directory = working_dir+"/benchmarks"
     
     properties = []
-    property_files = get_result_files(property_dir)
-    for file in property_files:
-        read = read_file(file)
-        properties.append(read)
+    with open(property_dir, "r") as file:
+        properties = file.readlines()
+    properties = [prop.strip() for prop in properties]
+
     print("Properties: ",properties)
 
     find_files = set()
