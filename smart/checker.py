@@ -78,58 +78,25 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
         return_result = []
 
         try:
-            with open(sby_file, "w") as sby_run_file:
-                sby_run_file.write("[tasks]\n")
-                sby_run_file.write("task bmc_check files\n")
-                sby_run_file.write("\n")
-                sby_run_file.write("[options]\n")
-                sby_run_file.write("bmc_check:\n")
-                sby_run_file.write("mode bmc\n")
-                sby_run_file.write("depth 1\n")
-                sby_run_file.write("timeout 180\n")
-                sby_run_file.write("vcd_sim on\n")
-                sby_run_file.write("\n")
-                sby_run_file.write("[engines]\n")
-                sby_run_file.write("bmc_check:\n")
-                sby_run_file.write("smtbmc --unroll\n")
-                sby_run_file.write("\n")
-                sby_run_file.write("[script]\n")
-                sby_run_file.write("files:\n")
-                sby_run_file.write("read -sv "+new_file_path+"\n")
-                for file in verilog_related_files:
-                    sby_run_file.write("read -sv "+file+"\n")
-                # file.write("prep -top "+)
-                sby_run_file.write("prep -top "+top_module+"\n")
-                
-
-            cmd = ["timeout","180","sby","-f",sby_file,"task"]
+            # cmd = ["timeout","180","sby","-f",sby_file,"task"]
             # print("cmd: ",cmd)
             # cmd = [sby_path,"-f",sby_file,"task"]
             
-            cmd2 = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
+            ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
 
             # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
-            result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+            # result = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             
-            if top_module in ebmc_unsupport_list:
-                if(result.returncode != 0):
-                    if(result.returncode ==124):
-                        return_result.append({verilog_file:"timeout"})
-                    else:
-                        return_result.append({verilog_file:"error"})
+            ebmc_result = subprocess.run(ebmc_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+            # print("the return code is: ",result.returncode)                     
+            if(ebmc_result.returncode != 0):
+                if(ebmc_result.returncode == 124):
+                    return_result.append({verilog_file:"timeout"})
                 else:
-                    return_result.append({verilog_file:"verified"})
+                    return_result.append({verilog_file:"error"})
             else:
-                result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-                # print("the return code is: ",result.returncode)                     
-                if(result.returncode != 0 or result2.returncode != 0):
-                    if(result.returncode ==124 or result2.returncode == 124):
-                        return_result.append({verilog_file:"timeout"})
-                    else:
-                        return_result.append({verilog_file:"error"})
-                else:
-                    return_result.append({verilog_file:"verified"})
+                return_result.append({verilog_file:"verified"})
 
         except Exception as e:
             print(f"Failed to create .sby file: {e}")
@@ -141,7 +108,7 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
     # subprocess.run(["rm","-rf",sby_file])
     # subprocess.run(["rm","-rf",sby_result])
     time_end = time.time()
-    print("Finish evaluate time: "+str(time_end-time_start)+" on the file: "+verilog_file + "with sby file: "+sby_file)
+    print("Finish evaluate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
     return return_result
 
 if __name__ == "__main__":
@@ -155,7 +122,7 @@ if __name__ == "__main__":
    
     working_dir = os.getcwd()
 
-    property_file = working_dir+"/invariants.txt"
+    property_file = working_dir+"/assertions.txt"
     
     properties = read_file(property_file)
 
@@ -163,10 +130,18 @@ if __name__ == "__main__":
 
     verified_cnt = 0
     total_cnt = 0
+    verified_assertions = []
     for propert in properties:
         result = run_fm_on_verilog_file(verilogDir,propert,[])
         if(result[0][verilogDir] == "verified"):
             verified_cnt+=1
+            verified_assertions.append(propert)
         total_cnt+=1
     print("The total number of properties is: "+str(total_cnt))
     print("The number of verified properties is: "+str(verified_cnt))        
+
+    with open("invariants.txt","w") as file:
+        for assertion in verified_assertions:
+            file.write(assertion+"\n")
+    
+    print("The verified assertions are written to invariants.txt")

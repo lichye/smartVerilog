@@ -198,7 +198,7 @@ if __name__ == "__main__":
         for assertion in verified_assertion:
             f.write(str(assertion)+"\n")
         f.write("\n")
-    merge_txt_files(resultDir, "invariants.txt")
+    merge_txt_files(resultDir, "assertions.txt")
     print("Finish all the work")
     
     
