@@ -1,0 +1,4 @@
+(md_state_q[1] == 1 & md_state_q[0] == 1) ##1 (md_state_q[1] == 1) |-> (valid_o == 0)
+(md_state_q[0] == 0 & div_en_i == 1 & equal_to_zero == 0) |=> (valid_o == 0)
+(md_state_q[0] == 0 & equal_to_zero == 0 & mult_en_i == 1) |=> (valid_o == 0)
+(md_state_q[0] == 1) |-> (valid_o == 0)

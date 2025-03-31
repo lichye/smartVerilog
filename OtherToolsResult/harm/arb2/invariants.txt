@@ -1,0 +1,6 @@
+((!gnt2 && req1) |-> gnt1)
+(gnt1 |-> req1)
+((!req2 && req1) |-> gnt1)
+((!gnt1 && req2) |-> gnt2)
+(gnt2 |-> req2)
+((!req1 && req2) |-> gnt2)
