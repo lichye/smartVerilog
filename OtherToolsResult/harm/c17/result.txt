@@ -1,7 +1,0 @@
-always (!top::N22 |-> top::clk)
-always (!top::N2 |-> top::clk)
-always (!top::N23 |-> top::clk)
-always (!top::N1 |-> top::clk)
-always (!top::N6 |-> top::clk)
-always (!top::N3 |-> top::clk)
-always (!top::N7 |-> top::clk)
