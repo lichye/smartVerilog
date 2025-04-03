@@ -9,7 +9,7 @@ import threading
 import uuid
 from concurrent.futures import ProcessPoolExecutor
 
-ebmc_unsupport_list = []
+mutant_check_list = ["arb2","ibex_controller","ibex_decoder","ibex_id_stage","ibex_multdiv_slow"]
 
 verilog_keywords = [
     # Module and Ports
@@ -91,8 +91,8 @@ class VerilogMutation:
         self.arithmatic_ops = {"+": r"\+", "-": r"-", "*": r"\*", "/": r"/", "%": r"%"}
         self.relational_ops = {"==": r"==", "!=": r"!=", ">": r">", "<": r"<", ">=": r">=", "<=": r"<="}
         # • Verilog has 8 gate types that are primitive components: and, or, nand, nor, xor, xnor, not, buf
-        self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor","not","buf"}
-
+        # self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor","not","buf"}
+        self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor"}
         # gate mutation
         for op in self.gate_ops:
             self.mutations.append({
@@ -539,7 +539,9 @@ if __name__ == "__main__":
     # bad_files = []
     bad_files = set()
     properties = ["1'b1"]
-    bad_files = run_fm_on_verilog_files(output_dir,properties)
+
+    if top_module in mutant_check_list:
+        bad_files = run_fm_on_verilog_files(output_dir,properties)
     
     remove_files(bad_files)
 

@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
   // checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
-  checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
+  checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::EBMC);
   timer = new Timer();  
 
   checker->setTopModule(moduleName);

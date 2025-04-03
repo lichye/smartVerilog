@@ -75,8 +75,8 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
             # print("cmd: ",cmd)
             # cmd = [sby_path,"-f",sby_file,"task"]
             
-            ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
-
+            # ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
+            ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--k-induction","--top",top_module]
             # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
             # result = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
