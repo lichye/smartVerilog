@@ -181,7 +181,8 @@ void VerilogChecker::cleanProperties() {
 bool VerilogChecker::runEBMC(){
     std::string command = "";
     command += "ebmc "+formalFilePath;
-    command += " --bound "+std::to_string(bound);
+    // command += " --bound "+std::to_string(bound);
+    command += " --k-induction";
     if(topModule != "")
         command += " --top "+topModule;
     // command += " --vcd test.vcd";
@@ -194,7 +195,8 @@ bool VerilogChecker::runEBMC(){
 bool VerilogChecker::runEBMC(std::string tracePath){
     std::string command = "";
     command += "ebmc "+formalFilePath;
-    command += " --bound "+std::to_string(bound);
+    // command += " --bound "+std::to_string(bound);
+    command += " --k-induction";
     if(topModule != "")
         command += " --top "+topModule;
     command += " --vcd "+tracePath;
