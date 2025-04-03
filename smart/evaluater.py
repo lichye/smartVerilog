@@ -302,6 +302,10 @@ if __name__ == "__main__":
         print("UnFound mutations: ",len(unfind_file))
         print("UnFound mutations: ",unfind_file)
 
+    if(len(find_files) != 0):
+        print("Found mutations: ",len(find_files))
+        print("Found mutations: ",find_files)
+
     total_mutations = len(unfind_file)+len(find_files)
 
     print("Found mutations: ",len(find_files))
