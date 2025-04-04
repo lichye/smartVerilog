@@ -31,8 +31,8 @@ tar -xvzf oss-cad-suite-linux-x64-20230520.tgz
 source oss-cad-suite/environment
 
 #install ebmc
-wget https://github.com/diffblue/hw-cbmc/releases/download/ebmc-5.4/ebmc_5.4_amd64.deb
-sudo dpkg -i ebmc_5.4_amd64.deb
+wget https://github.com/diffblue/hw-cbmc/releases/download/ebmc-5.5/ebmc_5.5_amd64.deb
+sudo dpkg -i ebmc_5.5_amd64.deb
 
 # Install cvc5
 # git clone https://github.com/cvc5/cvc5.git
