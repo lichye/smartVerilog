@@ -529,10 +529,10 @@ if __name__ == "__main__":
     # Run ebmc on the generated mutants and remove error files
     # bad_files = []
     bad_files = set()
-    properties = ["1'b1"]
+    # properties = ["1'b1"]
 
-    if top_module in mutant_check_list:
-        bad_files = run_fm_on_verilog_files(output_dir,properties)
+    # if top_module in mutant_check_list:
+    #     bad_files = run_fm_on_verilog_files(output_dir,properties)
     
     remove_files(bad_files)
 

@@ -1466,7 +1466,5 @@ module ibex_id_stage (
 		endcase
 	end
 	assign instr_ret_compressed_o = (instr_ret_o & instr_is_compressed_i);
-
-	assert property ((illegal_insn_o == 1 & lsu_store_err_i == 0 & illegal_c_insn_i == 1 & instr_rdata_i[2] == 1) ##1 (illegal_c_insn_i == 1) |-> (instr_valid_clear_o == 1));
 endmodule
 
