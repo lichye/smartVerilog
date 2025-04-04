@@ -365,16 +365,16 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
             # print("cmd: ",cmd)
             # cmd = [sby_path,"-f",sby_file,"task"]
             
-            cmd2 = ["timeout","30","ebmc",new_file_path,"--bound","10","--top",top_module]
+            # cmd2 = ["timeout","30","ebmc",new_file_path,"--bound","10","--top",top_module]
 
             # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
             result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             
-            result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+            # result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             # print("the return code is: ",result.returncode)                     
-            if(result.returncode != 0 or result2.returncode != 0):
-                if(result.returncode ==124 or result2.returncode == 124):
+            if(result.returncode != 0):
+                if(result.returncode ==124):
                     return_result.append({verilog_file:"timeout"})
                 else:
                     return_result.append({verilog_file:"error"})
