@@ -371,24 +371,15 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
 
             result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             
-            if top_module in ebmc_unsupport_list:
-                if(result.returncode != 0):
-                    if(result.returncode ==124):
-                        return_result.append({verilog_file:"timeout"})
-                    else:
-                        return_result.append({verilog_file:"error"})
+            result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+            # print("the return code is: ",result.returncode)                     
+            if(result.returncode != 0 or result2.returncode != 0):
+                if(result.returncode ==124 or result2.returncode == 124):
+                    return_result.append({verilog_file:"timeout"})
                 else:
-                    return_result.append({verilog_file:"verified"})
+                    return_result.append({verilog_file:"error"})
             else:
-                result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-                # print("the return code is: ",result.returncode)                     
-                if(result.returncode != 0 or result2.returncode != 0):
-                    if(result.returncode ==124 or result2.returncode == 124):
-                        return_result.append({verilog_file:"timeout"})
-                    else:
-                        return_result.append({verilog_file:"error"})
-                else:
-                    return_result.append({verilog_file:"verified"})
+                return_result.append({verilog_file:"verified"})
 
         except Exception as e:
             print(f"Failed to create .sby file: {e}")

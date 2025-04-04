@@ -199,7 +199,7 @@ if __name__ == "__main__":
         subset_size = 5
         smart_loop = size_of_variables*2
     else:
-        subset_size = 2
+        subset_size = size_of_variables/2
         smart_loop = 20
 
 

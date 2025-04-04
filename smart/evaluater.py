@@ -286,7 +286,7 @@ if __name__ == "__main__":
     find_files = run_fm_on_verilog_files(directory,properties)
 
     # print("Found mutations: ",sorted(find_files))
-    sorted(find_files)
+    # sorted(find_files)
     # print("Found mutations: ",find_files)
 
     all_file = [
@@ -294,7 +294,7 @@ if __name__ == "__main__":
         for file in os.listdir(directory)
         if file.startswith("mutant_") and file.endswith(".sv") and not file.endswith("_assertion.sv")
     ]
-
+    
     unfind_file = set(all_file) - set(find_files) - set(timeout_list)
 
     sorted(unfind_file)
