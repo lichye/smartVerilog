@@ -219,6 +219,7 @@ bool VerilogChecker::checkStateReachability(State* state) {
     else if(solver==BackEndSolver::SBY) {
         result = runSby();
     }
+    deleteVerilogFile();
     return !result;
 }
 
@@ -249,6 +250,7 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
     
     //if the property is verified, then the state is safe
     printDebug("The safety result is: "+std::to_string(result),1);
+    deleteVerilogFile();
     return result;
 }
 
@@ -442,4 +444,14 @@ State* VerilogChecker::makeReachableState(std::vector<Value*> values){
 
 void VerilogChecker::setTimer(Timer* timer) {
     this->timer = timer;
+}
+
+void VerilogChecker::deleteVerilogFile(){
+    std::string command = "rm -rf "+formalFilePath;
+    int status = system(command.c_str());
+    if(status!=0) {
+        printError("Error: Unable to delete file "+formalFilePath+"\n");
+        exit(1);
+    }
+    printDebug("Deleted file "+formalFilePath,3);
 }

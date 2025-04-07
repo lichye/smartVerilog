@@ -81,6 +81,7 @@ class VerilogChecker {
         std::vector<Signal>* signals;
 
         void writeVerilogFile();
+        void deleteVerilogFile();
         bool runEBMC();
         bool runEBMC(std::string);
         bool runSby();
