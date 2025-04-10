@@ -13,8 +13,8 @@ yes | sudo apt-get install pip
 yes | sudo apt-get install python3-venv
 yes | sudo pip3 install pytest
 
-python3 -m venv ~/venv
-source ~/venv/bin/activate
+python3 -m venv otherTools/venv
+source otherTools/venv/bin/activate
 yes | pip install "cocotb==1.8.0"
 
 cd smart
