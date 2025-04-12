@@ -143,12 +143,12 @@ if __name__ == "__main__":
     print("The total number of properties is: "+str(total_cnt))
     print("The number of verified properties is: "+str(verified_cnt))     
 
-    if(len(verified_assertions) == 0):
-        print("No verified properties")
-    else:
-        print("The error properties are: ")
-        for assertion in error_assertions:
-            print(assertion)
+    # if(len(verified_assertions) == 0):
+    #     print("No verified properties")
+    # else:
+    #     print("The error properties are: ")
+    #     for assertion in error_assertions:
+    #         print(assertion)
 
     with open("invariants.txt","w") as file:
         for assertion in verified_assertions:
