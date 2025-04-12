@@ -124,14 +124,31 @@ if __name__ == "__main__":
     verified_cnt = 0
     total_cnt = 0
     verified_assertions = []
-    for propert in properties:
-        result = run_fm_on_verilog_file(verilogDir,propert,[])
-        if(result[0][verilogDir] == "verified"):
-            verified_cnt+=1
-            verified_assertions.append(propert)
-        total_cnt+=1
+    error_assertions = []
+
+    with ProcessPoolExecutor() as executor:
+        futures = []
+        for propert in properties:
+            future = executor.submit(run_fm_on_verilog_file,verilogDir,propert,[])
+            futures.append(future)
+
+        for future in futures:
+            result = future.result()
+            if(result[0][verilogDir] == "verified"):
+                verified_cnt+=1
+                verified_assertions.append(propert)
+            else:
+                error_assertions.append(propert)
+            total_cnt+=1
     print("The total number of properties is: "+str(total_cnt))
-    print("The number of verified properties is: "+str(verified_cnt))        
+    print("The number of verified properties is: "+str(verified_cnt))     
+
+    if(len(verified_assertions) == 0):
+        print("No verified properties")
+    else:
+        print("The error properties are: ")
+        for assertion in error_assertions:
+            print(assertion)
 
     with open("invariants.txt","w") as file:
         for assertion in verified_assertions:
