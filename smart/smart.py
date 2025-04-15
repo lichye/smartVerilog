@@ -176,7 +176,7 @@ if __name__ == "__main__":
         
         time_end = time.time()
         cnt += 1
-        print("Finish "+str(cnt)+"/"+str(all_work)+" smart run in "+str(time_end-time_start)+" seconds")
+        print("Finish "+str(cnt)+"/"+str(all_work)+" smart run in "+str(time_end-time_start)+" seconds with the Init variables: "+filename)
         print("The result is "+str(result))
 
 
