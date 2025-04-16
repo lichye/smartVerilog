@@ -93,6 +93,7 @@ class VerilogMutation:
         # • Verilog has 8 gate types that are primitive components: and, or, nand, nor, xor, xnor, not, buf
         # self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor","not","buf"}
         self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor"}
+        self.small_gate_ops = {"not", "buf","dff"}
         # gate mutation
         for op in self.gate_ops:
             self.mutations.append({
@@ -101,6 +102,13 @@ class VerilogMutation:
                 "replacement": random.choice([y for y in self.gate_ops if y != op])
             })
         
+        for op in self.small_gate_ops:
+            self.mutations.append({
+                "category": "small_gate",
+                "pattern": rf"\b{op}\b",
+                "replacement": lambda m: f"// MUTANT: removed {m.group(0)}"
+            })
+
         # bitwise mutation
         for op, escaped_op in self.bitwise_ops.items():
             self.mutations.append({
