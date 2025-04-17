@@ -33,14 +33,10 @@ RUN apt-get update && \
     ln -sf python3 /usr/bin/python && \
     pip3 install pytest
 
-WORKDIR /workspace
-RUN apt-get install -y git
-RUN git clone https://github.com/lichye/smartVerilog.git
-
-WORKDIR /workspace/smartVerilog
-RUN mkdir -p /workspace/smartVerilog/smart/user/
-
 RUN pip install cocotb==1.8.0
+
+WORKDIR /workspace
+RUN date && git clone --branch develop https://github.com/lichye/smartVerilog.git
 
 WORKDIR /workspace/smartVerilog/otherTools
 RUN wget -nc https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2023-05-20/oss-cad-suite-linux-x64-20230520.tgz && \
@@ -54,7 +50,10 @@ unzip cvc5-Linux-x86_64-static.zip && \
 chmod +x cvc5-Linux-x86_64-static/bin/cvc5 && \
 mv cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin/
 
+
+
 WORKDIR /workspace/smartVerilog
+RUN mkdir -p /workspace/smartVerilog/smart/user/
 
 # run the command
 CMD ["bash"]
