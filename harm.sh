@@ -1,3 +1,4 @@
+# This works in harm
 if [ $# -lt 1 ]; then
     echo "Lack of arguments."
     echo "Usage: $0 <benchmark_name>"
@@ -31,27 +32,16 @@ cd ..
 
 mv smart/runtime/sim_results/sim1.vcd otherToolsResult/harm/$1/$1.vcd
 
-# docker run -it --rm \
-#   -v /home/magna/Desktop/smartVerilog/OtherToolsResult/harm:/smart \
-#   samger/harm
+cd otherToolsResult/harm
+bash run_harm.sh $1
+python getResult.py
+cd ..
+cd ..
+cp otherToolsResult/harm/assertions.txt smart/assertions.txt
+cd otherToolsResult/harm
+make clean
+cd ..
+cd ..
 
-# export PATH=$PATH:$(pwd)
-
-# cd ..
-# cd ..
-# cd smart
-
-# bash run.sh $1
-
-# exit
-
-# cd otherToolsResult/harm
-# python getResults.py
-
-# cd ..
-
-# cp otherToolsResult/harm/assertions.txt smart/assertions.txt
-
-# cd smart 
-# python checker.py $1
-  
+cd smart 
+python checker.py $1
