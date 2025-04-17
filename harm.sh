@@ -33,7 +33,7 @@ cd ..
 mv smart/runtime/sim_results/sim1.vcd otherToolsResult/harm/$1/$1.vcd
 
 cd otherToolsResult/harm
-bash run_harm.sh $1
+bash run.sh $1
 python getResult.py
 cd ..
 cd ..

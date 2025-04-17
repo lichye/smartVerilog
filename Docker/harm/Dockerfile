@@ -23,7 +23,8 @@ RUN mkdir build
 WORKDIR "/harm/build"
 RUN cmake -DCMAKE_BUILD_TYPE=Release ..
 RUN make -j16
-RUN make install
+
+ENV PATH="$PATH:/harm/build"
 
 RUN apt-get update && \
     apt-get install -y \
