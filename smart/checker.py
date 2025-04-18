@@ -146,11 +146,14 @@ if __name__ == "__main__":
     total_cnt = 0
     verified_assertions = []
     error_assertions = []
-
+    cnt = 0
+    properties_size = len(properties)
     with ProcessPoolExecutor() as executor:
         futures = []
         for propert in properties:
+            cnt+=1
             future = executor.submit(run_fm_on_verilog_file,verilogDir,propert,[])
+            print("Finish check "+str(cnt)+"/"+str(properties_size)+" properties")
             futures.append(future)
 
         for future in futures:
