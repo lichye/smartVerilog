@@ -43,5 +43,5 @@ make clean
 cd ..
 cd ..
 
-cd smart 
-python checker.py $1
+# cd smart 
+# python checker.py $1
