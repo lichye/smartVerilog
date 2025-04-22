@@ -71,7 +71,15 @@
         "typeinfo": "cpp",
         "strstream": "cpp",
         "typeindex": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "coroutine": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "span": "cpp",
+        "stop_token": "cpp",
+        "format": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
