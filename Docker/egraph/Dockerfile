@@ -16,6 +16,8 @@ RUN apt-get install -y git
 RUN date && git clone --branch develop https://github.com/lichye/smartVerilog.git
 
 WORKDIR /workspace/smartVerilog
+RUN git reset --hard
+RUN git pull
 RUN mkdir -p /workspace/smartVerilog/smart/user/
 
 RUN pip install cocotb==1.8.0
