@@ -13,7 +13,7 @@ RUN apt-get install cargo -y
 
 WORKDIR /workspace
 RUN apt-get install -y git
-RUN git clone --branch develop https://github.com/lichye/smartVerilog.git
+RUN date && git clone --branch develop https://github.com/lichye/smartVerilog.git
 
 WORKDIR /workspace/smartVerilog
 RUN mkdir -p /workspace/smartVerilog/smart/user/
@@ -32,7 +32,7 @@ RUN wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x8
     chmod +x cvc5-Linux-x86_64-static/bin/cvc5 && \
     mv cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin/
 
-RUN git clone https://github.com/guyguyguyguyguyguyguy/verilog_egraphs.git
+RUN date && git clone https://github.com/guyguyguyguyguyguyguy/verilog_egraphs.git
 
 RUN cd verilog_egraphs && \
     cd assert_egraph && \

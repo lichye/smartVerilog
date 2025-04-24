@@ -1,7 +1,7 @@
 import sys
 def countline(input_path, output_path):
     count = 0
-    with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:
+    with open(input_path, 'r') as infile:
         for line in infile:
             count= count + 1
     return count
