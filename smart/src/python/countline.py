@@ -1,5 +1,5 @@
 import sys
-def countline(input_path, output_path):
+def countline(input_path):
     count = 0
     with open(input_path, 'r') as infile:
         for line in infile:
