@@ -18,6 +18,8 @@ fi
 source otherTools/venv/bin/activate
 source otherTools/oss-cad-suite/environment
 
+rm -rf $1
+
 cd smart
 make all_clean
 cd ..

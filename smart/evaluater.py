@@ -313,7 +313,7 @@ if __name__ == "__main__":
     print("Timeout mutations: ",len(timeout_list))
     print("Total mutations: ",total_mutations+len(timeout_list))
     print("Total mutations(Without timeout file): ",total_mutations)
-    print("Coverage percentage: ",(len(find_files)/total_mutations)*100)
+    print("The mutation detection(MD) rate: ",(len(find_files)/total_mutations)*100)
     
     log_result = count_logfile()
 
@@ -327,4 +327,4 @@ if __name__ == "__main__":
         f.write("UnFound mutations: "+str(len(unfind_file))+"\n")
         f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
         f.write("Total mutations(Without timeout file): "+str(total_mutations)+"\n")
-        f.write("Coverage percentage: "+str((len(find_files)/total_mutations)*100)+"\n")
+        f.write("The mutation detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n")

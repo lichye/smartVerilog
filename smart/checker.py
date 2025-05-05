@@ -62,7 +62,9 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
         
         file_base, file_ext = os.path.splitext(os.path.basename(verilog_file))
 
-        new_file_name = f"{file_base}_assertion{file_ext}"
+        pid = os.getpid()
+
+        new_file_name = f"{file_base}_{pid}_assertion{file_ext}"
 
         new_file_path = os.path.join(dir_name, new_file_name)
 
@@ -85,11 +87,12 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
             # print("the return code is: ",result.returncode)                     
             if(ebmc_result.returncode != 0):
                 if(ebmc_result.returncode == 124):
-                    return_result.append({verilog_file:"timeout"})
+                    return_result.append({Tproperty,"timeout"})
                 else:
-                    return_result.append({verilog_file:"error"})
+                    return_result.append({Tproperty,"error"})
             else:
-                return_result.append({verilog_file:"verified"})
+                return_result.append({Tproperty,"verified"})
+                subprocess.run(["rm","-rf",new_file_path])
 
         except Exception as e:
             print(f"Failed to create .sby file: {e}")
@@ -101,8 +104,26 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
     # subprocess.run(["rm","-rf",sby_file])
     # subprocess.run(["rm","-rf",sby_result])
     time_end = time.time()
-    print("Finish evaluate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+    print("Finish check  property\t"+Tproperty+ "\t\tin time: "+str(time_end-time_start)+ "\tin the thread: "+str(pid))
     return return_result
+
+def extract_property_only(results):
+    ignore_tags = {'verified', 'error'}
+    
+    if isinstance(results, set):
+        return [item for item in results if item not in ignore_tags]
+    
+    elif isinstance(results, list):
+        extracted = []
+        for result in results:
+            props = [item for item in result if item not in ignore_tags]
+            if props:
+                extracted.append(props[0])
+        return extracted
+    
+    else:
+        raise TypeError("Unsupported input type for extract_property_only")
+
 
 if __name__ == "__main__":
     if(len(sys.argv) < 2):
@@ -124,17 +145,36 @@ if __name__ == "__main__":
     verified_cnt = 0
     total_cnt = 0
     verified_assertions = []
-    for propert in properties:
-        result = run_fm_on_verilog_file(verilogDir,propert,[])
-        if(result[0][verilogDir] == "verified"):
-            verified_cnt+=1
-            verified_assertions.append(propert)
-        total_cnt+=1
+    error_assertions = []
+    cnt = 0
+    properties_size = len(properties)
+    with ProcessPoolExecutor() as executor:
+        futures = []
+        for propert in properties:
+            cnt+=1
+            future = executor.submit(run_fm_on_verilog_file,verilogDir,propert,[])
+            print("Finish check "+str(cnt)+"/"+str(properties_size)+" properties")
+            futures.append(future)
+
+        for future in futures:
+            result = future.result()
+            if("verified" in result[0]):
+                verified_cnt+=1
+                verified_assertions.append(result[0])
+            total_cnt+=1
+    verified_assertions = extract_property_only(verified_assertions)
     print("The total number of properties is: "+str(total_cnt))
-    print("The number of verified properties is: "+str(verified_cnt))        
+    print("The number of verified properties is: "+str(verified_cnt))     
 
     with open("invariants.txt","w") as file:
         for assertion in verified_assertions:
             file.write(assertion+"\n")
     
     print("The verified assertions are written to invariants.txt")
+
+    resultfile = os.getcwd()+"/result_"+top_module+".txt"
+
+    with open(resultfile,"a") as f:
+        print("The number of verified properties is: "+str(verified_cnt))
+        print("The number of properties is: "+str(total_cnt))
+        f.write("The Verified correctness(VC) rate is: "+str(verified_cnt/total_cnt*100)+"\n")

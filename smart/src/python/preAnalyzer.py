@@ -139,6 +139,33 @@ def readFile(file_path):
         print(f"Error: File {file_path} not found.")
         return []
 
+def clean_verilog_input(verilog_code):
+    verilog_code = verilog_code.encode('utf-8').decode('utf-8-sig')
+    verilog_code = verilog_code.replace('\r\n', '\n')
+    verilog_code = verilog_code.replace('\t', '    ')
+    return verilog_code
+
+def extract_variables_from_file(verilog_code):
+    pattern = re.compile(r'(always\s*@\s*\([^\)]*\)\s*(?:.|\n)*?)(?=^\s*always\s*@|\Z)', re.IGNORECASE | re.MULTILINE)
+    verilog_code = clean_verilog_input(verilog_code)
+    matches = pattern.findall(verilog_code)
+    variables_list = list()
+    for always_block in matches:
+        varibales = extract_variables_from_block(always_block)
+        variables_list.append(varibales)
+    return variables_list
+
+def extract_variables_from_block(block):
+    assignments = re.findall(r'(\w+)\s*(<=|=)\s*[^;]+;', block)
+    vars_used = set()
+    for left_var, _ in assignments:
+        vars_used.add(left_var.strip())
+    right_vars = re.findall(r'(?:<=|=)\s*([^;]+);', block)
+    for expr in right_vars:
+        for token in re.findall(r'\b\w+\b', expr):
+            vars_used.add(token)
+    return vars_used
+
 if __name__ == "__main__":
     random.seed(42)
     if(len(sys.argv)!=5):
@@ -170,23 +197,16 @@ if __name__ == "__main__":
     for var in verilog_variables:
         if var in vcd_variables and var not in verilog_keywords:
             variables.add(var)
-    # vcd_variables = extract_variables(vcd_file)
-    # print("vcd_variables is "+str(vcd_variables))
-    # then we come to the a good variables sets
 
-    # print("The verilog variables are "+str(verilog_variables))
-    # print("\n")
-    # print("The vcd variables are "+str(vcd_variables))
-    # print("\n")
     print("The final variables are "+str(variables))
 
     resultfile = work_dir+"/result_"+top_module+".txt"
 
-    with open(resultfile, "a") as f:
-        f.write("There is "+str(len(variables))+" variables\n")
-        f.write("The variables are\n")
-        f.write(" ".join([f"{var}" for var in variables]))
-        f.write("\n")
+    # with open(resultfile, "a") as f:
+    #     f.write("There is "+str(len(variables))+" variables\n")
+    #     f.write("The variables are\n")
+    #     f.write(" ".join([f"{var}" for var in variables]))
+    #     f.write("\n")
     
     
     
@@ -209,6 +229,17 @@ if __name__ == "__main__":
         subset = get_random_subset(variables, subset_size)
         write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
 
+    # top_module_content
 
+    variables_list = extract_variables_from_file(top_module_content)
+    print("the always variables size is "+str(len(variables_list)))
+    for variables in variables_list:
+        write_varibles = set()
+        for var in variables:
+            if var in vcd_variables and var not in verilog_keywords:
+                write_varibles.add(var)
+        if len(write_varibles) > 0:
+            write_to_file(output_file+"always_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in write_varibles]))
+            init_cnt += 1
     
     

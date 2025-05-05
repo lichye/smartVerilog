@@ -199,6 +199,7 @@ int main(int argc, char* argv[]){
     print("Last assertion is verified\n");
     print("The property is "+sygusfunc->getBodyVerilogExpr());
     writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr(),std::ios::out);
+    writeStringToFile("SygusResult.sl",Cvc5result,std::ios::app);
     
     print("The property is written to "+resultFileDir);
   }
