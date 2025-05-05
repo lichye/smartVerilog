@@ -1,5 +1,5 @@
 # Structual introduction:
-smartVerilog/:
+smartVerilog:
 - smart: this contains the source code
 - Benchmark: this contains benchmark test suits
 - Docker: this contains the Dockerfile to install smart/harm
@@ -10,14 +10,18 @@ smartVerilog/:
 # Expriment:
 All this experiment can be carried under smartVerilog/ directory clone from the repository.
 
-## Install way-1 in clean ubuntu:
-    
+## Install 
+Firstly, git clone this repository.
+
+way-1 in clean ubuntu:
+
     bash install.sh
 
-## Install way-2 in Docker
+way-2 in Docker(Preferred):
+    
     cd Docker
 
-    docker build -t smart .
+    docker build -t smart --no-cache .
 
     docker run -it --rm smart
 
@@ -44,7 +48,7 @@ Inside the file the content would be:
     We found 14 assertions:
     ......
     *Important information in the paper:*
-    Verified correctness(VC) rate is : 100.0
+    The Verified correctness(VC) rate is : 100.0
     The mutation detection(MD) rate is : 100.0
 
 ## clean repository:
@@ -56,21 +60,25 @@ Inside the file the content would be:
 ## Install in Docker
 
     cd Docker/egraph
-    docker build -t harm .
+    docker build -t --no-cache harm .
     docker run -it --rm harm
 
 ## Run Benchmark
+
     bash harm.sh [Benchmark_name]
 
     example:
     
     bash harm.sh c17
 
-# the resource requirements:
+# The resource requirements:
 ## SMART
 RAM: 16GB Core: 4+
+
 ## HARM
 RAM: 32GB Core: 8+
+
 ## Expriment time cost:
 From 1min to 1.5day for different cases.
+
 To run all the benchmark needs totally 10days for smart and 5days for HARM.
