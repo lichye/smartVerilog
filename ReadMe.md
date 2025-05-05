@@ -11,9 +11,7 @@ smartVerilog:
 All this experiment can be carried under smartVerilog/ directory clone from the repository.
 
 ## Install 
-Firstly, git clone this repository.
-
-    git clone [address]
+Firstly, download the file and go the main directory smartVerilog/
 
 way-1 in clean ubuntu:
 
@@ -30,6 +28,7 @@ way-2 in Docker(Preferred):
 ## Run Benchmark under smartVerilog directory:
 
     bash run.sh [Benchmark_name]
+    cd 
 
 
 example:
