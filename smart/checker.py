@@ -171,3 +171,10 @@ if __name__ == "__main__":
             file.write(assertion+"\n")
     
     print("The verified assertions are written to invariants.txt")
+
+    resultfile = os.getcwd()+"/result_"+top_module+".txt"
+
+    with open(resultfile,"a") as f:
+        print("The number of verified properties is: "+str(verified_cnt))
+        print("The number of properties is: "+str(total_cnt))
+        f.write("The Verified correctness(VC) rate is: "+str(verified_cnt/total_cnt*100)+"\n")
