@@ -28,8 +28,6 @@ way-2 in Docker(Preferred):
 ## Run Benchmark under smartVerilog directory:
 
     bash run.sh [Benchmark_name]
-    cd 
-
 
 example:
     
