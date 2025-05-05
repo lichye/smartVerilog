@@ -8,20 +8,19 @@ smartVerilog:
 - harm.sh: the shell to run harm
 
 # Expriment:
-All this experiment can be carried under smartVerilog/ directory clone from the repository.
+All this experiment can be carried under smartVerilog/ directory.
 
 ## Install 
-Firstly, download the file use "Download Repository" and go the main directory smartVerilog-1A12/
 
-way-1 in clean ubuntu:
+Firstly, download the file use "Download Repository" and go the main directory smartVerilog-1A12/.
+
+way-1 in clean ubuntu(harm is NOT supported):
 
     bash install.sh
 
 way-2 in Docker(Preferred):
     
-    cd Docker
-
-    docker build -t smart --no-cache .
+    docker pull smart 
 
     docker run -it --rm smart
 
