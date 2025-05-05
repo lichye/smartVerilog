@@ -202,11 +202,11 @@ if __name__ == "__main__":
 
     resultfile = work_dir+"/result_"+top_module+".txt"
 
-    with open(resultfile, "a") as f:
-        f.write("There is "+str(len(variables))+" variables\n")
-        f.write("The variables are\n")
-        f.write(" ".join([f"{var}" for var in variables]))
-        f.write("\n")
+    # with open(resultfile, "a") as f:
+    #     f.write("There is "+str(len(variables))+" variables\n")
+    #     f.write("The variables are\n")
+    #     f.write(" ".join([f"{var}" for var in variables]))
+    #     f.write("\n")
     
     
     
