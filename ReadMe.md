@@ -11,19 +11,24 @@ smartVerilog/:
 All this experiment can be carried under smartVerilog/ directory clone from the repository.
 
 ## Install way-1 in clean ubuntu:
-bash install.sh
+    
+    bash install.sh
 
 ## Install way-2 in Docker
-cd Docker
-docker build -t smart .
-docker run -it --rm smart
+    cd Docker
+
+    docker build -t smart .
+
+    docker run -it --rm smart
 
 ## Run Benchmark under smartVerilog directory:
-bash run.sh [Benchmark_name]
+
+    bash run.sh [Benchmark_name]
 
 
 example:
-bash run.sh c17
+    
+    bash run.sh c17
 
 When you see "Done with c17" means the expriment is done for c17.
 
@@ -43,20 +48,23 @@ Inside the file the content would be:
     The mutation detection(MD) rate is : 100.0
 
 ## clean repository:
-bash clean.sh
+    
+    bash clean.sh
 
 # Related Work(HARM):
 
 ## Install in Docker
-cd Docker/egraph
-docker build -t harm .
-docker run -it --rm harm
+
+    cd Docker/egraph
+    docker build -t harm .
+    docker run -it --rm harm
 
 ## Run Benchmark
-bash harm.sh [Benchmark_name]
+    bash harm.sh [Benchmark_name]
 
-example:
-bash harm.sh c17
+    example:
+    
+    bash harm.sh c17
 
 # the resource requirements:
 ## SMART
