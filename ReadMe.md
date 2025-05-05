@@ -11,7 +11,7 @@ smartVerilog:
 All this experiment can be carried under smartVerilog/ directory clone from the repository.
 
 ## Install 
-Firstly, download the file and go the main directory smartVerilog/
+Firstly, download the file use "Download Repository" and go the main directory smartVerilog-1A12/
 
 way-1 in clean ubuntu:
 
