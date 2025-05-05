@@ -13,6 +13,8 @@ All this experiment can be carried under smartVerilog/ directory clone from the 
 ## Install 
 Firstly, git clone this repository.
 
+    git clone [address]
+
 way-1 in clean ubuntu:
 
     bash install.sh
