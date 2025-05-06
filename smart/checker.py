@@ -163,8 +163,8 @@ if __name__ == "__main__":
                 verified_assertions.append(result[0])
             total_cnt+=1
     verified_assertions = extract_property_only(verified_assertions)
-    print("The total number of properties is: "+str(total_cnt))
-    print("The number of verified properties is: "+str(verified_cnt))     
+    print("The total number of assertions is: "+str(total_cnt))
+    print("The number of verified assertions is: "+str(verified_cnt))     
 
     with open("invariants.txt","w") as file:
         for assertion in verified_assertions:
@@ -175,6 +175,6 @@ if __name__ == "__main__":
     resultfile = os.getcwd()+"/result_"+top_module+".txt"
 
     with open(resultfile,"a") as f:
-        print("The number of verified properties is: "+str(verified_cnt))
-        print("The number of properties is: "+str(total_cnt))
+        f.write("The number of verified assertions is: "+str(verified_cnt)+"\n")
+        f.write("The number of assertions is: "+str(total_cnt)+"\n")
         f.write("The Verified correctness(VC) rate is: "+str(verified_cnt/total_cnt*100)+"\n")

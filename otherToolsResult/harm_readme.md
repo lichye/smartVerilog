@@ -3,7 +3,7 @@ docker pull samger/harm
 
 # run the docker image
 docker run -it --rm \
-  -v /home/magna/Desktop/smartVerilog/otherToolsResult/harm:/smart \
+  -v /home/magna/smartVerilog/otherToolsResult/harm:/smart \
   samger/harm
 
 # make harm into the path

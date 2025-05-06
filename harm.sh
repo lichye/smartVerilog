@@ -13,7 +13,7 @@ else
     exit 1
 fi
 
-source ~/venv/bin/activate
+source otherTools/venv/bin/activate
 source otherTools/oss-cad-suite/environment
 
 cd smart
