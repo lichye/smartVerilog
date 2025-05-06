@@ -13,23 +13,21 @@ smartVerilog:
 # Expriment:
 All this experiment can be carried under smartVerilog/ directory.
 
-## Install  in clean ubuntu(harm/goldminer is NOT supported):
+## Install  in clean ubuntu(related work is NOT supported):
 Download the zip file and unzip whole
     bash install.sh
 
-way-2 in Docker(Preferred):
-    
-### Download the docker images from dockerhub.
+## Install in Docker(Preferred):
+If you have no experience of Docker, then it might good to read
 
-    docker pull smart 
+### 1. Install Docker 
+### 2. Download the docker images from dockerhub.
 
-### Run the docker image in container.
+    docker pull magna2024/smart 
+
+### 3. Run the docker image in container.
 
     docker run -it --rm smart
-
-### After above cmdline, we will under the working directory:
-
-    :/workspace/smartVerilog
 
 ## Run Benchmark under smartVerilog directory:
 
