@@ -14,15 +14,22 @@ All this experiment can be carried under smartVerilog/ directory.
 
 Firstly, download the file use "Download Repository" and go the main directory smartVerilog-1A12/.
 
-way-1 in clean ubuntu(harm is NOT supported):
+way-1 in clean ubuntu(harm/goldminer is NOT supported):
 
     bash install.sh
 
 way-2 in Docker(Preferred):
     
+1. Download the docker images from dockerhub.
+
     docker pull smart 
 
+2. Run the docker image in container.
+
     docker run -it --rm smart
+
+3. After above cmdline, we will under the working directory:
+    :/workspace/smartVerilog
 
 ## Run Benchmark under smartVerilog directory:
 
@@ -49,25 +56,10 @@ Inside the file the content would be:
     The Verified correctness(VC) rate is : 100.0
     The mutation detection(MD) rate is : 100.0
 
-## clean repository:
-    
-    bash clean.sh
-
-# Related Work(HARM):
-
-## Install in Docker
-
-    cd Docker/egraph
-    docker build -t --no-cache harm .
-    docker run -it --rm harm
-
-## Run Benchmark
-
+## Run other tools or egraph checker:
     bash harm.sh [Benchmark_name]
-
-    example:
-    
-    bash harm.sh c17
+    bash goldmine.sh [Benchmark_name]
+    bash egraph.sh [Benchmark_name]
 
 # The resource requirements:
 ## SMART

@@ -18,13 +18,13 @@ async def my_first_test(dut):
     """Test a design without clock signals."""
     random.seed(42)
 
-    clock = Clock(dut.clk, 2, units="ns")  # Create a 10ns period clock on port clk
+    clock = Clock(dut.CK, 2, units="ns")  # Create a 10ns period clock on port clk
     cocotb.start_soon(clock.start())  # Start the clock
-    await RisingEdge(dut.clk)
+    await RisingEdge(dut.CK)
 
     # Simulate 10 cycles (or steps) without clock
     for cycle in range(10000):
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.CK)
         dut.N1.value = random.randint(0, 1)
         dut.N5.value = random.randint(0, 1)
         dut.N9.value = random.randint(0, 1)

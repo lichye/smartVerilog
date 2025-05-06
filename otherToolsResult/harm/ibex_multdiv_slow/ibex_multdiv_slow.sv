@@ -1,5 +1,5 @@
 module ibex_multdiv_slow (
-	clk,
+	CK,
 	rst_ni,
 	mult_en_i,
 	div_en_i,
@@ -22,7 +22,7 @@ module ibex_multdiv_slow (
 	localparam [2:0] MD_LAST = 4;
 	localparam [2:0] MD_CHANGE_SIGN = 5;
 	localparam [2:0] MD_FINISH = 6;
-	input wire clk;
+	input wire CK;
 	input wire rst_ni;
 	input wire mult_en_i;
 	input wire div_en_i;
@@ -114,7 +114,7 @@ module ibex_multdiv_slow (
 	assign multdiv_state_m1 = (multdiv_state_q - 5'h1);
 	assign div_change_sign = (sign_a ^ sign_b);
 	assign rem_change_sign = sign_a;
-	always @(posedge clk or negedge rst_ni) begin : proc_multdiv_state_q
+	always @(posedge CK or negedge rst_ni) begin : proc_multdiv_state_q
 		if (!rst_ni) begin
 			multdiv_state_q <= 5'h0;
 			accum_window_q <= 33'h0;

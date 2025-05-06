@@ -38,7 +38,7 @@ module ibex_decoder (
 	data_sign_extension_o,
 	jump_in_dec_o,
 	branch_in_dec_o,
-	clk
+	CK
 );
 	parameter RV32E = 0;
 	parameter RV32M = 1;
@@ -52,7 +52,7 @@ module ibex_decoder (
 	input wire instr_new_i;
 	input wire [31:0] instr_rdata_i;
 	input wire illegal_c_insn_i;
-	input wire clk;
+	input wire CK;
 	output reg imm_a_mux_sel_o;
 	output reg [2:0] imm_b_mux_sel_o;
 	output wire [31:0] imm_i_type_o;
