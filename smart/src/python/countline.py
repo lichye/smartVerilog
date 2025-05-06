@@ -15,4 +15,4 @@ if __name__ == "__main__":
         input_file = sys.argv[1]
     # Example usage
     number = countline(input_file)
-    print("Number of lines in the file:", number)
+    print("After egraph checking, the number of assertions is:", number)
