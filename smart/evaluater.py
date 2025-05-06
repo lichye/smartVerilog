@@ -321,6 +321,7 @@ if __name__ == "__main__":
     resultfile = current_path+"/result_"+top_module+".txt"
 
     with open(resultfile,"a") as f:
+        print("Try to write to resultfile "+resultfile)
         f.write(log_result)
         f.write("\n")
         f.write("Found mutations: "+str(len(find_files))+"\n")
