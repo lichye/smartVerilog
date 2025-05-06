@@ -313,18 +313,19 @@ if __name__ == "__main__":
     print("Timeout mutations: ",len(timeout_list))
     print("Total mutations: ",total_mutations+len(timeout_list))
     print("Total mutations(Without timeout file): ",total_mutations)
-    print("The mutation detection(MD) rate: ",(len(find_files)/total_mutations)*100)
+    print("The Mutation Detection(MD) rate: ",(len(find_files)/total_mutations)*100)
     
-    log_result = count_logfile()
+    # log_result = count_logfile()
 
     resultfile = os.getcwd()+"/result_"+top_module+".txt"
 
+    print("The result file is: ",resultfile)
+
     with open(resultfile,"a") as f:
-        print("Try to write to resultfile "+resultfile)
-        f.write(log_result)
+        # f.write(log_result)
         f.write("\n")
         f.write("Found mutations: "+str(len(find_files))+"\n")
         f.write("UnFound mutations: "+str(len(unfind_file))+"\n")
         f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
         f.write("Total mutations(Without timeout file): "+str(total_mutations)+"\n")
-        f.write("The mutation detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n")
+        f.write("The Mutation Detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n")
