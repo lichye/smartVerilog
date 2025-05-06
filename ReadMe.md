@@ -1,6 +1,9 @@
 # Structual introduction:
 smartVerilog:
 - smart: this contains the source code
+- - smart.py: this is the file control the workflow of smart. **Important in paper
+- - checker.py: this is the file make the evaluation of correctness. **Important in paper
+- - evaluater.py: this is the file make the evaluation of mutataion detect rate. **Important in paper
 - Benchmark: this contains benchmark test suits
 - Docker: this contains the Dockerfile to install smart/harm
 - install.sh: this contains the cmdline to install smart
@@ -20,15 +23,16 @@ way-1 in clean ubuntu(harm/goldminer is NOT supported):
 
 way-2 in Docker(Preferred):
     
-1. Download the docker images from dockerhub.
+### Download the docker images from dockerhub.
 
     docker pull smart 
 
-2. Run the docker image in container.
+### Run the docker image in container.
 
     docker run -it --rm smart
 
-3. After above cmdline, we will under the working directory:
+### After above cmdline, we will under the working directory:
+
     :/workspace/smartVerilog
 
 ## Run Benchmark under smartVerilog directory:
