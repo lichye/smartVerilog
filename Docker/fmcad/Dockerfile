@@ -37,7 +37,7 @@ RUN apt-get update && \
 RUN pip install cocotb==1.8.0
 
 WORKDIR /workspace
-RUN date && git clone --branch develop https://github.com/lichye/smartVerilog.git
+RUN date && git clone https://github.com/lichye/smartVerilog.git
 
 WORKDIR /workspace/smartVerilog/otherTools
 RUN wget -nc https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2023-05-20/oss-cad-suite-linux-x64-20230520.tgz && \
