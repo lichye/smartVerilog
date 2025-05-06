@@ -47,3 +47,8 @@ cd smart
 python checker.py $1
 python evaluater.py $1
 
+mkdir $1
+mv smart/*.txt $1
+mv smart/user/* $1
+
+echo "Done with $1"

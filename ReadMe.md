@@ -13,12 +13,8 @@ smartVerilog:
 # Expriment:
 All this experiment can be carried under smartVerilog/ directory.
 
-## Install 
-
-Firstly, download the file use "Download Repository" and go the main directory smartVerilog-1A12/.
-
-way-1 in clean ubuntu(harm/goldminer is NOT supported):
-
+## Install  in clean ubuntu(harm/goldminer is NOT supported):
+Download the zip file and unzip whole
     bash install.sh
 
 way-2 in Docker(Preferred):
