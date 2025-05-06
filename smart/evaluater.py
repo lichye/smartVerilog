@@ -317,8 +317,7 @@ if __name__ == "__main__":
     
     log_result = count_logfile()
 
-    current_path = os.getcwd()
-    resultfile = current_path+"/result_"+top_module+".txt"
+    resultfile = os.getcwd()+"/result_"+top_module+".txt"
 
     with open(resultfile,"a") as f:
         print("Try to write to resultfile "+resultfile)
