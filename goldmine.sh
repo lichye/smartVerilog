@@ -1,3 +1,4 @@
+bash clean.sh
 # Check $1 is the name of the file
 if [ $# -lt 1 ]; then
     echo "Lack of arguments."
@@ -38,6 +39,4 @@ python evaluater.py $1
 cd ..
 mkdir $1
 mv smart/*.txt $1
-
-bash clean.sh
 echo "Done with $1"
