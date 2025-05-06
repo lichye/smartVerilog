@@ -17,15 +17,15 @@ from pathlib import Path
 async def my_first_test(dut):
     random.seed(42)
     """Try accessing the design."""
-    clock = Clock(dut.clk, 2, units="ns")  # Create a 10ns period clock on port clk
+    clock = Clock(dut.CK, 2, units="ns")  # Create a 10ns period clock on port clk
     cocotb.start_soon(clock.start())  # Start the clock
-    await RisingEdge(dut.clk)
+    await RisingEdge(dut.CK)
     
     dut.rst.value = 1
 
     for cycle in range(100000):
         #clk rising edge
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.CK)
         dut.req1.value = random.randint(0,1)
         dut.req2.value = random.randint(0,1)
         dut.rst.value = 0

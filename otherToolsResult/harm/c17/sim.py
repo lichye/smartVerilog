@@ -19,14 +19,14 @@ async def my_first_test(dut):
     random.seed(42)
 
     # Set up the clock
-    clock = Clock(dut.clk, 10, units="ns")
+    clock = Clock(dut.CK, 10, units="ns")
     cocotb.start_soon(clock.start())
-    await RisingEdge(dut.clk)
+    await RisingEdge(dut.CK)
 
     # Simulate 10 cycles (or steps) without clock
     for cycle in range(10):
 
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.CK)
         # input N1,N2,N3,N6,N7;
         dut.N1.value = random.randint(0, 1)
         dut.N2.value = random.randint(0, 1)

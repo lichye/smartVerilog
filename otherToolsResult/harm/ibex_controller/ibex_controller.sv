@@ -1,5 +1,5 @@
 module ibex_controller (
-	clk,
+	CK,
 	rst_ni,
 	fetch_enable_i,
 	ctrl_busy_o,
@@ -67,7 +67,7 @@ module ibex_controller (
 	localparam [3:0] IRQ_TAKEN = 7;
 	localparam [3:0] DBG_TAKEN_IF = 8;
 	localparam [3:0] DBG_TAKEN_ID = 9;
-	input wire clk;
+	input wire CK;
 	input wire rst_ni;
 	input wire fetch_enable_i;
 	output reg ctrl_busy_o;
@@ -161,7 +161,7 @@ module ibex_controller (
 	/* 
 	NO $display allowed in Verilog code that will go thorugh GM static
 	analysis
-	always @(negedge clk)
+	always @(negedge CK)
 		if (((((ctrl_fsm_cs == DECODE) && instr_valid_i) && !instr_fetch_err_i) && illegal_insn_d))
 			$display("%t: Illegal instruction (hart %0x) at PC 0x%h: 0x%h", $time, ibex_core.hart_id_i, ibex_id_stage.pc_id_i, ibex_id_stage.instr_rdata_i);
 	*/
@@ -432,7 +432,7 @@ module ibex_controller (
 	assign stall = (((stall_lsu_i | stall_multdiv_i) | stall_jump_i) | stall_branch_i);
 	assign id_in_ready_o = (~stall & ~halt_if);
 	assign instr_valid_clear_o = (~(stall | halt_if) | flush_id);
-	always @(posedge clk or negedge rst_ni) begin : update_regs
+	always @(posedge CK or negedge rst_ni) begin : update_regs
 		if (!rst_ni) begin
 			ctrl_fsm_cs <= RESET;
 			nmi_mode_q <= 1'b0;
