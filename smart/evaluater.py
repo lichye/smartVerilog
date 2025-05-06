@@ -281,6 +281,15 @@ if __name__ == "__main__":
 
     print("Properties: ",properties)
 
+    if(len(properties) == 0):
+        print("The properties file is empty!")
+        print("The Mutation Detection(MD) rate: ",0)
+        resultfile = os.getcwd()+"/result_"+top_module+".txt"
+        with open(resultfile,"a") as f:
+            f.write("The Mutation Detection(MD) rate: 0\n")
+
+        exit(1)
+    
     find_files = set()
     # find_files.update(run_ebmc_on_verilog_files(directory,properties,bound,ebmc_path))
     find_files = run_fm_on_verilog_files(directory,properties)
@@ -318,9 +327,6 @@ if __name__ == "__main__":
     # log_result = count_logfile()
 
     resultfile = os.getcwd()+"/result_"+top_module+".txt"
-
-    print("The result file is: ",resultfile)
-
     with open(resultfile,"a") as f:
         # f.write(log_result)
         f.write("\n")
