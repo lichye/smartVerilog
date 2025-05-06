@@ -14,11 +14,12 @@ smartVerilog:
 All this experiment can be carried under smartVerilog/ directory.
 
 ## Install  in clean ubuntu(related work is NOT supported):
-Download the zip file and unzip whole
+Download the zip file and unzip the whole file, then run the command line below smartVerilog/.
+
     bash install.sh
 
 ## Install in Docker(Preferred):
-If you have no experience of Docker, then it might good to read
+If you have no experience of Docker, then it might good to read DockerUsage.md. It explain what below command line's meanings.
 
 ### 1. Install Docker 
 ### 2. Download the docker images from dockerhub.
