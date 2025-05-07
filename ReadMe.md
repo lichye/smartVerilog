@@ -22,11 +22,13 @@ Download the zip file and unzip the whole file, then run the command line below 
 If you have no experience of Docker, then it might good to read DockerUsage.md. It explain what below command line's meanings.
 
 ### 1. Install Docker 
-### 2. Download the docker images from dockerhub.
+### 2. Download the docker images from dockerhub. 
+You might need sudo to do this if you do not set up docker well.
 
     docker pull magna2024/smart 
 
 ### 3. Run the docker image in container.
+You might need sudo to do this if you do not set up docker well.
 
     docker run -it --rm magna2024/smart
 
