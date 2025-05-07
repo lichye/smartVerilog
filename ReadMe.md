@@ -40,9 +40,12 @@ example:
 
 When you see "Done with c17" means the expriment is done for c17.
 
-The results will go to the [Benchmark_name] directory: with name result_[Benchmark_name].txt
+The results will go to the [Benchmark_name] directory: with name result_[Benchmark_name].txt 
+To read thie file, you could use command line "less".
 
-example: c17/result_c17.txt
+example: 
+
+    less c17/result_c17.txt
 
 Inside the file the content would be:
 
