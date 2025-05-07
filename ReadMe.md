@@ -30,7 +30,8 @@ If you have no experience of Docker, then it might good to read DockerUsage.md. 
 
     docker run -it --rm magna2024/smart
 
-## Run Benchmark under smartVerilog directory:
+## Run SMART on benchmarks
+[Benchmark_name] is the name in the paper. It can also be checked in Benchmark/ directory.
 
     bash run.sh [Benchmark_name]
 
