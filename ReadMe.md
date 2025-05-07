@@ -28,7 +28,7 @@ If you have no experience of Docker, then it might good to read DockerUsage.md. 
 
 ### 3. Run the docker image in container.
 
-    docker run -it --rm smart
+    docker run -it --rm magna2024/smart
 
 ## Run Benchmark under smartVerilog directory:
 
