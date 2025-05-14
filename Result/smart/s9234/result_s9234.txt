@@ -1,0 +1,14 @@
+
+Smart Time: 10679.38865017891
+Overall Time: 10680.422466754913
+Pre analysis Time: 1.0333220958709717
+We found 1881 assertions
+The number of verified assertions is: 1882
+The number of assertions is: 1882
+The Verified correctness(VC) rate is: 100.0
+
+Found mutations: 2919
+UnFound mutations: 2890
+Timeout mutations: 3
+Total mutations(Without timeout file): 5809
+The Mutation Detection(MD) rate: 50.24961266999484
