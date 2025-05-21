@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
   resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
   smt_path = currentDir + "/runtime/smt_results/"+core_id;
-
+  std::string sygusPath = "runtime/smt_results/sygus"+core_id+".sl";
   fs::create_directory(smt_path);
   // initVariables = currentDir + "/runtime/variables/initVariables.txt";
 
@@ -127,14 +127,14 @@ int main(int argc, char* argv[]){
 
   print("\tFinish generating random state");
 
-  sygus->printSysgusPath("sygus.sl");
+  sygus->printSysgusPath(sygusPath);
   print("\tFinish generating sygus file");
 
   timer->start(CVC5_Timer);
   std::string Cvc5result;
   SygusFunction* sygusfunc; 
   try{
-    Cvc5result = sygus->runCVC5Sygus("sygus.sl");
+    Cvc5result = sygus->runCVC5Sygus(sygusPath);
     timer->stop(CVC5_Timer);
     sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
   }
@@ -168,11 +168,11 @@ int main(int argc, char* argv[]){
     // print("\tFinish getting constraints from SMT trace: "+c.tracePath);
     sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
-    sygus->printSysgusPath("sygus.sl");
+    sygus->printSysgusPath(sygusPath);
     print("\tFinish generating sygus file");
 
     try{
-      Cvc5result = sygus->runCVC5Sygus("sygus.sl");
+      Cvc5result = sygus->runCVC5Sygus(sygusPath);
       timer->stop(CVC5_Timer);
       sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
     }

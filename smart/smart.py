@@ -106,7 +106,7 @@ if __name__ == "__main__":
     cnt = 0
 
     all_work = len(os.listdir(runtimeVariablesDir))
-    verified_assertion = []
+    verified_assertion = set()
     result_files = []
     futures = []
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         
         done_set = set()
         while len(done_set) < len(futures):
-            time.sleep(1)
+            time.sleep(10)
             done_now = [f for f in futures if f.done() and f not in done_set]
             done_set.update(done_now)
             print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} tasks")
@@ -142,13 +142,20 @@ if __name__ == "__main__":
                 if os.path.exists(file_to_delete):
                     os.remove(file_to_delete)
                     print(f"Deleted {file_to_delete} (result={result})")
-            # else:
+            else:
+                with open(result_files[i], "r") as f:
+                    new_assertion = f.read()
+
+                if new_assertion not in verified_assertion:
+                    verified_assertion.add(new_assertion)
+                    assertion_founded += 1
                 # print(f"Kept {result_files[i]} (result={result})")
         except Exception as e:
+            print(f"Exception occurred: {e}")
             file_to_delete = result_files[i]
             if os.path.exists(file_to_delete):
                 os.remove(file_to_delete)
-                print(f"Deleted {file_to_delete} due to exception")
+                # print(f"Deleted {file_to_delete} due to exception")
 
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time
@@ -158,7 +165,7 @@ if __name__ == "__main__":
 
     print("Smart Time: ", smart_time)
     print("Overall Time: ", all_time)
-    print("all Assertion: ", verified_assertion)
+    print("all Assertion: ", len(verified_assertion))
     with open(resultfile,"a") as f:
         f.write("\n")
         f.write("Smart Time: "+str(smart_time)+"\n")
