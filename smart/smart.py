@@ -18,9 +18,9 @@ def copy_sv_files(original_path, target_path):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
 
-def smart(current_path, top_module,result_file,init_variables):
+def smart(current_path, top_module,result_file,init_variables,core_id):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
-    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables]
+    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id]
     # print("Run cmd: ", cmd)
     # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -63,6 +63,7 @@ if __name__ == "__main__":
     runtimeVariablesDir = current_path+"/runtime/variables/"
     runtimeFormalDir = current_path+"/runtime/formal/"
     runtimeVerilogDir = current_path+"/runtime/verilog/"
+    runtimeSmtDir = current_path+"/runtime/smt_results/"
     initVariables = current_path+"/runtime/variables/initVariables.txt"
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -119,7 +120,7 @@ if __name__ == "__main__":
         for filename in sorted(os.listdir(runtimeVariablesDir)):
             smart_loop += 1
             result_file = os.path.join(resultDir, "result_"+str(smart_loop)+".txt")
-            future = executor.submit(smart, current_path, main_module, result_file, os.path.join(runtimeVariablesDir, filename))
+            future = executor.submit(smart, current_path, main_module, result_file, os.path.join(runtimeVariablesDir, filename), str(smart_loop))
             futures.append(future)
             result_files.append(result_file)
         

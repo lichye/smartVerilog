@@ -50,7 +50,7 @@ int main(int argc, char* argv[]){
   // print("Smart Verilog 0.1");
   int timeOut = 0;
 
-  if(argc!=5){
+  if(argc!=6){
     print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id>\n");
     return -1;
   }
@@ -59,14 +59,14 @@ int main(int argc, char* argv[]){
     moduleName = argv[2];
     resultFileDir = argv[3];
     initVariables = argv[4];
-    // core_id = argv[5];
+    core_id = argv[5];
   }
 
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
   resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
-  // smt_path = currentDir + "/runtime/smt_results/"+core_id;
+  smt_path = currentDir + "/runtime/smt_results/"+core_id;
 
-  // fs::create_directory(smt_path);
+  fs::create_directory(smt_path);
   // initVariables = currentDir + "/runtime/variables/initVariables.txt";
 
   StateMaker::setSeed(42);
@@ -141,6 +141,7 @@ int main(int argc, char* argv[]){
   catch(const std::exception& e){
     timer->stop(CVC5_Timer);
     writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
+    fs::remove_all(smt_path);
     return -1;
   }
  
@@ -178,6 +179,7 @@ int main(int argc, char* argv[]){
     catch(const std::exception& e){
       timer->stop(CVC5_Timer);
       writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
+      fs::remove_all(smt_path);
       return -1;
     }
     
@@ -199,11 +201,12 @@ int main(int argc, char* argv[]){
   }
   else{
     print("All assertion is not verified\n");
+    fs::remove(smt_path);
     return -1;
   }
   writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
   
-  // fs::remove_all(smt_path);
+  fs::remove_all(smt_path);
   return 0;
 }
 
