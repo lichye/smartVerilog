@@ -7,6 +7,7 @@ import time
 import glob
 import subprocess
 import threading
+from concurrent.futures import ProcessPoolExecutor
 
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
@@ -18,10 +19,12 @@ def copy_sv_files(original_path, target_path):
                 exit(1)
 
 def smart(current_path, top_module,result_file,init_variables):
+    # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
     cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables]
     # print("Run cmd: ", cmd)
-    # result = subprocess.run(cmd)
+    # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # print("Result: ", result)
     return result.returncode
 
 def preAnalysis(work_dir,file_path,top_module,output_file):
@@ -99,20 +102,52 @@ if __name__ == "__main__":
         exit(0)
     
     smart_start_time = time.time()
-    
-    verified_assertion = []
-
     cnt = 0
+
     all_work = len(os.listdir(runtimeVariablesDir))
+    verified_assertion = []
+    result_files = []
+    futures = []
 
 
     # start new process from the pool
     with ProcessPoolExecutor() as executor:
         # all works
         smart_loop = 0
+
+        # send works to different executors
         for filename in sorted(os.listdir(runtimeVariablesDir)):
             smart_loop += 1
-            future = executor.submit(smart, current_path, main_module, resultDir+"/result_"+str(smart_loop)+".txt", os.path.join(runtimeVariablesDir, filename))
+            result_file = os.path.join(resultDir, "result_"+str(smart_loop)+".txt")
+            future = executor.submit(smart, current_path, main_module, result_file, os.path.join(runtimeVariablesDir, filename))
+            futures.append(future)
+            result_files.append(result_file)
+        
+        done_set = set()
+        while len(done_set) < len(futures):
+            time.sleep(1)
+            done_now = [f for f in futures if f.done() and f not in done_set]
+            done_set.update(done_now)
+            print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} tasks")
+
+
+    # After all result back, delete the files
+    for i, future in enumerate(futures):
+        try:
+            result = future.result()
+            # print("Result: ", result)
+            if result != 0:
+                file_to_delete = result_files[i]
+                if os.path.exists(file_to_delete):
+                    os.remove(file_to_delete)
+                    print(f"Deleted {file_to_delete} (result={result})")
+            # else:
+                # print(f"Kept {result_files[i]} (result={result})")
+        except Exception as e:
+            file_to_delete = result_files[i]
+            if os.path.exists(file_to_delete):
+                os.remove(file_to_delete)
+                print(f"Deleted {file_to_delete} due to exception")
 
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time

@@ -39,6 +39,7 @@ std::string resultRemoveVariablesPath = "";
 std::string generateSMTResultPath();
 std::string initVariables = "";
 std::string currentDir = "";
+std::string core_id = "0";
 
 bool writeStringToFile(const std::string&, const std::string&,std::ios::openmode);
 
@@ -46,10 +47,11 @@ void modifySignals(std::string,int mode);
 void intersectionSignals(std::string);
 
 int main(int argc, char* argv[]){
+  // print("Smart Verilog 0.1");
   int timeOut = 0;
 
   if(argc!=5){
-    print("Usage: ./smart <currentDir> <topmodule> <result_file_dir>\n");
+    print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id>\n");
     return -1;
   }
   else{
@@ -57,10 +59,14 @@ int main(int argc, char* argv[]){
     moduleName = argv[2];
     resultFileDir = argv[3];
     initVariables = argv[4];
+    // core_id = argv[5];
   }
 
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
   resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
+  // smt_path = currentDir + "/runtime/smt_results/"+core_id;
+
+  // fs::create_directory(smt_path);
   // initVariables = currentDir + "/runtime/variables/initVariables.txt";
 
   StateMaker::setSeed(42);
@@ -82,7 +88,7 @@ int main(int argc, char* argv[]){
 
   // we first get all the signals from the module
   signals = module->getAllSignals();
-  modifySignals(resultRemoveVariablesPath,0);
+
   modifySignals(initVariables,1);
 
   print("Remaining signals:");
@@ -109,19 +115,7 @@ int main(int argc, char* argv[]){
   State* randomState = stateMaker->makeRandomState();
   int loopTime = 0;
 
-  // for(int i=0;i<5;i++){
-  //   bool reachable = checker->checkStateReachability(randomState);
-  //   if(reachable){
-  //     sygus->addConstraints(randomState,true);
-  //   }
-  //   else{
-  //     sygus->addConstraints(randomState,false);
-  //   }
-  // }
   while(checker->checkStateReachability(randomState)){
-    // print("\tGenerating random state in "+std::to_string(loopTime)+" time");
-    // print("\t The state is: "+randomState->toString());
-    
     sygus->addConstrainComments("Getting constraints from the random state",true);
     randomState = stateMaker->makeRandomState();
     if(loopTime++>3){
@@ -208,6 +202,8 @@ int main(int argc, char* argv[]){
     return -1;
   }
   writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
+  
+  // fs::remove_all(smt_path);
   return 0;
 }
 
