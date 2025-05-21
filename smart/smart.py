@@ -50,6 +50,7 @@ def merge_txt_files(folder_path, output_file='invariants.txt'):
 
 
 if __name__ == "__main__":
+    print("Start running smart core")
     all_start_time = time.time()
     
     # parameters
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
         f.write("We found "+str(len(verified_assertion))+" assertions\n")
     merge_txt_files(resultDir, "assertions.txt")
-    print("Finish all the work")
+    print("Finish running smart core")
     
     
     

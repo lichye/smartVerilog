@@ -198,7 +198,8 @@ if __name__ == "__main__":
         if var in vcd_variables and var not in verilog_keywords:
             variables.add(var)
 
-    print("The final variables are "+str(variables))
+    print("Filtered variabls size is "+str(len(variables)))
+    # print("The final variables are "+str(variables))
 
     resultfile = work_dir+"/result_"+top_module+".txt"
 
