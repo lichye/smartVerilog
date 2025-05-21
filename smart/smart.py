@@ -5,6 +5,8 @@ import subprocess
 import shutil
 import time
 import glob
+import subprocess
+import threading
 
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
@@ -21,12 +23,6 @@ def smart(current_path, top_module,result_file,init_variables):
     # result = subprocess.run(cmd)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return result.returncode
-
-def resultAnalysis(resultDir,runtimeRemoveVariables):
-    print("Result Analysis")
-    cmd = ["python", "src/python/resultAnalyzer.py", resultDir, runtimeRemoveVariables]
-    print("Run cmd: ", cmd)
-    subprocess.run(cmd)
 
 def preAnalysis(work_dir,file_path,top_module,output_file):
     cmd = ["python", "src/python/preAnalyzer.py",work_dir,file_path, top_module, output_file]
@@ -64,7 +60,6 @@ if __name__ == "__main__":
     runtimeVariablesDir = current_path+"/runtime/variables/"
     runtimeFormalDir = current_path+"/runtime/formal/"
     runtimeVerilogDir = current_path+"/runtime/verilog/"
-    runtimeRemoveVariables = current_path+"/runtime/variables/removeVariables.txt"
     initVariables = current_path+"/runtime/variables/initVariables.txt"
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -109,76 +104,15 @@ if __name__ == "__main__":
 
     cnt = 0
     all_work = len(os.listdir(runtimeVariablesDir))
-    # Each init variable file is a different smart loop
-    for filename in sorted(os.listdir(runtimeVariablesDir)):
-        now_time = time.time()
-        all_runtime = now_time - all_start_time
 
-        if(all_runtime > 24*3600):
-            print("Time out")
-            break
 
-        time_start = time.time()
-        #clean the removeVariables pipe
-        subprocess.run(["rm","-rf",runtimeRemoveVariables])
-        subprocess.run(["touch",runtimeRemoveVariables])
-
-        # /home/magna/smartVerilog/smart/runtime/smt_results
-        smt_results = os.path.join(os.getcwd(), "runtime/smt_results", "*.vcd")
-        for file in glob.glob(smt_results):
-            os.remove(file)
-        
-        writeLog(logfile,"Run with variables: "+filename+"\n")
-        writeLog(logfile,"Run Smart Loop "+str(loop_count)+"\n")
-        loop_count += 1
-
-        result_file = resultDir+"/result"+str(assertion_founded)+".txt"
-        init_variables = os.path.join(runtimeVariablesDir, filename)
-        result = smart(current_path, main_module,result_file,init_variables)
-
-        if result == 0:
-            writeLog(logfile, "Smart Loop " + str(loop_count)+" is successful\n\n")
-            smart_sucess += 1
-            with open(result_file, "r") as f:
-                new_assertion = f.read()
-
-            if new_assertion not in verified_assertion:
-                verified_assertion.append(new_assertion)
-                assertion_founded += 1
-        
-            if assertion_founded == assertion:
-                writeLog(logfile,"Finish all the assertion\n")
-                break
-        else:
-            writeLog(logfile,"Smart Loop " + str(loop_count)+" is failure\n\n")
-        
-        if removeVariables and result == 0:
-            result_file = resultDir+"/result"+str(assertion_founded)+".txt"
-            resultAnalysis(resultDir,runtimeRemoveVariables)
-            result = smart(current_path, main_module,result_file,init_variables)
-
-            if result == 0:
-                writeLog(logfile, "Remover Smart Loop is successful\n\n")
-                smart_sucess += 1
-                with open(result_file, "r") as f:
-                    new_assertion = f.read()
-                
-                if new_assertion not in verified_assertion:
-                    verified_assertion.append(new_assertion)
-                    assertion_founded += 1
-            
-                if assertion_founded == assertion:
-                    writeLog(logfile,"Finish all the assertion\n")
-                    break
-            else:
-                writeLog(logfile,"Remover Smart Loop  is failure\n\n")
-
-        
-        time_end = time.time()
-        cnt += 1
-        print("Finish "+str(cnt)+"/"+str(all_work)+" smart run in "+str(time_end-time_start)+" seconds with the Init variables: "+filename)
-        print("The result is "+str(result))
-
+    # start new process from the pool
+    with ProcessPoolExecutor() as executor:
+        # all works
+        smart_loop = 0
+        for filename in sorted(os.listdir(runtimeVariablesDir)):
+            smart_loop += 1
+            future = executor.submit(smart, current_path, main_module, resultDir+"/result_"+str(smart_loop)+".txt", os.path.join(runtimeVariablesDir, filename))
 
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time
