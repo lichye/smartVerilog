@@ -3,6 +3,7 @@
 #include "StateMaker.h"
 #include "Timer.h"
 #include "utils.h"
+#include <unistd.h>
 
 #include <string>
 #include <fstream>
@@ -280,6 +281,8 @@ std::string VerilogChecker::generateFormalFilePath(PropertyType type) {
         printError("Error: Property type not supported\n");
         exit(1);
     }
+    filename += getpid();
+    filename += "_";
     filename += oss.str();
     filename +=".sv";
     formalFilePath = filename;

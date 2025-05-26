@@ -38,19 +38,7 @@ def writeLog(file,content):
         f.write(content)
     f.close()
 
-def merge_txt_files(folder_path, output_file='invariants.txt'):
-    with open(output_file, 'w', encoding='utf-8') as out_file:
-        for filename in os.listdir(folder_path):
-            if filename.endswith('.txt'):
-                file_path = os.path.join(folder_path, filename)
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    out_file.write(content + '\n')
-    print(f"All .txt files in '{folder_path}' merged into '{output_file}'.")
-
-
 if __name__ == "__main__":
-    print("Start running smart core")
     all_start_time = time.time()
     
     # parameters
@@ -111,6 +99,8 @@ if __name__ == "__main__":
     result_files = []
     futures = []
 
+    print("--------------")
+    print("Start running smart core")
 
     # start new process from the pool
     with ProcessPoolExecutor() as executor:
@@ -145,9 +135,9 @@ if __name__ == "__main__":
                     print(f"Deleted {file_to_delete} (result={result})")
             else:
                 with open(result_files[i], "r") as f:
-                    new_assertion = f.read()
+                    new_assertion = f.read().strip()
 
-                if new_assertion not in verified_assertion:
+                if new_assertion not in verified_assertion: 
                     verified_assertion.add(new_assertion)
                     assertion_founded += 1
                 # print(f"Kept {result_files[i]} (result={result})")
@@ -173,7 +163,9 @@ if __name__ == "__main__":
         f.write("Overall Time: "+str(all_time)+"\n")
         f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
         f.write("We found "+str(len(verified_assertion))+" assertions\n")
-    merge_txt_files(resultDir, "assertions.txt")
+    with open("assertions.txt","w") as f:
+        for assertion in verified_assertion:
+            f.write(assertion+"\n")
     print("Finish running smart core")
     
     
