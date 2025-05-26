@@ -373,7 +373,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     subprocess.run(["rm","-rf",sby_file])
     subprocess.run(["rm","-rf",sby_result])
     time_end = time.time()
-    print("Finish mutate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+    # print("Finish mutate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
     return return_result
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
