@@ -281,9 +281,9 @@ std::string VerilogChecker::generateFormalFilePath(PropertyType type) {
         printError("Error: Property type not supported\n");
         exit(1);
     }
-    filename += getpid();
-    filename += "_";
     filename += oss.str();
+    filename += std::to_string(getpid());
+    filename += "_";
     filename +=".sv";
     formalFilePath = filename;
     return filename;
