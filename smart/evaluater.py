@@ -284,11 +284,11 @@ if __name__ == "__main__":
     print("Total mutations(Without timeout file): ",total_mutations)
     print("The Mutation Detection(MD) rate: ",(len(find_files)/total_mutations)*100)
     
-    # log_result = count_logfile()
+    log_result = count_logfile()
 
     resultfile = os.getcwd()+"/result_"+top_module+".txt"
     with open(resultfile,"a") as f:
-        # f.write(log_result)
+        f.write(log_result)
         f.write("\n")
         f.write("Found mutations: "+str(len(find_files))+"\n")
         f.write("UnFound mutations: "+str(len(unfind_file))+"\n")

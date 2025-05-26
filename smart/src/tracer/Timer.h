@@ -6,7 +6,8 @@
 #define TIMER_H
 enum timerType {
     SBY_Timer,
-    CVC5_Timer
+    CVC5_Timer,
+    FM_Timer
 };
 
 class Timer {
@@ -21,8 +22,10 @@ public:
 private:
     int sbyCounter;
     int cvc5Counter;
+    int fmCounter;
     double sbyTotalTime;
     double cvc5TotalTime;
+    double fmTotalTime;
     std::chrono::time_point<std::chrono::steady_clock> start_time;
     std::chrono::time_point<std::chrono::steady_clock> end_time;
 };

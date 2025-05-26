@@ -188,7 +188,9 @@ bool VerilogChecker::runEBMC(){
     // command += " --vcd test.vcd";
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
+    timer->start(timerType::FM_Timer);
     int status = system(command.c_str());
+    timer->stop(timerType::FM_Timer);
     return status==0;
 }
 
@@ -344,11 +346,11 @@ bool VerilogChecker::runSby() {
 
     command += " > /dev/null 2>&1";
     printDebug("Running SBY with command: "+command+"\n",1);
-    timer->start(timerType::SBY_Timer);
+    timer->start(timerType::FM_Timer);
     int status = system(command.c_str());
     // print("The command is "+command+"\n");
     // print("The status is "+std::to_string(status)+"\n");
-    timer->stop(timerType::SBY_Timer);
+    timer->stop(timerType::FM_Timer);
     printDebug("SBY result is "+std::to_string(status),1);
     return status==0;
 }

@@ -42,4 +42,5 @@ cd ..
 mkdir $1
 mv smart/*.txt $1
 mv smart/user/* $1
+mv smart/*.sl $1
 echo "Done with $1"
