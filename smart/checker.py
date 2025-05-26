@@ -103,8 +103,8 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
         return_result.append({verilog_file:"error"})
     # subprocess.run(["rm","-rf",sby_file])
     # subprocess.run(["rm","-rf",sby_result])
-    time_end = time.time()
-    print("Finish check  property\t"+Tproperty+ "\t\tin time: "+str(time_end-time_start)+ "\tin the thread: "+str(pid))
+    # time_end = time.time()
+    # print("Finish check  property\t"+Tproperty+ "\t\tin time: "+str(time_end-time_start)+ "\tin the thread: "+str(pid))
     return return_result
 
 def extract_property_only(results):
@@ -153,8 +153,14 @@ if __name__ == "__main__":
         for propert in properties:
             cnt+=1
             future = executor.submit(run_fm_on_verilog_file,verilogDir,propert,[])
-            print("Finish check "+str(cnt)+"/"+str(properties_size)+" properties")
             futures.append(future)
+        
+        done_set = set()
+        while len(done_set) < len(futures):
+            time.sleep(10)
+            done_now = [f for f in futures if f.done() and f not in done_set]
+            done_set.update(done_now)
+            print(f"[{time.strftime('%X')}] Completed check {len(done_set)}/{len(futures)} assertions")
 
         for future in futures:
             result = future.result()

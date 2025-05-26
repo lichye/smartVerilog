@@ -73,50 +73,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
         return_result = []
 
         try:
-            # with open(sby_file, "w") as sby_run_file:
-                # sby_run_file.write("[tasks]\n")
-                # sby_run_file.write("task bmc_check files\n")
-                # sby_run_file.write("\n")
-                # sby_run_file.write("[options]\n")
-                # sby_run_file.write("bmc_check:\n")
-                # sby_run_file.write("mode bmc\n")
-                # sby_run_file.write("depth 1\n")
-                # sby_run_file.write("timeout 180\n")
-                # sby_run_file.write("vcd_sim on\n")
-                # sby_run_file.write("\n")
-                # sby_run_file.write("[engines]\n")
-                # sby_run_file.write("bmc_check:\n")
-                # sby_run_file.write("smtbmc --unroll\n")
-                # sby_run_file.write("\n")
-                # sby_run_file.write("[script]\n")
-                # sby_run_file.write("files:\n")
-                # sby_run_file.write("read -sv "+new_file_path+"\n")
-                # for file in verilog_related_files:
-                #     sby_run_file.write("read -sv "+file+"\n")
-                # file.write("prep -top "+)
-                # sby_run_file.write("prep -top "+top_module+"\n")
-                
-
-            # cmd = ["timeout","180","sby","-f",sby_file,"task"]
-            # print("cmd: ",cmd)
-            # cmd = [sby_path,"-f",sby_file,"task"]
-            
             ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
-
-            # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
-
-            # result = subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-            
-            # result2 = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-            # # print("the return code is: ",result.returncode)                     
-            # if(result.returncode != 0 or result2.returncode != 0):
-            #     if(result.returncode ==124 or result2.returncode == 124):
-            #         return_result.append({verilog_file:"timeout"})
-            #     else:
-            #         return_result.append({verilog_file:"error"})
-            # else:
-            #     return_result.append({verilog_file:"verified"})
-
             ebmc_result = subprocess.run(ebmc_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             if(ebmc_result.returncode != 0):
                 if(ebmc_result.returncode == 124):
@@ -136,7 +93,6 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     subprocess.run(["rm","-rf",sby_file])
     subprocess.run(["rm","-rf",sby_result])
     time_end = time.time()
-    print("Finish evaluate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
     return return_result
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
@@ -182,6 +138,13 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
             executor.submit(run_fm_on_verilog_file, verilog_file, properties, verilog_related_files)
             for verilog_file in verilog_files
         ]
+        done_set = set()
+        while len(done_set) < len(futures):
+            time.sleep(10)
+            done_now = [f for f in futures if f.done() and f not in done_set]
+            done_set.update(done_now)
+            print(f"[{time.strftime('%X')}] Completed evaluate {len(done_set)}/{len(futures)} mutant tasks")
+
         for future in futures:
             thread_result += future.result()
         print("Finish parallel processing")
@@ -279,7 +242,7 @@ if __name__ == "__main__":
         properties = file.readlines()
     properties = [prop.strip() for prop in properties]
 
-    print("Properties: ",properties)
+    # print("Properties: ",properties)
 
     if(len(properties) == 0):
         print("The properties file is empty!")
@@ -294,9 +257,6 @@ if __name__ == "__main__":
     # find_files.update(run_ebmc_on_verilog_files(directory,properties,bound,ebmc_path))
     find_files = run_fm_on_verilog_files(directory,properties)
 
-    # print("Found mutations: ",sorted(find_files))
-    # sorted(find_files)
-    # print("Found mutations: ",find_files)
 
     all_file = [
         os.path.join(directory, file)
@@ -309,16 +269,16 @@ if __name__ == "__main__":
     sorted(unfind_file)
     if(len(unfind_file) != 0):
         print("UnFound mutations: ",len(unfind_file))
-        print("UnFound mutations: ",unfind_file)
+        # print("UnFound mutations: ",unfind_file)
 
     if(len(find_files) != 0):
         print("Found mutations: ",len(find_files))
-        print("Found mutations: ",find_files)
+        # print("Found mutations: ",find_files)
 
     total_mutations = len(unfind_file)+len(find_files)
 
     print("Found mutations: ",len(find_files))
-    print("UnFound mutations: ",len(unfind_file))
+    # print("UnFound mutations: ",len(unfind_file))
     print("Timeout mutations: ",len(timeout_list))
     print("Total mutations: ",total_mutations+len(timeout_list))
     print("Total mutations(Without timeout file): ",total_mutations)

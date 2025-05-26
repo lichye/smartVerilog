@@ -273,8 +273,8 @@ class VerilogMutation:
         self.load_verilog()
         self.define_mutations()
         # print("Generating mutants...")
-        for muation in self.mutations:
-            print(muation)
+        # for muation in self.mutations:
+        #     print(muation)
         file_count=self.generate_mutants()
         return file_count
 
