@@ -126,6 +126,7 @@ def extract_property_only(results):
 
 
 if __name__ == "__main__":
+    print("Start checker.py")
     if(len(sys.argv) < 2):
         print("Usage: python3 evaluater.py top_module")
         exit(1)
@@ -184,3 +185,6 @@ if __name__ == "__main__":
         f.write("The number of verified assertions is: "+str(verified_cnt)+"\n")
         f.write("The number of assertions is: "+str(total_cnt)+"\n")
         f.write("The Verified correctness(VC) rate is: "+str(verified_cnt/total_cnt*100)+"\n")
+    
+    print("Finish running checker.py")
+    print("-------------------------------")

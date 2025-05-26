@@ -99,7 +99,7 @@ if __name__ == "__main__":
     result_files = []
     futures = []
 
-    print("--------------")
+    print("-------------------------------")
     print("Start running smart core")
 
     # start new process from the pool
@@ -167,6 +167,7 @@ if __name__ == "__main__":
         for assertion in verified_assertion:
             f.write(assertion+"\n")
     print("Finish running smart core")
+    print("-------------------------------")
     
     
     

@@ -225,6 +225,7 @@ def count_logfile():
     return result
 
 if __name__ == "__main__":
+    print("Smart Evaluater")
     if(len(sys.argv) < 2):
         print("Usage: python3 evaluater.py top_module")
         exit(1)
@@ -294,3 +295,5 @@ if __name__ == "__main__":
         f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
         f.write("Total mutations(Without timeout file): "+str(total_mutations)+"\n")
         f.write("The Mutation Detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n")
+    
+    print("Finish running evaluater.py")
