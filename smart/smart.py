@@ -120,7 +120,7 @@ if __name__ == "__main__":
             time.sleep(10)
             done_now = [f for f in futures if f.done() and f not in done_set]
             done_set.update(done_now)
-            print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} tasks")
+            print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} Smart Cores")
 
 
     # After all result back, delete the files
