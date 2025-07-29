@@ -1,4 +1,4 @@
-
+# This python script can be used to check the assertions in the verilog files
 import os
 import sys
 import re

@@ -104,6 +104,9 @@ clean:
 	rm -rf *sby
 	rm -rf *task
 	rm -rf result.txt
+	rm -rf *.txt
+	rm -rf *.out
+	rm -rf SygusResult.sl
 	
 
 

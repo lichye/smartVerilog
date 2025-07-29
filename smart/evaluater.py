@@ -224,20 +224,33 @@ def count_logfile():
     result += "CVC5 Total Time: " + str(cvc5_time) + " seconds\n"
     return result
 
+def setupMutants(sv_path,top_module_file,mutant_path,top_module):
+    cmd = ["python", "src/python/mutation.py", sv_path, top_module_file, mutant_path,top_module]
+    print("Run cmd: ", cmd)
+    subprocess.run(cmd)
+
 if __name__ == "__main__":
+    
     print("Smart Evaluater")
     if(len(sys.argv) < 2):
         print("Usage: python3 evaluater.py top_module")
         exit(1)
     else:
         top_module = sys.argv[1]
+        main_file_name = top_module + ".sv"
 
     property_dir = "invariants.txt"
     bound = 10
     ebmc_path = "ebmc"
     working_dir = os.getcwd()
     directory = working_dir+"/benchmarks"
-    
+    mverilog_path = working_dir+"/runtime/verilog/"
+    mutant_path = working_dir+"/benchmarks/"
+
+
+    #Setup the mutants
+    setupMutants(mverilog_path,main_file_name,mutant_path,top_module)
+
     properties = []
     with open(property_dir, "r") as file:
         properties = file.readlines()

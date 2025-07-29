@@ -58,4 +58,7 @@ sudo mv cvc5 /usr/local/bin/
 cd ..
 cd ..
 
+cd smart
+mkdir user/
+
 # wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static-gpl.zip

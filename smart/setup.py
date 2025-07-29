@@ -67,11 +67,6 @@ def sv_prep(sv_path,rst_path):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
 
-def setupMutants(sv_path,top_module_file,mutant_path,top_module):
-    cmd = ["python", "src/python/mutation.py", sv_path, top_module_file, mutant_path,top_module]
-    print("Run cmd: ", cmd)
-    subprocess.run(cmd)
-
 def preAnalysis(work_dir,file_path,top_module,output_file):
     cmd = ["python", "src/python/preAnalyzer.py",work_dir,file_path, top_module, output_file]
     print("Run cmd: ", cmd)
@@ -161,7 +156,7 @@ if __name__ == "__main__":
     compile_time = compile_end_time - compile_start_time 
 
     #Setup the mutants
-    setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
+    # setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
 
     all_end_time = time.time()
     print("Simulation time: ", sim_time)
