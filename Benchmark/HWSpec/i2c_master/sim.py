@@ -26,26 +26,6 @@ async def my_first_test(dut):
     # Simulate 10 cycles (or steps) without clock
     dut.rst = 1
     await RisingEdge(dut.clk)
-    dut.rst = 0
-
-    # input  wire [6:0]  s_axis_cmd_address,
-    # input  wire        s_axis_cmd_start,
-    # input  wire        s_axis_cmd_read,
-    # input  wire        s_axis_cmd_write,
-    # input  wire        s_axis_cmd_write_multiple,
-    # input  wire        s_axis_cmd_stop,
-    # input  wire        s_axis_cmd_valid,
-
-    # input  wire [7:0]  s_axis_data_tdata,
-    # input  wire        s_axis_data_tvalid,
-    # input  wire        s_axis_data_tlast,
-    # input  wire        m_axis_data_tready,
-
-    # input  wire        scl_i,
-    # input  wire        sda_i,
-    
-    # input  wire [15:0] prescale,
-    # input  wire        stop_on_idle
 
     for cycle in range(10):
         await RisingEdge(dut.clk)

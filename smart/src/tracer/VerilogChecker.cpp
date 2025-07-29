@@ -91,14 +91,32 @@ void VerilogChecker::writeVerilogFile() {
     std::string currentModuleName = "";
     bool isModule = false;
     bool insertProperties = false;
-    
+    bool insideBlockComment = false;
 
     while (std::getline(inputFile, line)) {
         lines.push_back(line);
 
-        if(line.find("endmodule") != std::string::npos && isModule) {
+        std::string trimmed = trim(line);
+
+        if (trimmed.find("/*") != std::string::npos) {
+            insideBlockComment = true;
+        }
+        if (insideBlockComment) {
+            if (trimmed.find("*/") != std::string::npos) {
+                insideBlockComment = false;
+            }
+            continue;
+        }
+
+        size_t commentPos = line.find("//");
+        size_t modulePos = line.find("module");
+        if ((commentPos != std::string::npos && (modulePos == std::string::npos || modulePos > commentPos))) {
+            continue;
+        }
+
+        if (line.find("endmodule") != std::string::npos && isModule) {
             assert(properties.size() == propertyTypes.size());
-            for(int i=0;i<properties.size();i++) {
+            for (int i = 0; i < properties.size(); i++) {
                 lines.insert(lines.end() - 1, "    assert property (" + properties[i] + ");\n");
                 insertProperties = true;
             }
@@ -106,27 +124,27 @@ void VerilogChecker::writeVerilogFile() {
         }
 
         if (line.find("module") != std::string::npos) {
-            int start = line.find("module") + 6; 
+            int start = line.find("module") + 6;
             int end = line.find('(', start);
-            if(end == std::string::npos) {
-                end = line.find('\n', start);
+            if (end == std::string::npos) {
+                end = line.find(' ', start); // fallback
             }
             currentModuleName = line.substr(start, end - start);
             currentModuleName = trim(currentModuleName);
-            printDebug("Current module name: "+currentModuleName,4);
+            printDebug("Current module name: " + currentModuleName, 4);
         }
 
-        if(currentModuleName == topModule) {
-            printDebug("Current module is top module",4);
+        if (currentModuleName == topModule) {
+            printDebug("Current module is top module", 4);
             isModule = true;
-        }else{
-            printDebug("Current module name: "+currentModuleName,4);
-            printDebug("Top module name: "+topModule,4);
+        } else {
+            printDebug("Current module name: " + currentModuleName, 4);
+            printDebug("Top module name: " + topModule, 4);
             isModule = false;
         }
-        
     }
     inputFile.close();
+
    
     std::ofstream outputFile(formalFilePath);
     if(!outputFile.is_open()) {
