@@ -14,7 +14,7 @@ Download the zip file and unzip the whole file, then run the command line below 
 
     bash run.sh c17
 
-Result will goto file: c17\
+Result will goto file: smartVerilog\c17\
 
 # The resource requirements:
 ## SMART
