@@ -6,6 +6,7 @@
 
 #define smartVerbose 0
 #define runRandomState true
+#define unboundChecker false
 // Verbose level 0: No debug information
 // Verbose level 1: module calls - level
 // Verbose level 2: function calls - level

@@ -125,14 +125,25 @@ void VerilogChecker::writeVerilogFile() {
 
         if (line.find("module") != std::string::npos) {
             int start = line.find("module") + 6;
-            int end = line.find('(', start);
-            if (end == std::string::npos) {
-                end = line.find(' ', start); // fallback
+
+            // Skip whitespace
+            while (start < line.size() && isspace(line[start])) {
+                ++start;
             }
+
+            // Find the end of the module name (before space, '#' or '(' )
+            int end = start;
+            while (end < line.size() && !isspace(line[end]) && line[end] != '#' && line[end] != '(') {
+                ++end;
+            }
+
             currentModuleName = line.substr(start, end - start);
             currentModuleName = trim(currentModuleName);
+
             printDebug("Current module name: " + currentModuleName, 4);
+            // print("Current module name: " + currentModuleName + "\n");
         }
+
 
         if (currentModuleName == topModule) {
             printDebug("Current module is top module", 4);
@@ -161,6 +172,7 @@ void VerilogChecker::writeVerilogFile() {
         printError("Error: Unable to insert properties in the module "+topModule+"\n");
         exit(1);
     }
+    // print("Successfully wrote formal file "+formalFilePath+"\n");
 }
 
 void VerilogChecker::addProperty(State* state,PropertyType type) {
@@ -201,7 +213,16 @@ bool VerilogChecker::runEBMC(){
     std::string command = "";
     command += "ebmc "+formalFilePath;
     // command += " --bound "+std::to_string(bound);
-    command += " --k-induction";
+
+    for(auto &path : relatedFilePaths) {
+        command +=" "+path+ " ";
+    }
+    
+    if(unboundChecker)
+        command += " --k-induction";
+    else
+        command += " --bound "+std::to_string(bound);
+
     if(topModule != "")
         command += " --top "+topModule;
     // command += " --vcd test.vcd";
@@ -217,12 +238,22 @@ bool VerilogChecker::runEBMC(std::string tracePath){
     std::string command = "";
     command += "ebmc "+formalFilePath;
     // command += " --bound "+std::to_string(bound);
-    command += " --k-induction";
+
+    for(auto &path : relatedFilePaths) {
+        command +=" "+path+ " ";
+    }
+
+    if(unboundChecker)
+        command += " --k-induction";
+    else
+        command += " --bound "+std::to_string(bound);
+
     if(topModule != "")
         command += " --top "+topModule;
     command += " --vcd "+tracePath;
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
+    print("Running EBMC with command: "+command+"\n");
     int status = system(command.c_str());
     return status==0;
 }
@@ -250,6 +281,7 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
     generateFormalFilePath(PropertyType::SAFT_PROPERTY);
     addProperty(func,PropertyType::SAFT_PROPERTY);
     writeVerilogFile();
+
 
     bool result = false;
     if(solver==BackEndSolver::EBMC) {

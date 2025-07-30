@@ -22,8 +22,10 @@ Trace::Trace(TraceType ctype, std::string path){
             printDebug("Start to parse the vcd file in: "+vcdPath+"\n",1);
             VCDFileParser vcdParser;
             VCDFile* vcdFile = vcdParser.parse_file(vcdPath);
-            assert(vcdFile != nullptr && "VCD file should not be null");
-
+            if(vcdFile == nullptr){
+                printError("VCD file is null, please check the path: "+vcdPath+"\n");
+                return;
+            }
             readVCDFile(vcdFile);
             delete vcdFile;
             printDebug("Trace Gathered Successfully\n",1);

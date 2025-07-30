@@ -266,23 +266,23 @@ VERSION_TEXT        {COMMENT_TEXT}
     return VCDParser::parser::make_TOK_IDENTIFIER(std::string(yytext),loc);
 }
 
-<IN_VAR_PID>{BRACKET_O} {
+<IN_VAR_PID,IN_VAR_RNG>{BRACKET_O} {
     BEGIN(IN_VAR_RNG);
     //std::cout << yytext << ", ";
     return VCDParser::parser::make_TOK_BRACKET_O(loc);
 }
 
-<IN_VAR_RNG>{DECIMAL_NUM} {
+<IN_VAR_RNG,IN_VAR_PID>{DECIMAL_NUM} {
     //std::cout << yytext << ", ";
     return VCDParser::parser::make_TOK_DECIMAL_NUM(std::atoi(yytext),loc);
 }
 
-<IN_VAR_RNG>{COLON} {
+<IN_VAR_RNG,IN_VAR_PID>{COLON} {
     //std::cout << yytext << ", ";
     return VCDParser::parser::make_TOK_COLON(loc);
 }
 
-<IN_VAR_RNG>{BRACKET_C} {
+<IN_VAR_RNG,IN_VAR_RNG>{BRACKET_C} {
     //std::cout << yytext << ", ";
     return VCDParser::parser::make_TOK_BRACKET_C(loc);
 }

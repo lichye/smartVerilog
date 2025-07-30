@@ -95,18 +95,11 @@ all_clean: clean
 	mkdir $(BUILD_DIR)
 
 clean:
-	rm -rf sygus.sl
-	rm -rf runtime/cocotb/*
-	rm -rf runtime/formal/*
-	rm -rf runtime/smt_results/*
-	rm -rf runtime/variables/*
-	rm -rf result/*
-	rm -rf *sby
-	rm -rf *task
-	rm -rf result.txt
-	rm -rf *.txt
-	rm -rf *.out
-	rm -rf SygusResult.sl
+	rm -rf $(BUILD_DIR)
+	rm -rf $(LEX_OUT) $(LEX_HEADER) $(YAC_OUT) $(YAC_HEADER)
+	rm -rf $(OBJS) $(SMART_TARGET) $(ASSERTION_TARGET)
+	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
+	mkdir $(BUILD_DIR)
 	
 
 
