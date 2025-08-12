@@ -271,7 +271,8 @@ bool VerilogChecker::checkStateReachability(State* state) {
     else if(solver==BackEndSolver::SBY) {
         result = runSby();
     }
-    deleteVerilogFile();
+    if(deleteTempFile)
+        deleteVerilogFile();
     return !result;
 }
 
@@ -303,7 +304,8 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
     
     //if the property is verified, then the state is safe
     printDebug("The safety result is: "+std::to_string(result),1);
-    deleteVerilogFile();
+    if(deleteTempFile)
+        deleteVerilogFile();
     return result;
 }
 
