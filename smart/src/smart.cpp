@@ -91,10 +91,12 @@ int main(int argc, char* argv[]){
 
   modifySignals(initVariables,1);
 
-  print("Remaining signals:");
+  print("This Core Loop's Variables:");
   for(auto &signal : *signals){
     print("\t"+signal.name);
   }
+  print("");
+
   std::sort(signals->begin(),signals->end());
 
   sygus->setSignals(signals);
@@ -260,10 +262,6 @@ void modifySignals(std::string removeVariablesPath,int mode){
   while (std::getline(file, line)) { // Read the file line by line
       lines.push_back(line); // Add each line to the vector
   }
-
-  for(auto &line : lines){
-    printDebug("Removing signal: "+line,2);
-  }
   if(mode == 0){
     for(auto &line : lines){
       //if in mode 0, we remove the signal with the same name in file
@@ -294,5 +292,6 @@ void modifySignals(std::string removeVariablesPath,int mode){
       signals->push_back(signal);
     }
   }
+
 
 }

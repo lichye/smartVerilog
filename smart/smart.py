@@ -24,6 +24,8 @@ def smart(current_path, top_module,result_file,init_variables,core_id):
     # print("Run cmd: ", str(cmd))
     # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    writeLog("smartCore.txt", " ".join(cmd)+"\n")
+    # writeLog("smartCore.txt", " ".str(result)+ "\n")
     # print("Result: ", result)
     return result.returncode
 

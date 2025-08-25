@@ -304,13 +304,13 @@ reference:
     }
 |   TOK_IDENTIFIER TOK_BRACKET_O TOK_DECIMAL_NUM TOK_BRACKET_C {
         $$  = new VCDSignal();
-        $$ -> reference = $1 + "[" + std::to_string($3) + "]";
+        $$ -> reference = $1;
         $$ -> lindex = $3;
         $$ -> rindex = $3;
     }
 |   TOK_IDENTIFIER TOK_BRACKET_O TOK_DECIMAL_NUM TOK_COLON TOK_DECIMAL_NUM TOK_BRACKET_C {
         $$  = new VCDSignal();
-        $$ -> reference = $1 + "[" + std::to_string($3) + ":" + std::to_string($5) + "]";
+        $$ -> reference = $1;
         if ($3 == 0 && $3 == $5) {
             $$ -> lindex = -1;
             $$ -> rindex = -1;
@@ -322,7 +322,7 @@ reference:
 |   TOK_IDENTIFIER TOK_BRACKET_O TOK_DECIMAL_NUM TOK_BRACKET_C
                  TOK_BRACKET_O TOK_DECIMAL_NUM TOK_COLON TOK_DECIMAL_NUM TOK_BRACKET_C {
     $$ = new VCDSignal();
-    $$->reference = $1 + "[" + std::to_string($3) + "]";
+    $$->reference = $1;
     if ($6 == 0 && $6 == $8) {
         $$->lindex = -1;
         $$->rindex = -1;
@@ -335,7 +335,7 @@ reference:
     TOK_BRACKET_O TOK_DECIMAL_NUM TOK_COLON TOK_DECIMAL_NUM TOK_BRACKET_C
     TOK_BRACKET_O TOK_DECIMAL_NUM TOK_COLON TOK_DECIMAL_NUM TOK_BRACKET_C {
         $$ = new VCDSignal();
-        $$->reference = $1 + "[" + std::to_string($3) + ":" + std::to_string($5) + "]";
+        $$->reference = $1;
         if ($8 == 0 && $8 == $10) {
             $$->lindex = -1;
             $$->rindex = -1;
