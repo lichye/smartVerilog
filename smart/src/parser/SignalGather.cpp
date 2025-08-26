@@ -1,5 +1,6 @@
 #include "SignalGather.h"
 #include "ini.h"
+#include "setups.h"
 #include <iostream>
 #include <fstream>
 #include <exception>

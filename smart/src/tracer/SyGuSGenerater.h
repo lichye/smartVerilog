@@ -47,6 +47,7 @@ class SyGuSGenerater
         std::string createFunctionHeader(const std::vector<Signal>);
         std::string createFunctionGrammar();
         std::string createBoolGrammar();
+        std::string createExprGrammar();
         std::string createSingleBvGrammar(Signal);
         std::string createMixBvGrammar(const std::vector<Signal>);
         std::string createKeyGrammar();

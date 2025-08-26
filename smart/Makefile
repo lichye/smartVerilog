@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX             ?= g++
-CXXFLAGS        += -std=c++17 -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
+CXXFLAGS        += -std=c++17 -I ./src/support/ -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
 LDFLAGS         = -L./lib
 
 # Source and build directories
@@ -69,10 +69,6 @@ compile: smart_compile
 # Main compilation rule for smart.out
 smart_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(SMART_SRC)
 	$(CXX) $(CXXFLAGS) -o $(SMART_TARGET) $^
-
-# Main compilation rule for assertion.out
-assertion_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(ASSERTION_SRC)
-	$(CXX) $(CXXFLAGS) -o $(ASSERTION_TARGET) $^
 
 smart:
 	./$(SMART_TARGET)

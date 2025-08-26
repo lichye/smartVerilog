@@ -3,6 +3,7 @@
 #include "string"
 #include <vector>
 #include "Trace.h"
+#include "setups.h"
 #include <filesystem>
 #include <set>
 #include <map>

@@ -27,6 +27,7 @@ enum SygusOperatorType
     BVSLE = 18,
     BVSGT = 19,
     BVSGE = 20,
+    BOOLIMPL = 21,
 };
 
 enum SygusExprType

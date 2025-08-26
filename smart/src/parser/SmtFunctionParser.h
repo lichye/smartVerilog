@@ -2,6 +2,7 @@
 #define SMT_FUNCTION_PARSER_H
 #include <vector>
 #include "utils.h"
+#include "setups.h"
 #include "SygusExpr.h"
 class SmtFunctionParser {
     public:

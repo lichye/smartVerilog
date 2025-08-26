@@ -252,6 +252,8 @@ std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
     print("Error: cvc5 failed\n");
     return "";
   }
+  printDebug("CVC5 Return code: " + std::to_string(exitCode),3);
+  printDebug("The Result from cvc5 is: " + result,3);
   return result;
 }
 
@@ -292,30 +294,18 @@ std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signa
 std::string SyGuSGenerater::createFunctionGrammar()
 {
     std::string functionGrammar = "(\n";
+
+    //functionGrammar += "(Expr Bool)";
     
-    functionGrammar += "(";
-    functionGrammar += "Start ";
-    functionGrammar += " Bool";
-    functionGrammar += ")\n";
+    functionGrammar += "(Expr Bool) ";
+    functionGrammar += "(Atom Bool)\n";
+
 
     std::string functionGrammarDetail = "";
-
-    functionGrammarDetail += createBoolGrammar();
-
-    // for(auto signal:signals){
-    //     if(signal.type == SignalType::BITS){
-    //         functionGrammar += "(";
-    //         functionGrammar += "Single_"+signal.toSygusName()+" ";
-    //         functionGrammar += " (_ ";
-    //         functionGrammar += "BitVec ";
-    //         functionGrammar += std::to_string(signal.lindex - signal.rindex + 1);
-    //         functionGrammar += "))\n";
-
-    //         functionGrammarDetail += createSingleBvGrammar(signal);
-    //     }
-    // }
-
     
+    functionGrammarDetail += createExprGrammar();
+    // functionGrammarDetail += "; Boolean Grammar\n";
+    functionGrammarDetail += createBoolGrammar();    
 
     for(auto signals : sameTypeSignals){
         if(signals.first.first == SignalType::BITS){
@@ -386,14 +376,14 @@ std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals){
 std::string SyGuSGenerater::createBoolGrammar()
 {   
     std::string boolGra =
-    std::string("(Start Bool \n")+
+    std::string("(Atom Bool \n")+
     std::string("\t(\n")+
 
     //std::string("; true false\n")+
-    std::string("\t(= Start Start) \n")+
-    std::string("\t(not Start) \n")+
-    std::string("\t(and Start Start) \n")+
-    std::string("\t(or Start Start)\n");
+    std::string("\t(= Atom Atom) \n")+
+    std::string("\t(not Atom) \n")+
+    std::string("\t(and Atom Atom) \n")+
+    std::string("\t(or Atom Atom)\n");
     
     //add the important checker for True return
     boolGra += createKeyGrammar();
@@ -401,6 +391,17 @@ std::string SyGuSGenerater::createBoolGrammar()
     //wait for add bv compare grammar
     boolGra += std::string("\t)\n")+ std::string(")\n");
     return boolGra;
+}
+
+std::string SyGuSGenerater::createExprGrammar()
+{
+    std::string exprGra =
+    std::string("(Expr Bool \n")+
+    std::string("\t(\n")+
+    std::string("\t Atom \n")+
+    std::string("\t (=> Atom Atom)\n");
+    exprGra += std::string("\t)\n")+ std::string(")\n");
+    return exprGra;
 }
 
 std::string SyGuSGenerater::createConstraint(bool constraintType,int index)

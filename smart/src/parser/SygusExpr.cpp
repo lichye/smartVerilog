@@ -70,6 +70,9 @@ SygusOperatorType getOperatorType(std::string op)
     else if(op=="bvsge"){
         return BVSGE;
     }
+    else if(op=="=>"){
+        return BOOLIMPL;
+    }
     else
         return UNKNOWOPERATOR;
 }
@@ -187,6 +190,8 @@ std::string SygusOperator::toString()
             return "s>";
         case BVSGE:
             return "s>=";
+        case BOOLIMPL:
+            return "|->";
         default:
             return "Unknown Operator";
     }
@@ -237,6 +242,8 @@ int SygusOperator::getOperandsNumber()
         case BVSGT:
             return 2;
         case BVSGE:
+            return 2;
+        case BOOLIMPL:
             return 2;
         default:
             throw std::invalid_argument("Unknown operator type: " + std::to_string(op));

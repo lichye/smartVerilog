@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 #include "SmtFunctionParser.h"
 #include "Module.h"
 #include "Timer.h"
+#include "setups.h"
 
 //global variables
 
@@ -155,7 +156,7 @@ int main(int argc, char* argv[]){
   print("\tTrace goes to VCD file: "+SMTVCDfilePath);
 
   int mostRun = signals->size();
-  print("This smart will run "+std::to_string(mostRun)+" times");
+
   while(!verifiedResult){
     if(timeOut++>mostRun||verifiedResult){
       print("Time out\n");

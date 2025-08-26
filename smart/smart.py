@@ -24,6 +24,7 @@ def smart(current_path, top_module,result_file,init_variables,core_id):
     # print("Run cmd: ", str(cmd))
     # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # print(" ".join(cmd))
     writeLog("smartCore.txt", " ".join(cmd)+"\n")
     # writeLog("smartCore.txt", " ".str(result)+ "\n")
     # print("Result: ", result)
@@ -134,7 +135,7 @@ if __name__ == "__main__":
                 file_to_delete = result_files[i]
                 if os.path.exists(file_to_delete):
                     os.remove(file_to_delete)
-                    print(f"Deleted {file_to_delete} (result={result})")
+                    # print(f"Deleted {file_to_delete} (result={result})")
             else:
                 with open(result_files[i], "r") as f:
                     new_assertion = f.read().strip()
