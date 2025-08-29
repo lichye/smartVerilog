@@ -1,9 +1,9 @@
+#ifndef TIMER_H
+#define TIMER_H
 #include <iostream>
 #include <chrono>
 #include <thread>
 #include <string>
-#ifndef TIMER_H
-#define TIMER_H
 enum timerType {
     SBY_Timer,
     CVC5_Timer,

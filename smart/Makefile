@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX             ?= g++
-CXXFLAGS        += -std=c++17 -I ./src/support/ -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
+CXXFLAGS        += -std=c++17 -I ./src/helper/ -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
 LDFLAGS         = -L./lib
 
 # Source and build directories
@@ -10,7 +10,7 @@ RUNTIME_DIR     ?= ./runtime
 PYTHON_DIR      ?= ./src/python
 
 # Ensure subdirectories exist
-BUILD_SUBDIRS   = $(BUILD_DIR)/parser $(BUILD_DIR)/tracer
+BUILD_SUBDIRS   = $(BUILD_DIR)/parser $(BUILD_DIR)/tracer $(BUILD_DIR)/helper
 
 # VCD Parser Files (from the first Makefile)
 LEX_SRC         ?= $(SRC_DIR)/parser/VCDScanner.l
@@ -33,7 +33,7 @@ SMART_SRC      	= ./src/smart.cpp
 
 ASSERTION_SRC   = ./src/assertion.cpp
 
-SRC_DIRS        = ./src/parser ./src/tracer ./src/support
+SRC_DIRS        = ./src/parser ./src/tracer ./src/helper
 
 SRC_FILES       = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.cpp))
 
