@@ -22,7 +22,7 @@ def sim(current_path,file_name):
     verilogDesign = current_path+"/runtime/verilog/"+file_name
     
     result = subprocess.run(["python", simPython])
-
+ 
     if result.returncode != 0:
         print("Error in simulation")
         exit(-1)
@@ -99,6 +99,8 @@ if __name__ == "__main__":
     mutant_path = current_path+"/benchmarks/"
 
     mverilog_path = current_path+"/runtime/verilog/"
+
+    setup_path = current_path+"/src/python/setUp.py"
     
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -117,7 +119,7 @@ if __name__ == "__main__":
         exit(1)
 
     #Start the preporcessing
-    subprocess.run(["make", "setup"]) # this will setup the directories and files needed for the smart compiler
+    subprocess.run(["python",setup_path]) # this will setup the directories and files needed for the smart compiler
     sv_prep(user_path,mverilog_path) # this will prepare the system verilog files for cocotb
     print("Finish Initial Setup")
     
