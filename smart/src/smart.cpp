@@ -27,7 +27,6 @@ VerilogChecker* checker;
 StateMaker* stateMaker;
 Timer* timer;
 
-
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
 std::string config_path = "User/config.ini";
@@ -43,7 +42,6 @@ std::string currentDir = "";
 std::string core_id = "0";
 
 bool writeStringToFile(const std::string&, const std::string&,std::ios::openmode);
-
 void modifySignals(std::string,int mode);
 void intersectionSignals(std::string);
 
@@ -110,7 +108,7 @@ int main(int argc, char* argv[]){
     //check will help
     // constrain = checker->fixupConstrains(constrain);
     sygus->addConstraints(constrain.constraints,constrain.isTrue);
-    sygus->addConstrainComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
+    sygus->addConstraintComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
 
   print("In looptime "+std::to_string(timeOut)+":");
@@ -119,7 +117,7 @@ int main(int argc, char* argv[]){
   int loopTime = 0;
 
   while(checker->checkStateReachability(randomState)){
-    sygus->addConstrainComments("Getting constraints from the random state",true);
+    sygus->addConstraintComments("Getting constraints from the random state",true);
     randomState = stateMaker->makeRandomState();
     if(loopTime++>3){
       break;
@@ -169,7 +167,7 @@ int main(int argc, char* argv[]){
     Constrains new_c = checker->fixupConstrains(c);
     sygus->addConstraints(new_c.constraints,c.isTrue);
     // print("\tFinish getting constraints from SMT trace: "+c.tracePath);
-    sygus->addConstrainComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
+    sygus->addConstraintComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
     
     sygus->printSysgusPath(sygusPath);
     print("\tFinish generating sygus file");

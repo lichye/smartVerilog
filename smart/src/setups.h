@@ -5,6 +5,8 @@
 #define deleteTempFile false
 #define runRandomState true
 #define unboundChecker false
+#define LTLproperty true
+#define LTLpropertyDepth 1
 
 
 inline void print(std::string message)

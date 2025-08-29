@@ -13,28 +13,6 @@ SyGuSGenerater::SyGuSGenerater()
 SyGuSGenerater::~SyGuSGenerater()
 {   
     printDebug("SyGuSGenerater Destructor called",2);
-    //std::cout<<"SyGuSGenerater Destructor called"<<std::endl;
-}
-
-void SyGuSGenerater::setSignals(std::vector<Signal> signals)
-{
-    for(auto signal : signals){
-        SignalType signalType = signal.type;
-        int signalWidth = signal.lindex - signal.rindex + 1;
-        std::pair<SignalType,int> signalKey = std::make_pair(signalType,signalWidth);
-        
-        //add the Signal to the sameTypeSignals map
-        //then we have the relation ship between the signal type and the signal
-        if(sameTypeSignals.find(signalKey) == sameTypeSignals.end()){
-            sameTypeSignals[signalKey] = std::vector<Signal>();
-            sameTypeSignals[signalKey].push_back(signal);
-        }
-        else{
-            sameTypeSignals[signalKey].push_back(signal);
-        }
-        this->signals.push_back(signal);
-    }
-
 }
 
 void SyGuSGenerater::setSignals(std::vector<Signal>* signals)
@@ -63,6 +41,7 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
         std::cout<<"The constraints size is not the same length with the signals"<<std::endl;
         std::cout<<"The constraints size is "<<inputConstraints.size()<<" and the signals size is "<<this->signals.size()<<std::endl;
     }
+    //Make sure the inputConstraints has the same size as the signals
     assert(inputConstraints.size() == this->signals.size());
     //if the constraints are empty then we add the inputConstraints one by one
     if(trueConstrains){
@@ -100,25 +79,6 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
         }
     }
     printDebug("Finish SyGuSGenerater::addConstraints",2);
-}
-
-void SyGuSGenerater::addConstrainComments(std::string comment,bool isTrueConstrains){
-    if(isTrueConstrains){
-        if(constraints.size() == 0){
-            comments[0] = comment;
-        }
-        else{
-            comments[constraints[0].size()] = comment;
-        }
-    }
-    else{
-        if(falseConstraints.size() == 0){
-            falseComments[0] = comment;
-        }
-        else{
-            falseComments[falseConstraints[0].size()] = comment;
-        }
-    }
 }
 
 void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
@@ -164,6 +124,25 @@ void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
     }
 }
 
+void SyGuSGenerater::addConstraintComments(std::string comment,bool isTrueConstrains){
+    if(isTrueConstrains){
+        if(constraints.size() == 0){
+            comments[0] = comment;
+        }
+        else{
+            comments[constraints[0].size()] = comment;
+        }
+    }
+    else{
+        if(falseConstraints.size() == 0){
+            falseComments[0] = comment;
+        }
+        else{
+            falseComments[falseConstraints[0].size()] = comment;
+        }
+    }
+}
+
 void SyGuSGenerater::printSysgusPath(std::string path)
 {
     printDebug("Printing the SyGuS file to the path: "+path,2);
@@ -174,7 +153,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         
         //print out the synthesis function, only if signals exist
         if(signals.size()>0){
-            file<<createSyntheisFunction(signals);
+            file<<createSynthesisFunction(signals,0);
         }
         
         //print out  the constraints, only if constraints exist
@@ -208,6 +187,23 @@ void SyGuSGenerater::printSysgusPath(std::string path)
     printDebug("Printing the SyGuS file to the path: "+path,2);
 }
 
+void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
+{
+    printDebug("Printing the SyGuS file to the path: "+path,2);
+    std::ofstream file;
+    file.open(path);
+    if(file.is_open()){
+        file<<"(set-logic BV)\n"; 
+        file<<"; The latency is "<<latency<<"\n";
+        if(signals.size()>0){
+            file<<createSynthesisFunction(signals,latency);
+        }
+    }
+    else{
+        std::cout<<"Error opening file"<<std::endl;
+    }
+    printDebug("Printing the SyGuS file to the path: "+path,2);
+}
 void SyGuSGenerater::debugPrint()
 {
     std::cout<<"The signals are: "<<std::endl;
@@ -257,16 +253,17 @@ std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
   return result;
 }
 
-std::string SyGuSGenerater::createSyntheisFunction(const std::vector<Signal> signals)
-{   
+
+std::string SyGuSGenerater::createSynthesisFunction(const std::vector<Signal> signals,int latency)
+{
     std::string synthFun="";
-    std::string functionheader = createFunctionHeader(signals);
-    std::string functionGrammar = createFunctionGrammar();
+    std::string functionheader = createFunctionHeader(signals,latency);
+    std::string functionGrammar = createFunctionGrammar(latency);
     synthFun = "( "+ functionheader + functionGrammar+")\n";
     return synthFun;
 }
 
-std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signals)
+std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signals,int latency)
 {
     std::string functionHeader = "synth-fun ";
     functionHeader += "inv ";
@@ -286,31 +283,51 @@ std::string SyGuSGenerater::createFunctionHeader(const std::vector<Signal> signa
         }
     }
 
+    //If this is a LTL synthesis function, then we need next signals
+    if(latency > 0){
+        for(auto signal:signals){
+            if(signal.type == SignalType::BITS){
+                functionHeader += "("+ signal.toSygusName() + "_"+ std::to_string(latency) + " ";
+                functionHeader += "(_ BitVec " + std::to_string(signal.lindex - signal.rindex + 1) + ")";
+                functionHeader += ") ";
+            }
+            if(signal.type == SignalType::BOOLEAN){
+                functionHeader += "("+signal.toSygusName() + "_"+ std::to_string(latency) + " ";
+                functionHeader += "Bool";
+                functionHeader += ") ";
+            }
+        }
+    }
     //end of the function header
     functionHeader += ") Bool\n";
     return functionHeader;
 }
 
-std::string SyGuSGenerater::createFunctionGrammar()
+std::string SyGuSGenerater::createFunctionGrammar(int latency)
 {
     std::string functionGrammar = "(\n";
 
     //functionGrammar += "(Expr Bool)";
-    
-    functionGrammar += "(Expr Bool) ";
-    functionGrammar += "(Atom Bool)\n";
-
-
     std::string functionGrammarDetail = "";
-    
-    functionGrammarDetail += createExprGrammar();
-    // functionGrammarDetail += "; Boolean Grammar\n";
-    functionGrammarDetail += createBoolGrammar();    
+    if(latency > 0){
+        functionGrammar += "(ExprX Bool)\n";
+        functionGrammar += "(Atom Bool)\n";
+        functionGrammar += "(AtomX Bool)\n";
+        functionGrammarDetail += createExprXGrammar();
+        functionGrammarDetail += createAtomGrammar();
+        functionGrammarDetail += createAtomXGrammar(latency);   
+    }
+    else{
+        functionGrammar += "(Expr Bool) ";
+        functionGrammar += "(Atom Bool)\n";
+        functionGrammarDetail += createExprGrammar();
+        functionGrammarDetail += createAtomGrammar();
+    }
 
     for(auto signals : sameTypeSignals){
         if(signals.first.first == SignalType::BITS){
             //assert(signals.second.size() > 1);
-            functionGrammarDetail += createMixBvGrammar(signals.second);
+            functionGrammarDetail += createMixBvGrammar(signals.second,0);
             functionGrammar += "(";
             functionGrammar += "MixBv"+std::to_string(signals.first.second)+" ";
             functionGrammar += " (_ ";
@@ -319,7 +336,20 @@ std::string SyGuSGenerater::createFunctionGrammar()
             functionGrammar += "))\n";
         }   
     }
-    //add the details for each grammar in the functionGrammar
+    if(latency > 0){
+        for(auto signals : sameTypeSignals){
+            if(signals.first.first == SignalType::BITS){
+                //assert(signals.second.size() > 1);
+                functionGrammarDetail += createMixBvGrammar(signals.second,latency);
+                functionGrammar += "(";
+                functionGrammar += "MixBvX"+std::to_string(signals.first.second)+" ";
+                functionGrammar += " (_ ";
+                functionGrammar += "BitVec ";
+                functionGrammar += std::to_string(signals.first.second);
+                functionGrammar += "))\n";
+            }
+        }
+    }
     functionGrammar += ")\n";
     functionGrammar += "(\n";
     functionGrammar += functionGrammarDetail;
@@ -350,30 +380,46 @@ std::string SyGuSGenerater::createSingleBvGrammar(Signal signal)
     return bvGrammar;
 }
 
-std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals){
+std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals, int latency){
     std::string mixBvGrammar = "";
-    std::string startName = "MixBv"+std::to_string(signals[0].getWidth());
-    mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ") \n") +std::string("    ( \n");
-    for(auto signal : signals){
-        mixBvGrammar += std::string("\t")+signal.toSygusName()+"\n";
+    if(latency == 0){
+        
+        std::string startName = "MixBv"+std::to_string(signals[0].getWidth());
+        mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ") \n") +std::string("    ( \n");
+        for(auto signal : signals){
+            mixBvGrammar += std::string("\t")+signal.toSygusName()+"\n";
+        }
+        mixBvGrammar += std::string("\t(bvneg ")+ startName + ")\n";
+        mixBvGrammar += std::string("\t(bvnot ")+ startName + ")\n";
+        mixBvGrammar += std::string("\t(bvand ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvor ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvadd ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvsub ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvmul ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t)\n")+
+        std::string(")\n");
     }
-    mixBvGrammar += std::string("\t(bvneg ")+ startName + ")\n";
-    mixBvGrammar += std::string("\t(bvnot ")+ startName + ")\n";
-    mixBvGrammar += std::string("\t(bvand ")+ startName + " " + startName + ")\n";
-    mixBvGrammar += std::string("\t(bvor ")+ startName + " " + startName + ")\n";
-    //mixBvGrammar += std::string("\t(bvxor ")+ startName + " " + startName + ")\n";
-    mixBvGrammar += std::string("\t(bvadd ")+ startName + " " + startName + ")\n";
-    mixBvGrammar += std::string("\t(bvsub ")+ startName + " " + startName + ")\n";
-    mixBvGrammar += std::string("\t(bvmul ")+ startName + " " + startName + ")\n";
-    // mixBvGrammar += std::string("\t(bvudiv ")+ startName + " " + startName + ")\n";
-    // mixBvGrammar += std::string("\t(bvlshr ")+ startName + " " + startName + ")\n";
-    // mixBvGrammar += std::string("\t(bvshl ")+ startName + " " + startName + ")\n";
-    mixBvGrammar += std::string("\t)\n")+
-    std::string(")\n");
+    else{
+        std::string startName = "MixBvX"+std::to_string(signals[0].getWidth());
+        mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ") \n") +std::string("    ( \n");
+        for(auto signal : signals){
+            mixBvGrammar += std::string("\t")+signal.toSygusName()+"_"+std::to_string(latency)+"\n";
+        }
+        mixBvGrammar += std::string("\t(bvneg ")+ startName + ")\n";
+        mixBvGrammar += std::string("\t(bvnot ")+ startName + ")\n";
+        mixBvGrammar += std::string("\t(bvand ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvor ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvadd ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvsub ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t(bvmul ")+ startName + " " + startName + ")\n";
+        mixBvGrammar += std::string("\t)\n")+
+        std::string(")\n");
+    }
+    
     return mixBvGrammar;
 }
 
-std::string SyGuSGenerater::createBoolGrammar()
+std::string SyGuSGenerater::createAtomGrammar()
 {   
     std::string boolGra =
     std::string("(Atom Bool \n")+
@@ -386,11 +432,30 @@ std::string SyGuSGenerater::createBoolGrammar()
     std::string("\t(or Atom Atom)\n");
     
     //add the important checker for True return
-    boolGra += createKeyGrammar();
+    boolGra += createKeyGrammar(0);
 
     //wait for add bv compare grammar
     boolGra += std::string("\t)\n")+ std::string(")\n");
     return boolGra;
+}
+
+std::string SyGuSGenerater::createAtomXGrammar(int latency)
+{   
+    std::string boolXGra =
+    std::string("(AtomX Bool \n")+
+    std::string("\t(\n")+
+    //std::string("; true false\n")+
+    std::string("\t(= AtomX AtomX) \n")+
+    std::string("\t(not AtomX) \n")+
+    std::string("\t(and AtomX AtomX) \n")+
+    std::string("\t(or AtomX AtomX)\n");
+
+    // //add the important checker for True return
+    boolXGra += createKeyGrammar(latency);
+
+    //wait for add bv compare grammar
+    boolXGra += std::string("\t)\n")+ std::string(")\n");
+    return boolXGra;
 }
 
 std::string SyGuSGenerater::createExprGrammar()
@@ -402,6 +467,16 @@ std::string SyGuSGenerater::createExprGrammar()
     std::string("\t (=> Atom Atom)\n");
     exprGra += std::string("\t)\n")+ std::string(")\n");
     return exprGra;
+}
+
+std::string SyGuSGenerater::createExprXGrammar()
+{
+    std::string exprXGra =
+    std::string("(ExprX Bool \n")+
+    std::string("\t(\n")+
+    std::string("\t (=> Atom AtomX)\n");
+    exprXGra += std::string("\t)\n")+ std::string(")\n");
+    return exprXGra;
 }
 
 std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
@@ -431,33 +506,55 @@ std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
     return constraintLine;
 }
 
-std::string SyGuSGenerater::createKeyGrammar()
+std::string SyGuSGenerater::createKeyGrammar(int latency)
 {   
     std::string trueGrammar = "";
-    //add true checker for each signal
-    for(auto typeSignals : sameTypeSignals){
-        
-        SignalType signalType = typeSignals.first.first;
-        int signalWidth = typeSignals.first.second;
-
-
-        if(signalType == SignalType::BOOLEAN){
-            for(auto signal : typeSignals.second){
-                trueGrammar += "\t" + signal.toSygusName() + "\n";
+    if(latency==0){
+        //add true checker for each signal
+        for(auto typeSignals : sameTypeSignals){
+            SignalType signalType = typeSignals.first.first;
+            int signalWidth = typeSignals.first.second;
+            if(signalType == SignalType::BOOLEAN){
+                for(auto signal : typeSignals.second){
+                    trueGrammar += "\t" + signal.toSygusName() + "\n";
+                }
             }
+            else if(signalType == SignalType::BITS){
+                // trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
+                trueGrammar += "\t(= MixBv"     +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvule  MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvuge MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvult MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvugt MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvslt MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvsgt MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvsle MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvsge MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
+            }    
         }
-        else if(signalType == SignalType::BITS){
-            // trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
-            trueGrammar += "\t(= MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvule  MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvuge MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvult MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvugt MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvslt MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvsgt MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvsle MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-            trueGrammar += "\t(bvsge MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
-        }    
+    }
+    else{
+        for(auto typeSignals : sameTypeSignals){
+            SignalType signalType = typeSignals.first.first;
+            int signalWidth = typeSignals.first.second;
+            if(signalType == SignalType::BOOLEAN){
+                for(auto signal : typeSignals.second){
+                    trueGrammar += "\t" + signal.toSygusName()+"_"+std::to_string(latency) + "\n";
+                }
+            }
+            else if(signalType == SignalType::BITS){
+                // trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
+                trueGrammar += "\t(= MixBvX"        +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvule  MixBvX"   +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvuge MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvult MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvugt MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvslt MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvsgt MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvsle MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+                trueGrammar += "\t(bvsge MixBvX"    +std::to_string(signalWidth)+" MixBvX"+std::to_string(signalWidth)+" )\n";
+            }    
+        }
     }
 
     return trueGrammar;
