@@ -1,16 +1,29 @@
-# Compiler and flags
-CXX             ?= g++
-CXXFLAGS        += -std=c++17 -I ./src/helper/ -I./include -I./src/parser -I./src/tracer -I$(SRC_DIR) -I$(BUILD_DIR) -g
-LDFLAGS         = -L./lib
-
 # Source and build directories
 SRC_DIR         ?= ./src
 BUILD_DIR       ?= ./build
 RUNTIME_DIR     ?= ./runtime
 PYTHON_DIR      ?= ./src/python
+SMART_TARGET	= smart.out
+ASSERTION_TARGET = assertion.out
+SMART_SRC      	= ./src/smart.cpp
+ASSERTION_SRC   = ./src/assertion.cpp
+SRC_DIRS        = ./src/parser ./src/tracer ./src/helper ./src/sygus
+
+# Compiler and flags
+CXX             ?= g++
+INCLUDES := \
+	-I ./src/helper/ \
+	-I ./src/parser \
+	-I ./src/tracer \
+	-I ./src/sygus \
+	-I $(BUILD_DIR) \
+	-I $(SRC_DIR) \
+
+CXXFLAGS        += $(INCLUDES) -std=c++17 -g
+LDFLAGS         = -L./lib
 
 # Ensure subdirectories exist
-BUILD_SUBDIRS   = $(BUILD_DIR)/parser $(BUILD_DIR)/tracer $(BUILD_DIR)/helper
+BUILD_SUBDIRS   = $(BUILD_DIR)/parser $(BUILD_DIR)/tracer $(BUILD_DIR)/helper $(BUILD_DIR)/sygus
 
 # VCD Parser Files (from the first Makefile)
 LEX_SRC         ?= $(SRC_DIR)/parser/VCDScanner.l
@@ -25,15 +38,6 @@ VCD_SRC         ?= $(SRC_DIR)/VCDFile.cpp \
                    $(SRC_DIR)/VCDValue.cpp \
                    $(SRC_DIR)/VCDFileParser.cpp
 
-SMART_TARGET	= smart.out
-
-ASSERTION_TARGET = assertion.out
-
-SMART_SRC      	= ./src/smart.cpp
-
-ASSERTION_SRC   = ./src/assertion.cpp
-
-SRC_DIRS        = ./src/parser ./src/tracer ./src/helper
 
 SRC_FILES       = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.cpp))
 
@@ -58,16 +62,7 @@ $(YAC_OUT): $(YAC_SRC) | $(BUILD_SUBDIRS)
 $(LEX_OUT): $(LEX_SRC) $(YAC_OUT) | $(BUILD_SUBDIRS)
 	flex  -P VCDParser --header-file=$(LEX_HEADER) -o $(LEX_OUT) $(LEX_SRC)
 
-all: smart_compile
-
-
-setup:
-	python $(PYTHON_DIR)/setUp.py
-
-compile: smart_compile
-
-# Main compilation rule for smart.out
-smart_compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(SMART_SRC)
+compile: $(LEX_OUT) $(YAC_OUT) $(OBJS) $(SMART_SRC)
 	$(CXX) $(CXXFLAGS) -o $(SMART_TARGET) $^
 
 smart:
@@ -95,27 +90,6 @@ clean:
 	rm -rf $(LEX_OUT) $(LEX_HEADER) $(YAC_OUT) $(YAC_HEADER)
 	rm -rf $(OBJS) $(SMART_TARGET) $(ASSERTION_TARGET)
 	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
-	mkdir $(BUILD_DIR)
-	
-
-
-sim_clean:
-	rm -rf sim_build
-	rm -rf runtime/__pycache__
-	rm -rf $(RUNTIME_DIR)/sim_results/*.vcd
-	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
-	mkdir sim_build
-
-smart_clean:
-	rm -rf sygus.sl
-	rm -rf runtime/sim_results/*.vcd
-	rm -rf runtime/smt_results/*.vcd
-
-assertion_clean:
-	rm -rf $(ASSERTION_TARGET)
-
-compile_clean:
-	rm -rf $(BUILD_DIR)
 	mkdir $(BUILD_DIR)
 
 
