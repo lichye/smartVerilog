@@ -2,7 +2,7 @@
 #define SETUPS_H
 
 #define smartVerbose 3
-#define deleteTempFile false
+#define deleteTempFile true
 #define runRandomState true
 #define unboundChecker false
 #define LTLproperty true

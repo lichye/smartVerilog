@@ -48,6 +48,7 @@ class SyGuSGenerater
         std::string createMixBvGrammar(const std::vector<Signal>,int);
         std::string createKeyGrammar(int);
         std::string createConstraint(bool,int);
+        std::string createLTLConstraint(bool,int,int);
         bool checkConstraintsDefined(int,bool);
 
         

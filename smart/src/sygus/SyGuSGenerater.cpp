@@ -193,10 +193,37 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
     std::ofstream file;
     file.open(path);
     if(file.is_open()){
-        file<<"(set-logic BV)\n"; 
-        file<<"; The latency is "<<latency<<"\n";
         if(signals.size()>0){
+            file<<"(set-logic BV)\n"; 
+            file<<"; The latency is "<<latency<<"\n";
+
             file<<createSynthesisFunction(signals,latency);
+            
+            //print out  the constraints, only if constraints exist
+            if(constraints.size() >0){
+                //we believe that the constraints are the same length with the signals
+                for(int i =0;i+latency<constraints[0].size();i++){
+                    if(comments.find(i) != comments.end()){
+                        file<<"; "<<comments[i]<<std::endl;
+                    }
+                    file<<createLTLConstraint(true,i,latency);
+                }
+            }
+
+            //print out the false constraints, only if false constraints exist
+            file<<"; "<<"False Constraints below"<<std::endl;
+            if(falseConstraints.size() > 0){
+                for(int i =0;i<falseConstraints[0].size();i++){
+                    if(falseComments.find(i) != falseComments.end()){
+                        file<<"; "<<falseComments[i]<<std::endl;
+                    }
+                    file<<createLTLConstraint(false,i,latency);
+                }
+            }
+
+
+            file<<"(check-synth)"<<std::endl;
+        file.close();
         }
     }
     else{
@@ -252,7 +279,6 @@ std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
   printDebug("The Result from cvc5 is: " + result,3);
   return result;
 }
-
 
 std::string SyGuSGenerater::createSynthesisFunction(const std::vector<Signal> signals,int latency)
 {
@@ -495,6 +521,40 @@ std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
         }
     }
     else{
+        for(auto constraint : falseConstraints){
+            constraintLine += constraint[index]->toSyGusString() + " ";
+        }
+    }
+    
+    constraintLine += ") ";
+    constraintLine += constraintType ? "true" : "false";
+    constraintLine += "))\n";
+    return constraintLine;
+}
+
+std::string SyGuSGenerater::createLTLConstraint(bool constraintType,int index,int latency)
+{
+    assert(index < constraints[0].size());
+    assert(index + latency < constraints[0].size());
+    std::string constraintLine;
+    if(!checkConstraintsDefined(index,constraintType)){
+        constraintLine+="; ";
+    }
+   
+    constraintLine += "(constraint (=(inv ";
+
+    if(constraintType){
+        for(auto constraint : constraints){
+            constraintLine += constraint[index]->toSyGusString() + " ";
+        }
+        for(auto constraint : constraints){
+            constraintLine += constraint[index + latency]->toSyGusString() + " ";
+        }
+    }
+    else{
+        for(auto constraint : constraints){
+            constraintLine += constraint[index]->toSyGusString() + " ";
+        }
         for(auto constraint : falseConstraints){
             constraintLine += constraint[index]->toSyGusString() + " ";
         }

@@ -129,6 +129,7 @@ int main(int argc, char* argv[]){
   print("\tFinish generating random state");
 
   sygus->printSysgusPath(sygusPath);
+  sygus->printLTLSygusPath("LTL.sl",1);
   print("\tFinish generating sygus file");
 
   timer->start(CVC5_Timer);
