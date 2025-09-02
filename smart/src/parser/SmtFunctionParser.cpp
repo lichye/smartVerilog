@@ -15,7 +15,7 @@ SmtFunctionParser::~SmtFunctionParser()
 {
 }
 
-SygusExpr* SmtFunctionParser::parseSmtFunction(std::string function) {
+SygusExpr* SmtFunctionParser::parseSmtFunction(std::string function,bool isLTL) {
     if (function.find("(define-fun") <0) {
         throw std::invalid_argument("Input is not a valid SMT-LIB function definition.");
     }
@@ -27,10 +27,10 @@ SygusExpr* SmtFunctionParser::parseSmtFunction(std::string function) {
     // Parse the function body
     printDebug("We parse the function: " + body + "\n",2);
     std::istringstream stream(body);
-    return parseExpression(stream);
+    return parseExpression(stream, isLTL);
 }
 
-SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
+SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream,bool isLTL) {
     skipWhitespace(stream);
     //print("stream after skipping whitespace: " + stream.str() + "\n");
     char ch = stream.peek();
@@ -43,12 +43,17 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
         SygusExprType exprType = getExprType(opToken);
 
         if (exprType == FUNCTION) {
-            SygusIdentifier* id = (SygusIdentifier*)parseExpression(stream);
-            SygusVariableList* parameter_list = (SygusVariableList*)parseExpression(stream);
-            SygusExpr* return_type = parseExpression(stream);
-            SygusExpr* body = parseExpression(stream);
+            SygusIdentifier* id = (SygusIdentifier*)parseExpression(stream,isLTL);
+            SygusVariableList* parameter_list = (SygusVariableList*)parseExpression(stream,isLTL);
+            SygusExpr* return_type = parseExpression(stream,isLTL);
+            SygusExpr* body = parseExpression(stream,isLTL);
             SygusFunction* function = new SygusFunction(id, parameter_list, body);
             stream.get(); // Consume ')'
+            if(isLTL)
+                function->setLatency(latency);
+            else
+                function->setLatency(0);
+
             printDebug("We parse a function : \n" + function->toString() + "\n",1);
             return function;
         }
@@ -56,9 +61,9 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
             printDebug("We meet a list expression\n",3);
             SygusVariableList* list = new SygusVariableList();
             while(stream.peek() != ')'){
-                SygusExpr* id = parseExpression(stream);
+                SygusExpr* id = parseExpression(stream,isLTL);
                 list->addVariable((SygusIdentifier*)id);
-                SygusExpr* type = parseExpression(stream);
+                SygusExpr* type = parseExpression(stream,isLTL);
                 list->addType((SygusVariableType*)type);
                 stream.get(); // Consume ')' of the identifier declaration      
             }
@@ -73,8 +78,8 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
         else if(exprType == BITS_TYPE){
             printDebug("We meet a bits type\n",3);
 
-            SygusExpr* bitvec = parseExpression(stream);
-            SygusIntValue* bitlength = (SygusIntValue*)parseExpression(stream);
+            SygusExpr* bitvec = parseExpression(stream,isLTL);
+            SygusIntValue* bitlength = (SygusIntValue*)parseExpression(stream,isLTL);
 
             int bitlengthValue = bitlength->getValue();
             SygusBitsType* bitsType = new SygusBitsType(bitlengthValue);
@@ -91,13 +96,13 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
             SygusComplexExpr* complexExpr = new SygusComplexExpr(op);
             int operands = op->getOperandsNumber();
             if(operands==1){
-                SygusExpr* operand = parseExpression(stream);
+                SygusExpr* operand = parseExpression(stream,isLTL);
                 complexExpr->addOperand(operand);
             }
             else if(operands==2){
-                SygusExpr* operand1 = parseExpression(stream);
+                SygusExpr* operand1 = parseExpression(stream,isLTL);
                 complexExpr->addOperand(operand1);
-                SygusExpr* operand2 = parseExpression(stream);
+                SygusExpr* operand2 = parseExpression(stream,isLTL);
                 complexExpr->addOperand(operand2);
             }
             else{
@@ -117,6 +122,9 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream) {
         SygusExprType exprType = getExprType(token);
         if(exprType == IDENTIFIER){
             printDebug("the token has type of Identifier: "+token+"\n",3);
+            if(isLTL){
+                token = cleanLatency(token);
+            }
             return new SygusIdentifier(token);
         } 
         else if(exprType == BOOL_TYPE){
@@ -172,4 +180,25 @@ void SmtFunctionParser::skipWhitespace(std::istringstream& stream) {
     while (std::isspace(stream.peek())) {
         stream.get();
     }
+}
+
+std::string SmtFunctionParser::cleanLatency(std::string token) {
+    const size_t pos = token.find_last_of('_');
+    if (pos == std::string::npos || pos + 1 >= token.size()) {
+        return token;
+    }
+
+    const std::string suffix = token.substr(pos + 1);
+
+    const bool all_digits = !suffix.empty() &&
+        std::all_of(suffix.begin(), suffix.end(),
+                    [](unsigned char ch){ return std::isdigit(ch); });
+
+    if (!all_digits) {
+        return token;
+    } else {
+        latency = std::stoi(suffix);
+        printDebug("We found a latency: " + std::to_string(latency) + "\n", 3);
+    }
+    return token.substr(0, pos);
 }

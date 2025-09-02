@@ -1,13 +1,15 @@
 #ifndef SETUPS_H
 #define SETUPS_H
 
-#define smartVerbose 3
-#define deleteTempFile true
-#define runRandomState true
+// Property mining Settings
 #define unboundChecker false
 #define LTLproperty true
 #define LTLpropertyDepth 1
 
+// Debugging Settings
+#define smartVerbose 0
+#define deleteTempFile true
+#define runRandomState true
 
 inline void print(std::string message)
 {

@@ -2,7 +2,7 @@
 #include <chrono>
 #include <thread>
 #include "Timer.h"
-#include "utils.h"
+#include "Utils.h"
 
 Timer::Timer(){
     sbyCounter = 0;

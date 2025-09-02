@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include "VCDTypes.hpp"
-#include "utils.h"
+#include "Utils.h"
 
 class SignalGather
 {

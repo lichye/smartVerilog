@@ -178,10 +178,12 @@ class SygusFunction: public SygusExpr
         std::string toString();
         SygusExpr* getBody();
         std::string getBodyVerilogExpr();
+        void setLatency(int);
 
     private:
         SygusIdentifier *name;
         SygusVariableList *parameters;
         SygusExpr *body;
+        int latency;
 };
 #endif

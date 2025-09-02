@@ -2,7 +2,7 @@
 #define VALUE_H
 
 #include "VCDValue.hpp"
-#include "utils.h"
+#include "Utils.h"
 #include <random>
 
 class Value{

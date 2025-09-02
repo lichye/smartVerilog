@@ -2,7 +2,7 @@
 #include "State.h"
 #include "StateMaker.h"
 #include "Timer.h"
-#include "utils.h"
+#include "Utils.h"
 #include <unistd.h>
 
 #include <string>
@@ -253,7 +253,6 @@ bool VerilogChecker::runEBMC(std::string tracePath){
     command += " --vcd "+tracePath;
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
-    print("Running EBMC with command: "+command+"\n");
     int status = system(command.c_str());
     return status==0;
 }
@@ -415,8 +414,6 @@ void VerilogChecker::setHomePath(std::string path) {
 }
 
 Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
-    //constrains.constraints[0] is the first Signal vector
-    print("\tFix up the constrains");
     int timeStamp = constrains.constraints[0].size();
     int signalSize = constrains.constraints.size();
     bool isUnDefined = false;

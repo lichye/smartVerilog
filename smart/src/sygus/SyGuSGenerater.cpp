@@ -1,5 +1,5 @@
 #include "SyGuSGenerater.h"
-#include "utils.h"
+#include "Utils.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -500,6 +500,7 @@ std::string SyGuSGenerater::createExprXGrammar()
     std::string exprXGra =
     std::string("(ExprX Bool \n")+
     std::string("\t(\n")+
+    std::string("\t (=> Atom Atom) \n")+
     std::string("\t (=> Atom AtomX)\n");
     exprXGra += std::string("\t)\n")+ std::string(")\n");
     return exprXGra;
@@ -537,13 +538,19 @@ std::string SyGuSGenerater::createLTLConstraint(bool constraintType,int index,in
     assert(index < constraints[0].size());
     assert(index + latency < constraints[0].size());
     std::string constraintLine;
+    
     if(!checkConstraintsDefined(index,constraintType)){
         constraintLine+="; ";
     }
-   
+    
+    if(!checkConstraintsDefined(index + latency,constraintType)&&constraintType){
+        constraintLine+="; ";
+    }
+
     constraintLine += "(constraint (=(inv ";
 
     if(constraintType){
+        
         for(auto constraint : constraints){
             constraintLine += constraint[index]->toSyGusString() + " ";
         }

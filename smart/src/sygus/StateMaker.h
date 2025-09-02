@@ -2,7 +2,7 @@
 #define STATEMAKER_H
 
 #include "Trace.h"
-#include "utils.h"
+#include "Utils.h"
 #include "State.h"
 class StateMaker
 {

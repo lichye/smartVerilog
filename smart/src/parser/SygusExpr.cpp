@@ -1,5 +1,5 @@
 #include "SygusExpr.h"
-#include "utils.h"
+#include "Utils.h"
 #include <string>
 #include <cassert>
 #include <iostream>
@@ -443,7 +443,7 @@ std::string SygusFunction::toString()
     std::string result;
     result+="function id : " + name->toString() + "\n";
     result+="parameters : " + parameters->toString() + "\n";
-    result+="body : " + body->toString() + "\n";
+    result+="body: "+getBodyVerilogExpr() + "\n";
     return result;
 }
 
@@ -454,5 +454,24 @@ SygusExpr* SygusFunction::getBody()
 
 std::string SygusFunction::getBodyVerilogExpr()
 {
-    return body->toString();
+    if(latency==0)
+        return body->toString();
+    else{
+        std::string Expr = body->toString();
+        const std::string arrow ="|->";
+        std::size_t pos = Expr.find(arrow);
+        if(pos == std::string::npos)
+            throw std::runtime_error("Expression does not contain '|->'");
+        else{
+            std::string result = Expr;
+            result.insert(pos+arrow.length()," ##"+std::to_string(latency)+" ");
+            return result;
+        }
+    }
+
+}
+
+void SygusFunction::setLatency(int latency)
+{
+    this->latency = latency;
 }

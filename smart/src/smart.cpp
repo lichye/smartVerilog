@@ -19,14 +19,7 @@ namespace fs = std::filesystem;
 #include "setups.h"
 
 //global variables
-
-std::vector<Signal>* signals;
-SyGuSGenerater* sygus;
-Module* module;
-VerilogChecker* checker;
-StateMaker* stateMaker;
-Timer* timer;
-
+int latency = 0;
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
 std::string config_path = "User/config.ini";
@@ -40,17 +33,26 @@ std::string generateSMTResultPath();
 std::string initVariables = "";
 std::string currentDir = "";
 std::string core_id = "0";
+std::string Cvc5result;
+std::vector<Signal>* signals;
+SyGuSGenerater* sygus;
+Module* module;
+VerilogChecker* checker;
+StateMaker* stateMaker;
+Timer* timer;
+SmtFunctionParser parser;
 
-bool writeStringToFile(const std::string&, const std::string&,std::ios::openmode);
+//Help function
 void modifySignals(std::string,int mode);
 void intersectionSignals(std::string);
+void printCoreSignals(std::vector<Signal>*);
+bool writeStringToFile(const std::string&, const std::string&,std::ios::openmode);
+SygusFunction* parseSygusFunction(const std::string&,SyGuSGenerater*,bool);
+State* createNegativeState();
 
 int main(int argc, char* argv[]){
-  // print("Smart Verilog 0.1");
-  int timeOut = 0;
-
-  if(argc!=6){
-    print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id>\n");
+  if(argc!=7){
+    print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id> <Latency>\n");
     return -1;
   }
   else{
@@ -59,101 +61,63 @@ int main(int argc, char* argv[]){
     resultFileDir = argv[3];
     initVariables = argv[4];
     core_id = argv[5];
+    latency = std::stoi(argv[6]);
   }
 
+  bool isLTL = (latency > 0);
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
   resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
   smt_path = currentDir + "/runtime/smt_results/"+core_id;
   std::string sygusPath = "runtime/smt_results/sygus"+core_id+".sl";
   fs::create_directory(smt_path);
-  // initVariables = currentDir + "/runtime/variables/initVariables.txt";
-
   StateMaker::setSeed(42);
-  SmtFunctionParser parser;
+
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
-  // checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::SBY);
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::EBMC);
   timer = new Timer();  
 
   checker->setTopModule(moduleName);
   checker->setTimer(timer);
-
-  // this means we does not care about the initial state
-  // checker->setModuleTime("##1");
   
+  //Read from trace & Generate Signals
   module->addTracesfromDir(SIM,sim_path);
   module->addTracesfromDir(SMT,smt_path);
-
-  // we first get all the signals from the module
   signals = module->getAllSignals();
-
   modifySignals(initVariables,1);
-
-  print("This Core Loop's Variables:");
-  for(auto &signal : *signals){
-    print("\t"+signal.name);
-  }
-  print("");
-
   std::sort(signals->begin(),signals->end());
-
   sygus->setSignals(signals);
   checker->setSignals(signals);
-
   stateMaker = new StateMaker(signals);
 
+  printCoreSignals(signals);
+  print("In looptime 0:");
+
+  //Add constrains into sygus
   std::vector<Constrains> constraints = module->getAllConstraints(signals);
   for(auto &constrain : constraints){
-    //check will help
-    // constrain = checker->fixupConstrains(constrain);
     sygus->addConstraints(constrain.constraints,constrain.isTrue);
     sygus->addConstraintComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
 
-  print("In looptime "+std::to_string(timeOut)+":");
-
-  State* randomState = stateMaker->makeRandomState();
-  int loopTime = 0;
-
-  while(checker->checkStateReachability(randomState)){
-    sygus->addConstraintComments("Getting constraints from the random state",true);
-    randomState = stateMaker->makeRandomState();
-    if(loopTime++>3){
-      break;
-    }
+  State* negativeState = createNegativeState();
+  sygus->addConstraints(negativeState,false);
+  if(latency == 0){
+    sygus->printSysgusPath(sygusPath);
   }
-  sygus->addConstraints(randomState,false);
-
-
-  print("\tFinish generating random state");
-
-  sygus->printSysgusPath(sygusPath);
-  sygus->printLTLSygusPath("LTL.sl",1);
-  print("\tFinish generating sygus file");
-
-  timer->start(CVC5_Timer);
-  std::string Cvc5result;
-  SygusFunction* sygusfunc; 
-  try{
-    Cvc5result = sygus->runCVC5Sygus(sygusPath);
-    timer->stop(CVC5_Timer);
-    sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
+  else{
+    sygus->printLTLSygusPath(sygusPath,latency);
   }
-  catch(const std::exception& e){
-    timer->stop(CVC5_Timer);
-    writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
-    fs::remove_all(smt_path);
-    return -1;
-  }
- 
+  
+  SygusFunction* sygusfunc = parseSygusFunction(sygusPath, sygus,isLTL);
   print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
 
   std::string SMTVCDfilePath = generateSMTResultPath();
   bool verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
-  print("\tFinish checking the assertion: "+std::to_string(verifiedResult));
-  print("\tTrace goes to VCD file: "+SMTVCDfilePath);
+  print("\tIts correctness is: "+std::to_string(verifiedResult));
+  printDebug("\tTrace goes to VCD file: "+SMTVCDfilePath,1);
 
+  int timeOut = 0;
   int mostRun = signals->size();
 
   while(!verifiedResult){
@@ -162,44 +126,30 @@ int main(int argc, char* argv[]){
       break;
     }
     print("In looptime "+std::to_string(timeOut)+":");
-    print("\tGathering signals from the SMT traces");
     module->addTrace(SMT,SMTVCDfilePath);
     Constrains c = module->getConstrain(SMTVCDfilePath,signals);
     Constrains new_c = checker->fixupConstrains(c);
     sygus->addConstraints(new_c.constraints,c.isTrue);
-    // print("\tFinish getting constraints from SMT trace: "+c.tracePath);
     sygus->addConstraintComments("Getting constraints from the trace :\t"+c.tracePath,c.isTrue);
-    
-    sygus->printSysgusPath(sygusPath);
-    print("\tFinish generating sygus file");
-
-    try{
-      Cvc5result = sygus->runCVC5Sygus(sygusPath);
-      timer->stop(CVC5_Timer);
-      sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result);
+    if(isLTL){
+      sygus->printLTLSygusPath(sygusPath,latency);
     }
-    catch(const std::exception& e){
-      timer->stop(CVC5_Timer);
-      writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
-      fs::remove_all(smt_path);
-      return -1;
+    else{
+      sygus->printSysgusPath(sygusPath);
     }
-    
-    print("\twe get assertion:" + sygusfunc->getBodyVerilogExpr());
+    sygusfunc = parseSygusFunction(sygusPath, sygus,isLTL);    
+    print("\tGet assertion:" + sygusfunc->getBodyVerilogExpr());
 
     SMTVCDfilePath = generateSMTResultPath();
     verifiedResult = checker->checkExprSafety(sygusfunc,SMTVCDfilePath);
-    print("\tFinish checking the assertion: "+std::to_string(verifiedResult));
-    print("\tTrace goes to VCD file: "+SMTVCDfilePath);
+    print("\tIts correctness is: "+std::to_string(verifiedResult));
+    printDebug("\tTrace goes to VCD file: "+SMTVCDfilePath,1);
 
   }
   if(verifiedResult){
-    print("Last assertion is verified\n");
-    print("The property is "+sygusfunc->getBodyVerilogExpr());
     writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr(),std::ios::out);
     writeStringToFile("SygusResult.sl",Cvc5result,std::ios::app);
-    
-    print("The property is written to "+resultFileDir);
+    print("Last assertion "+sygusfunc->getBodyVerilogExpr()+" is verified and written to "+resultFileDir);
   }
   else{
     print("All assertion is not verified\n");
@@ -294,4 +244,42 @@ void modifySignals(std::string removeVariablesPath,int mode){
   }
 
 
+}
+
+SygusFunction* parseSygusFunction(const std::string& sygusPath,SyGuSGenerater* sygus,bool isLTL){
+  SygusFunction* sygusfunc = nullptr;
+  try{
+      timer->start(CVC5_Timer);
+      Cvc5result = sygus->runCVC5Sygus(sygusPath);
+      timer->stop(CVC5_Timer);
+      sygusfunc = (SygusFunction*) parser.parseSmtFunction(Cvc5result, isLTL);
+    }
+    catch(const std::exception& e){
+      timer->stop(CVC5_Timer);
+      writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
+      fs::remove_all(smt_path);
+      exit(-1);
+  }
+  return sygusfunc;
+}
+
+void printCoreSignals(std::vector<Signal>* signals){
+  std::string coreSignals="Core Signals:";
+  for(auto &signal : *signals){
+    coreSignals += "\t" + signal.name;
+  }
+  print(coreSignals);
+}
+
+State* createNegativeState(){
+  State* negativeState = stateMaker->makeRandomState();
+  int loopTime = 0;
+  while(checker->checkStateReachability(negativeState)){
+    sygus->addConstraintComments("Getting constraints from the random state",true);
+    negativeState = stateMaker->makeRandomState();
+    if(loopTime++>3){
+      break;
+    }
+  }
+  return negativeState;
 }
