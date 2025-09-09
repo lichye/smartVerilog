@@ -92,4 +92,9 @@ clean:
 	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
 	mkdir $(BUILD_DIR)
 
+smart_clean:
+	rm -rf $(SMART_TARGET)
+	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
+	rm -rf sygus.sl
+
 

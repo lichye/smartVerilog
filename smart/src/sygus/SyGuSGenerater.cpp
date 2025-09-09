@@ -84,7 +84,7 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
 void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
 {   
     printDebug("Adding constraints from the state",2);
-    printDebug("The state is "+state->toString(),2);
+    printDebug("The state is "+state->toString(),3);
     assert(state->signalSize() == this->signals.size());
     std::vector<Value*> values = state->getValues();
     assert(values.size() == this->signals.size()); 
@@ -106,9 +106,9 @@ void SyGuSGenerater::addConstraints(State* state,bool trueConstrains)
        }
     }
     else{
-        printDebug("Adding false constraints\n",3);
+        printDebug("Adding false constraints",3);
         if(falseConstraints.size()==0){
-            printDebug("FalseConstraints does not exists\n",3);
+            printDebug("FalseConstraints does not exists before",3);
             for(auto value : values){
                 std::vector<Value*> constraint;
                 constraint.push_back(value);
@@ -198,7 +198,7 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
             file<<"; The latency is "<<latency<<"\n";
 
             file<<createSynthesisFunction(signals,latency);
-            
+            printDebug("Synthesis Function Down in file",3);
             //print out  the constraints, only if constraints exist
             if(constraints.size() >0){
                 //we believe that the constraints are the same length with the signals
@@ -209,8 +209,7 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
                     file<<createLTLConstraint(true,i,latency);
                 }
             }
-
-            //print out the false constraints, only if false constraints exist
+            printDebug("True Constraints Down in file",3);
             file<<"; "<<"False Constraints below"<<std::endl;
             if(falseConstraints.size() > 0){
                 for(int i =0;i<falseConstraints[0].size();i++){
@@ -221,7 +220,7 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
                 }
             }
 
-
+            printDebug("False Constraints Down in file",3);
             file<<"(check-synth)"<<std::endl;
         file.close();
         }
@@ -229,7 +228,7 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
     else{
         std::cout<<"Error opening file"<<std::endl;
     }
-    printDebug("Printing the SyGuS file to the path: "+path,2);
+    printDebug("Finish Printing the SyGuS file to the path: "+path,2);
 }
 void SyGuSGenerater::debugPrint()
 {
@@ -340,14 +339,14 @@ std::string SyGuSGenerater::createFunctionGrammar(int latency)
         functionGrammar += "(Atom Bool)\n";
         functionGrammar += "(AtomX Bool)\n";
         functionGrammarDetail += createExprXGrammar();
-        functionGrammarDetail += createAtomGrammar();
+        functionGrammarDetail += createAtomGrammar(true);
         functionGrammarDetail += createAtomXGrammar(latency);   
     }
     else{
         functionGrammar += "(Expr Bool) ";
         functionGrammar += "(Atom Bool)\n";
         functionGrammarDetail += createExprGrammar();
-        functionGrammarDetail += createAtomGrammar();
+        functionGrammarDetail += createAtomGrammar(false);
     }
 
     for(auto signals : sameTypeSignals){
@@ -445,14 +444,16 @@ std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals, int 
     return mixBvGrammar;
 }
 
-std::string SyGuSGenerater::createAtomGrammar()
+std::string SyGuSGenerater::createAtomGrammar(bool isLTL)
 {   
     std::string boolGra =
-    std::string("(Atom Bool \n")+
-    std::string("\t(\n")+
+        std::string("(Atom Bool \n")+
+        std::string("\t(\n");
 
-    //std::string("; true false\n")+
-    std::string("\t(= Atom Atom) \n")+
+    if(!isLTL){
+        boolGra += std::string("\t(= Atom Atom) \n");
+    }    
+    boolGra +=
     std::string("\t(not Atom) \n")+
     std::string("\t(and Atom Atom) \n")+
     std::string("\t(or Atom Atom)\n");
@@ -535,22 +536,23 @@ std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
 
 std::string SyGuSGenerater::createLTLConstraint(bool constraintType,int index,int latency)
 {
+    // printDebug("Creating "+std::to_string(constraintType)+" LTL Constraint at index "+std::to_string(index)+" with latency "+std::to_string(latency),3);
     assert(index < constraints[0].size());
     assert(index + latency < constraints[0].size());
     std::string constraintLine;
     
+    printDebug("PASS assertion",3);
     if(!checkConstraintsDefined(index,constraintType)){
         constraintLine+="; ";
     }
     
-    if(!checkConstraintsDefined(index + latency,constraintType)&&constraintType){
-        constraintLine+="; ";
-    }
+    // if(!checkConstraintsDefined(index + latency,constraintType)&&constraintType){
+    //     constraintLine+="; ";
+    // }
+    printDebug("After checking constraints defined",3);
 
     constraintLine += "(constraint (=(inv ";
-
-    if(constraintType){
-        
+    if(constraintType){   
         for(auto constraint : constraints){
             constraintLine += constraint[index]->toSyGusString() + " ";
         }
@@ -587,8 +589,6 @@ std::string SyGuSGenerater::createKeyGrammar(int latency)
                 }
             }
             else if(signalType == SignalType::BITS){
-                // trueGrammar += "\t(not (= MixBv"+std::to_string(signalWidth)+" (_ bv0 "+std::to_string(signalWidth)+")))\n";
-                trueGrammar += "\t(= MixBv"     +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
                 trueGrammar += "\t(bvule  MixBv"+std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
                 trueGrammar += "\t(bvuge MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";
                 trueGrammar += "\t(bvult MixBv" +std::to_string(signalWidth)+" MixBv"+std::to_string(signalWidth)+" )\n";

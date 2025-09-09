@@ -7,7 +7,7 @@
 #define LTLpropertyDepth 1
 
 // Debugging Settings
-#define smartVerbose 0
+#define smartVerbose 3
 #define deleteTempFile true
 #define runRandomState true
 
@@ -19,7 +19,10 @@ inline void print(std::string message)
 inline void printDebug(std::string message, int level)
 {
     if (smartVerbose >= level)
-    {
+    {   
+        for(int i=0;i<level;i++){
+            std::cout<<"\t";
+        }
         std::cout << message << std::endl;
     }
 }

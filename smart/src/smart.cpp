@@ -17,6 +17,10 @@ namespace fs = std::filesystem;
 #include "Module.h"
 #include "Timer.h"
 #include "setups.h"
+#include <fcntl.h>      
+#include <unistd.h>     
+#include <sys/file.h>  
+#include <sys/types.h>
 
 //global variables
 int latency = 0;
@@ -47,6 +51,7 @@ void modifySignals(std::string,int mode);
 void intersectionSignals(std::string);
 void printCoreSignals(std::vector<Signal>*);
 bool writeStringToFile(const std::string&, const std::string&,std::ios::openmode);
+bool append_with_lock_posix(const std::string&, const std::string&);
 SygusFunction* parseSygusFunction(const std::string&,SyGuSGenerater*,bool);
 State* createNegativeState();
 
@@ -153,11 +158,10 @@ int main(int argc, char* argv[]){
   }
   else{
     print("All assertion is not verified\n");
-    fs::remove(smt_path);
-    return -1;
   }
-  writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
-  
+
+  //append_with_lock_posix("log.txt","This loop's Result: "+std::to_string(verifiedResult)+"\n"+timer->printTime()+"\n");
+  writeStringToFile("log.txt","This "+core_id+" 's Result: "+std::to_string(verifiedResult)+"\n"+timer->printTime()+"\n",std::ios::out|std::ios::app);
   fs::remove_all(smt_path);
   return 0;
 }
@@ -194,6 +198,23 @@ bool writeStringToFile(const std::string& filename, const std::string& content, 
     outfile << content; 
     outfile.close();    
     return true;     
+}
+
+bool append_with_lock_posix(const std::string& path, const std::string& content) {
+    int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0666);
+    if (fd == -1) return false;
+    if (::flock(fd, LOCK_EX) != 0) { ::close(fd); return false; }
+    const char* p = content.data();
+    size_t n = content.size();
+    while (n > 0) {
+        ssize_t w = ::write(fd, p, n);
+        if (w < 0) { ::flock(fd, LOCK_UN); ::close(fd); return false; }
+        p += w; n -= (size_t)w;
+    }
+
+    ::flock(fd, LOCK_UN);
+    ::close(fd);
+    return true;
 }
 
 void modifySignals(std::string removeVariablesPath,int mode){
@@ -256,7 +277,7 @@ SygusFunction* parseSygusFunction(const std::string& sygusPath,SyGuSGenerater* s
     }
     catch(const std::exception& e){
       timer->stop(CVC5_Timer);
-      writeStringToFile("log.txt",timer->printTime(),std::ios::out|std::ios::app);
+      writeStringToFile("log.txt","This "+core_id+" 's Result: -1(Sygus infeasible)\n"+timer->printTime()+"\n",std::ios::out|std::ios::app);
       fs::remove_all(smt_path);
       exit(-1);
   }

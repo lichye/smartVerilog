@@ -40,7 +40,7 @@ class SyGuSGenerater
         std::string createSynthesisFunction(const std::vector<Signal>,int);
         std::string createFunctionHeader(const std::vector<Signal>,int);
         std::string createFunctionGrammar(int);
-        std::string createAtomGrammar();
+        std::string createAtomGrammar(bool);
         std::string createAtomXGrammar(int);
         std::string createExprGrammar();
         std::string createExprXGrammar();
