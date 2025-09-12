@@ -16,6 +16,10 @@ yes | sudo pip3 install pytest
 python3 -m venv otherTools/venv
 source otherTools/venv/bin/activate
 yes | pip install "cocotb==1.8.0"
+yes | pip install more_itertools
+yes | pip install matplotlib
+yes | pip install igraph
+yes | pip install z3-solver
 
 cd smart
 mkdir user/

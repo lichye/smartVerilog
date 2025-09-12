@@ -47,8 +47,8 @@ rm -rf *task
 
 
 # # Run the evaluator 
-# python checker.py $1
-# python evaluater.py $1
+python checker.py $1
+python evaluater.py $1
 
 cd ..
 mkdir $1
