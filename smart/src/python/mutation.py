@@ -53,6 +53,8 @@ verilog_keywords = [
     "generate", "endgenerate",
 ]
 
+random.seed(42)
+
 class VerilogMutation:
     def __init__(self, input_file, output_dir):
         self.input_file = input_file
