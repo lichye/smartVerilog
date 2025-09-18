@@ -220,20 +220,27 @@ if __name__ == "__main__":
         subset_size = 5
         smart_loop = size_of_variables*2
     else:
-        subset_size = size_of_variables-3
-        smart_loop = size_of_variables*2
+        subset_size = size_of_variables
+        smart_loop = size_of_variables*3
 
 
     init_cnt = 0
     # subsets = generate_combinations(variables, subset_size)
-    for i in range(0,smart_loop):
-        subset = get_random_subset(variables, subset_size)
-        write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
+    if(subset_size >10):
+        for i in range(0,smart_loop):
+            subset = get_random_subset(variables, subset_size)
+            write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
+    else:
+        print("The subset size is "+str(subset_size))
+        subsets = generate_subsets(variables, subset_size)
+        for subset in subsets:
+            if(len(subset) >=2):
+                write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))
+                init_cnt += 1
 
     # top_module_content
 
     variables_list = extract_variables_from_file(top_module_content)
-    print("the always variables size is "+str(len(variables_list)))
     for variables in variables_list:
         write_varibles = set()
         for var in variables:
