@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
     init_cnt = 0
     # subsets = generate_combinations(variables, subset_size)
-    if(subset_size >10):
+    if(size_of_variables >10):
         for i in range(0,smart_loop):
             subset = get_random_subset(variables, subset_size)
             write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))

@@ -62,7 +62,7 @@ class PowerLattice:
     def _minimise(self):
         while True:
             curr_best, l = self.curr_best
-            print("Current best: ", l)
+            # print("Current best: ", l)
             level = l - 1
             if level != self.l:
                 # self.tried = set() # I think that each time we move to a new layer we can reset the tried set
