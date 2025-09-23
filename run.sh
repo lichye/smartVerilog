@@ -39,7 +39,7 @@ python checker.py $1
 python evaluater.py $1
 cd ..
 
-mkdir $1
-mv smart/*.txt $1
-mv smart/user/* $1
+mkdir Results/$1
+mv smart/*.txt Results/$1
+mv smart/user/* Results/$1
 echo "Done with $1"
