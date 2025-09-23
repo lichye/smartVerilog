@@ -1,3 +1,4 @@
+# The dockerfile to build fmcad submission environment
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,6 +15,7 @@ RUN apt-get install -y git
 RUN git clone https://github.com/lichye/smartVerilog.git
 
 WORKDIR /workspace/smartVerilog
+RUN git checkout fmcad2025
 RUN mkdir -p /workspace/smartVerilog/smart/user/
 
 RUN pip install cocotb==1.8.0
