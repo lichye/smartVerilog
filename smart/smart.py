@@ -20,7 +20,7 @@ def copy_sv_files(original_path, target_path):
 
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
-    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency]
+    cmd = ["timeout","20","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency]
     # print("Run cmd: ", str(cmd))
     # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -65,6 +65,11 @@ if __name__ == "__main__":
     if(len(sys.argv)==2):
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"
+        latency = 0
+    elif(len(sys.argv)==3):
+        main_module = sys.argv[1]
+        main_file_name = main_module+".sv"
+        latency = int(sys.argv[2])
     else:
         print("Should give the main module name")
         exit(1)
@@ -167,7 +172,7 @@ if __name__ == "__main__":
         f.write("Overall Time: "+str(all_time)+"\n")
         f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
         f.write("We found "+str(len(verified_assertion))+" assertions\n")
-    with open("assertions.txt","w") as f:
+    with open("assertions.txt","a") as f:
         for assertion in verified_assertion:
             f.write(assertion+"\n")
     print("Finish running smart core")
