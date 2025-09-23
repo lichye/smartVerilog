@@ -23,7 +23,7 @@ else
 fi
 
 # Clean up previous runs
-rm -rf $1
+rm -rf Results/$1
 
 cd smart
 make all_clean
@@ -51,8 +51,8 @@ python checker.py $1
 python evaluater.py $1
 
 cd ..
-mkdir $1
-mv smart/*.txt $1
-mv smart/user/* $1
-mv smart/*.sl $1
+mkdir Results
+mkdir Results/$1
+mv smart/*.txt Results/$1
+mv smart/user/* Results/$1
 echo "Done with $1"
