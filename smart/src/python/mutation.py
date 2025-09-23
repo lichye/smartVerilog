@@ -97,14 +97,14 @@ class VerilogMutation:
         self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor"}
         self.small_gate_ops = {"not", "buf","dff"}
         # gate mutation
-        for op in self.gate_ops:
+        for op in sorted(self.gate_ops):
             self.mutations.append({
                 "category": "gate",
                 "pattern": rf"\b{op}\b",
                 "replacement": random.choice([y for y in self.gate_ops if y != op])
             })
         
-        for op in self.small_gate_ops:
+        for op in sorted(self.small_gate_ops):
             self.mutations.append({
                 "category": "small_gate",
                 "pattern": rf"\b{op}\b",
@@ -112,7 +112,7 @@ class VerilogMutation:
             })
 
         # bitwise mutation
-        for op, escaped_op in self.bitwise_ops.items():
+        for op, escaped_op in sorted(self.bitwise_ops.items()):
             self.mutations.append({
                 "category": "bitwise",
                 "pattern": escaped_op,
@@ -120,7 +120,7 @@ class VerilogMutation:
             })
         
         # arithmatic mutation
-        for op, escaped_op in self.arithmatic_ops.items():
+        for op, escaped_op in sorted(self.arithmatic_ops.items()):
             self.mutations.append({
                 "category": "arithmatic",
                 "pattern": escaped_op,
@@ -128,7 +128,7 @@ class VerilogMutation:
             })
         
         # relational mutation
-        for op, escaped_op in self.relational_ops.items():
+        for op, escaped_op in sorted(self.relational_ops.items()):
             self.mutations.append({
                 "category": "relational",
                 "pattern": escaped_op,
