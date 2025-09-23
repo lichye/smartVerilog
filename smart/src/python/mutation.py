@@ -53,6 +53,8 @@ verilog_keywords = [
     "generate", "endgenerate",
 ]
 
+random.seed(42)
+
 class VerilogMutation:
     def __init__(self, input_file, output_dir):
         self.input_file = input_file
@@ -95,14 +97,14 @@ class VerilogMutation:
         self.gate_ops = {"and", "or", "nand", "nor", "xor", "xnor"}
         self.small_gate_ops = {"not", "buf","dff"}
         # gate mutation
-        for op in self.gate_ops:
+        for op in sorted(self.gate_ops):
             self.mutations.append({
                 "category": "gate",
                 "pattern": rf"\b{op}\b",
                 "replacement": random.choice([y for y in self.gate_ops if y != op])
             })
         
-        for op in self.small_gate_ops:
+        for op in sorted(self.small_gate_ops):
             self.mutations.append({
                 "category": "small_gate",
                 "pattern": rf"\b{op}\b",
@@ -110,7 +112,7 @@ class VerilogMutation:
             })
 
         # bitwise mutation
-        for op, escaped_op in self.bitwise_ops.items():
+        for op, escaped_op in sorted(self.bitwise_ops.items()):
             self.mutations.append({
                 "category": "bitwise",
                 "pattern": escaped_op,
@@ -118,7 +120,7 @@ class VerilogMutation:
             })
         
         # arithmatic mutation
-        for op, escaped_op in self.arithmatic_ops.items():
+        for op, escaped_op in sorted(self.arithmatic_ops.items()):
             self.mutations.append({
                 "category": "arithmatic",
                 "pattern": escaped_op,
@@ -126,7 +128,7 @@ class VerilogMutation:
             })
         
         # relational mutation
-        for op, escaped_op in self.relational_ops.items():
+        for op, escaped_op in sorted(self.relational_ops.items()):
             self.mutations.append({
                 "category": "relational",
                 "pattern": escaped_op,
@@ -273,8 +275,8 @@ class VerilogMutation:
         self.load_verilog()
         self.define_mutations()
         # print("Generating mutants...")
-        for muation in self.mutations:
-            print(muation)
+        # for muation in self.mutations:
+        #     print(muation)
         file_count=self.generate_mutants()
         return file_count
 
@@ -373,7 +375,7 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     subprocess.run(["rm","-rf",sby_file])
     subprocess.run(["rm","-rf",sby_result])
     time_end = time.time()
-    print("Finish mutate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
+    # print("Finish mutate time: "+str(time_end-time_start)+" on the file: "+verilog_file)
     return return_result
 
 def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
