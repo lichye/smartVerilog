@@ -20,7 +20,7 @@ def copy_sv_files(original_path, target_path):
 
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
-    cmd = ["timeout","20","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency]
+    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency]
     # print("Run cmd: ", str(cmd))
     # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
