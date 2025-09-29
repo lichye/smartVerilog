@@ -61,7 +61,7 @@ def write_exprs_to_file(entries, output_file="assertions.txt"):
     svas = {sva for sva, _ in entries}  # deduplicate by expr only
     with open(output_file, "w", encoding="utf-8") as f:
         for sva in sorted(svas):
-            f.write(sva + ")\n")
+            f.write(sva + "\n")
 
 def main():
     reduced_file = "reducedResult.txt"
