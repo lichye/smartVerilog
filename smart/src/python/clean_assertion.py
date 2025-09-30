@@ -31,7 +31,7 @@ def extract_define_funs(filename):
             expr_match = re.search(r"Bool\s+(.+)\)\s*$", block)
             if expr_match:
                 expr = expr_match.group(1).strip()
-                entries.add((sva_expr, expr))
+                entries.add((sva_expr+")", expr))
             i = j
         elif line.endswith(":"):
             sva_expr = line[:-1].strip()

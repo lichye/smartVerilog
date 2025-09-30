@@ -7,7 +7,7 @@
 #define LTLpropertyDepth 1
 
 // Debugging Settings
-#define smartVerbose 3
+#define smartVerbose 0
 #define deleteTempFile true
 #define runRandomState true
 
