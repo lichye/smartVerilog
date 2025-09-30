@@ -78,7 +78,11 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
             # cmd = [sby_path,"-f",sby_file,"task"]
             
             # ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
-            ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--k-induction","--top",top_module]
+            if(bound != -1):
+                # print("Use bounded model checking with bound "+str(bound))
+                ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound",str(bound),"--top",top_module]
+            else:
+                ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--k-induction","--top",top_module]
             # cmd2 = ["ebmc",new_file_path,"--bound","10","--top",top_module]
 
             # result = subprocess.run(cmd2,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
@@ -86,6 +90,9 @@ def run_fm_on_verilog_file(verilog_file,Tproperty,verilog_related_files):
             ebmc_result = subprocess.run(ebmc_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             # print("the return code is: ",result.returncode)                     
             if(ebmc_result.returncode != 0):
+                print(f"Failed to verify property {Tproperty} on {verilog_file}")
+                print("stdout:", ebmc_result.stdout)
+                # subprocess.run(["cp",verilog_file,verilog_file+"_error_"+str(pid)+".sv"])
                 if(ebmc_result.returncode == 124):
                     return_result.append({Tproperty,"timeout"})
                 else:
@@ -126,12 +133,21 @@ def extract_property_only(results):
 
 
 if __name__ == "__main__":
+    bound = -1
     print("Start checker.py")
     if(len(sys.argv) < 2):
         print("Usage: python3 evaluater.py top_module")
         exit(1)
-    else:
+    elif(len(sys.argv)==2):
         top_module = sys.argv[1]
+        print("No bound is specified, use unbounded model checking")
+    elif(len(sys.argv)==3):
+        top_module = sys.argv[1]
+        bound = sys.argv[2]
+        print("Use bounded model checking with bound "+str(bound))
+    else:
+        print("Usage: python3 evaluater.py top_module [bound]")
+        exit(1)
 
     
    

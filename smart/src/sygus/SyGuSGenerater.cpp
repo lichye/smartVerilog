@@ -252,7 +252,7 @@ void SyGuSGenerater::debugPrint()
 }
 
 std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
-  std::string command = "cvc5 --lang=sygus2 "+sygusPath;
+  std::string command = "timeout 5 cvc5 --lang=sygus2 "+sygusPath;
   std::string result;
   char buffer[128];
   FILE* pipe = popen(command.c_str(), "r");

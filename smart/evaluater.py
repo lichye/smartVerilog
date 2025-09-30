@@ -218,26 +218,39 @@ def count_logfile():
     for match in cvc5_timer_pattern.finditer(logfile_content):
         cvc5_time += float(match.group(1))
 
-    result = "FM Checker Total Calls: " + str(fm_checker_calls) + "\n"
+    result = "\nFM Checker Total Calls: " + str(fm_checker_calls) + "\n"
     result += "FM Checker Total Time: " + str(fm_checker_time) + " seconds\n"
     result += "CVC5 Total Calls: " + str(cvc5_calls) + "\n"
     result += "CVC5 Total Time: " + str(cvc5_time) + " seconds\n"
     return result
 
 def setupMutants(sv_path,top_module_file,mutant_path,top_module):
+    all_items = os.listdir(mutant_path)
+    if len(all_items) != 0:
+        print("Exits mutants file, skip setupMutants")
+        return
     cmd = ["python", "src/python/mutation.py", sv_path, top_module_file, mutant_path,top_module]
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
 
 if __name__ == "__main__":
-    
+    bound = -1
     print("Smart Evaluater")
     if(len(sys.argv) < 2):
         print("Usage: python3 evaluater.py top_module")
         exit(1)
-    else:
+    elif(len(sys.argv) == 2):
         top_module = sys.argv[1]
         main_file_name = top_module + ".sv"
+        print("No bound is given, use unbound model checking")
+    elif(len(sys.argv) == 3):
+        top_module = sys.argv[1]
+        bound = sys.argv[2]
+        main_file_name = top_module + ".sv"
+        print("The bound is given: ",bound)
+    else:
+        print("Usage: python3 evaluater.py top_module [bound]")
+        exit(1)
 
     property_dir = "invariants.txt"
     bound = 10
@@ -304,9 +317,9 @@ if __name__ == "__main__":
         f.write(log_result)
         f.write("\n")
         f.write("Found mutations: "+str(len(find_files))+"\n")
-        f.write("UnFound mutations: "+str(len(unfind_file))+"\n")
-        f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
+        # f.write("UnFound mutations: "+str(len(unfind_file))+"\n")
+        # f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
         f.write("Total mutations(Without timeout file): "+str(total_mutations)+"\n")
-        f.write("The Mutation Detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n")
+        f.write("The Mutation Detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n\n")
     
     print("Finish running evaluater.py")
