@@ -195,11 +195,14 @@ if __name__ == "__main__":
             verilog_variables.update(vari)
 
     for var in verilog_variables:
-        if var in vcd_variables and var not in verilog_keywords:
+        if var in vcd_variables and var not in verilog_keywords and var != top_module:
             variables.add(var)
 
     print("Filtered variabls size is "+str(len(variables)))
     # print("The final variables are "+str(variables))
+
+    for var in variables:
+        write_to_file("runtime/variables.txt", "\n".join([f"{var}" for var in variables]))
 
     resultfile = work_dir+"/result_"+top_module+".txt"
 

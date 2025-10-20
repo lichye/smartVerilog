@@ -153,8 +153,8 @@ int main(int argc, char* argv[]){
   }
   if(verifiedResult){
     writeStringToFile(resultFileDir,sygusfunc->getBodyVerilogExpr(),std::ios::out);
-    writeStringToFile("SygusResult.sl",Cvc5result,std::ios::app);
-    writeStringToFile("CompareResult.txt",sygusfunc->getBodyVerilogExpr()+":\n"+Cvc5result+"\n",std::ios::app);
+    writeStringToFile("runtime/SygusResult.sl",Cvc5result,std::ios::app);
+    writeStringToFile("runtime/CompareResult.txt",sygusfunc->getBodyVerilogExpr()+":\n"+Cvc5result+"\n",std::ios::app);
     print("Last assertion "+sygusfunc->getBodyVerilogExpr()+" is verified and written to "+resultFileDir);
   }
   else{

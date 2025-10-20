@@ -64,8 +64,8 @@ def write_exprs_to_file(entries, output_file="assertions.txt"):
             f.write(sva + "\n")
 
 def main():
-    reduced_file = "reducedResult.txt"
-    sygus_file = "CompareResult.txt"
+    reduced_file = "runtime/reducedResult.txt"
+    sygus_file = "runtime/CompareResult.txt"
 
     reduced_results = load_reduced_results(reduced_file)
     entries = extract_define_funs(sygus_file)

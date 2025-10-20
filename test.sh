@@ -46,30 +46,30 @@ rm -rf *.sby
 rm -rf *task
 
 
-#Run basic evaluator
-python checker.py $1
-python evaluater.py $1
+# #Run basic evaluator
+# python checker.py $1
+# python evaluater.py $1
 
-# Run the reducer
-python src/python/minimise_assertions.py SygusResult.sl reducedResult.txt
+# # Run the reducer
+python src/python/minimise_assertions.py runtime/SygusResult.sl runtime/reducedResult.txt
 python src/python/clean_assertion.py
-# # Run the evaluator 
-python checker.py $1
-python evaluater.py $1
+# # # Run the evaluator 
+# python checker.py $1
+# python evaluater.py $1
 
-# Run the LTL
-python smart.py $1
-python smart.py $1 1
-rm -rf *.sby
-rm -rf *task
+# # Run the LTL
+# python smart.py $1
+# python smart.py $1 1
+# rm -rf *.sby
+# rm -rf *task
 
 # Run the evaluator
-python checker.py $1 10
-python evaluater.py $1 10
+# python checker.py $1 10
+# python evaluater.py $1 10
 
-cd ..
-mkdir Results
-mkdir Results/$1
-mv smart/*.txt Results/$1
-mv smart/user/* Results/$1
-echo "Done with $1"
+# cd ..
+# mkdir Results
+# mkdir Results/$1
+# mv smart/*.txt Results/$1
+# mv smart/user/* Results/$1
+# echo "Done with $1"

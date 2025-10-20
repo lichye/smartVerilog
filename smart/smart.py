@@ -41,6 +41,71 @@ def writeLog(file,content):
         f.write(content)
     f.close()
 
+def runBlockSmart():
+    cnt = 0
+    all_work = len(os.listdir(runtimeVariablesDir))
+    
+    result_files = []
+    futures = []
+
+    print("-------------------------------")
+    print("Start running Smart Block of "+str(all_work)+" threads")
+
+    assertion_founded = 0
+     # start new process from the pool
+    with ProcessPoolExecutor() as executor:
+        # all works
+        smart_loop = 0
+
+        # send works to different executors
+        for filename in sorted(os.listdir(runtimeVariablesDir)):
+            smart_loop += 1
+            result_file = os.path.join(resultDir, "result_"+str(smart_loop)+".txt")
+            future = executor.submit(smart, current_path, main_module, result_file, os.path.join(runtimeVariablesDir, filename), str(smart_loop), str(latency))
+            futures.append(future)
+            result_files.append(result_file)
+        
+        done_set = set()
+        while len(done_set) < len(futures):
+            time.sleep(10)
+            done_now = [f for f in futures if f.done() and f not in done_set]
+            done_set.update(done_now)
+            print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} Smart Cores")
+
+
+    # After all result back, delete the files
+    for i, future in enumerate(futures):
+        try:
+            result = future.result()
+            # print("Result: ", result)
+            if result != 0:
+                file_to_delete = result_files[i]
+                if os.path.exists(file_to_delete):
+                    os.remove(file_to_delete)
+                    # print(f"Deleted {file_to_delete} (result={result})")
+            else:
+                with open(result_files[i], "r") as f:
+                    new_assertion = f.read().strip()
+
+                if new_assertion not in verified_assertion: 
+                    verified_assertion.add(new_assertion)
+                    assertion_founded += 1
+                # print(f"Kept {result_files[i]} (result={result})")
+        except Exception as e:
+            # print(f"Exception occurred: {e}")
+            file_to_delete = result_files[i]
+            if os.path.exists(file_to_delete):
+                os.remove(file_to_delete)
+                # print(f"Deleted {file_to_delete} due to exception")
+    subprocess.run("rm -rf ./runtime/variables/*", shell=True)
+    print("Finish running Smart Block, found "+str(assertion_founded)+" new assertions")
+    
+
+def GenerateNewBlocks():
+    cmd = ["python", "src/python/generate_variable_subsets.py"]
+    subprocess.run(cmd)
+    return
+
 if __name__ == "__main__":
     latency = 0
     all_start_time = time.time()
@@ -85,77 +150,25 @@ if __name__ == "__main__":
     resultfile = current_path+"/result_"+main_module+".txt"
     
     copy_sv_files(mverilog_path, runtimeFormalDir)
+    
     #Pre analysis of the code
     pre_start_time = time.time()
-    
     preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir)
-    
     pre_end_time = time.time()  
+    
     # Smart
     smart_sucess = 0
-
-    assertion_founded = 0
+    verified_assertion = set()
 
     loop_count = 0
     if(assertion == 0):
         exit(0)
     
     smart_start_time = time.time()
-    cnt = 0
 
-    all_work = len(os.listdir(runtimeVariablesDir))
-    verified_assertion = set()
-    result_files = []
-    futures = []
-
-    print("-------------------------------")
-    print("Start running smart core")
-
-    # start new process from the pool
-    with ProcessPoolExecutor() as executor:
-        # all works
-        smart_loop = 0
-
-        # send works to different executors
-        for filename in sorted(os.listdir(runtimeVariablesDir)):
-            smart_loop += 1
-            result_file = os.path.join(resultDir, "result_"+str(smart_loop)+".txt")
-            future = executor.submit(smart, current_path, main_module, result_file, os.path.join(runtimeVariablesDir, filename), str(smart_loop), str(latency))
-            futures.append(future)
-            result_files.append(result_file)
-        
-        done_set = set()
-        while len(done_set) < len(futures):
-            time.sleep(10)
-            done_now = [f for f in futures if f.done() and f not in done_set]
-            done_set.update(done_now)
-            print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} Smart Cores")
-
-
-    # After all result back, delete the files
-    for i, future in enumerate(futures):
-        try:
-            result = future.result()
-            # print("Result: ", result)
-            if result != 0:
-                file_to_delete = result_files[i]
-                if os.path.exists(file_to_delete):
-                    os.remove(file_to_delete)
-                    # print(f"Deleted {file_to_delete} (result={result})")
-            else:
-                with open(result_files[i], "r") as f:
-                    new_assertion = f.read().strip()
-
-                if new_assertion not in verified_assertion: 
-                    verified_assertion.add(new_assertion)
-                    assertion_founded += 1
-                # print(f"Kept {result_files[i]} (result={result})")
-        except Exception as e:
-            print(f"Exception occurred: {e}")
-            file_to_delete = result_files[i]
-            if os.path.exists(file_to_delete):
-                os.remove(file_to_delete)
-                # print(f"Deleted {file_to_delete} due to exception")
+    runBlockSmart()
+    GenerateNewBlocks()
+    runBlockSmart()
 
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time
