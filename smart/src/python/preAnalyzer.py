@@ -3,6 +3,7 @@ import configparser
 import sys
 import math
 import random
+import os
 from itertools import combinations, chain
 
 verilog_keywords = [
@@ -215,27 +216,20 @@ if __name__ == "__main__":
     
     
     variables = sorted(list(variables))
-    size_of_variables = len(variables)
-    if size_of_variables >= 400:
-        subset_size = 20
-        smart_loop = size_of_variables / 20
-    elif size_of_variables >10:
-        subset_size = 5
-        smart_loop = size_of_variables
-    else:
-        subset_size = size_of_variables
-        smart_loop = size_of_variables
+    V = len(variables)
+    k = round(2.7+1.6*math.log(V,10))
+    n = max(int(0.5*V**0.9), os.cpu_count())
 
 
     init_cnt = 0
     # subsets = generate_combinations(variables, subset_size)
-    if(size_of_variables >10):
-        for i in range(0,smart_loop):
-            subset = get_random_subset(variables, subset_size)
+    if(V >10):
+        for i in range(0,int(n)):
+            subset = get_random_subset(variables, k)
             write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
     else:
-        print("The subset size is "+str(subset_size))
-        subsets = generate_subsets(variables, subset_size)
+        print("The subset size is "+str(k))
+        subsets = generate_subsets(n, k)
         for subset in subsets:
             if(len(subset) >=2):
                 write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))

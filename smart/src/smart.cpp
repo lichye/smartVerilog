@@ -32,7 +32,6 @@ std::string ebmcReachable = "runtime/formal/reachable.sv";
 std::string moduleName = "";
 std::string verilogSrcPath = "";
 std::string resultFileDir = "";
-std::string resultRemoveVariablesPath = "";
 std::string generateSMTResultPath();
 std::string initVariables = "";
 std::string currentDir = "";
@@ -71,7 +70,6 @@ int main(int argc, char* argv[]){
 
   bool isLTL = (latency > 0);
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
-  resultRemoveVariablesPath = currentDir + "/runtime/variables/removeVariables.txt";
   smt_path = currentDir + "/runtime/smt_results/"+core_id;
   std::string sygusPath = "runtime/smt_results/sygus"+core_id+".sl";
   fs::create_directory(smt_path);
@@ -219,7 +217,6 @@ bool append_with_lock_posix(const std::string& path, const std::string& content)
 }
 
 void modifySignals(std::string removeVariablesPath,int mode){
-  // std::string removeVariablesPath = "/home/magna/Desktop/smartVerilog/smart/runtime/variables/removeVariables.txt";
   std::vector<std::string> lines;
   std::ifstream file(removeVariablesPath); // Open the file
 

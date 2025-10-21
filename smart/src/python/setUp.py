@@ -24,8 +24,6 @@ def setup(current_path):
 
     result_dir = current_path+"/result"
 
-    removeVariables = current_path+"/runtime/variables/removeVariables.txt"
-
     mutant_path = current_path+"/benchmarks/"
 
     # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
@@ -45,8 +43,6 @@ def setup(current_path):
         os.makedirs(result_dir)
     if not os.path.exists(variables_dir):
         os.makedirs(variables_dir)
-    if not os.path.exists(removeVariables):
-        open(removeVariables, 'w').close()
     if not os.path.exists(mutant_path):
         os.makedirs(mutant_path)
 

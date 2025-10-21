@@ -38,12 +38,12 @@ class Mistral:
 
         self.fvars = self.formula.get_free_variables()
 
-        # testing if formula is satisfiable
         if get_model(self.formula, solver_name=self.sname) == None:
             return None
 
         mus = self.compute_mus(frozenset([]), self.fvars, 0)
-        return mus
+        # return MSA (minimal satisfying assignment)
+        return self.fvars- mus
 
     def compute_mus(self, X, fvars, lb):
         """
@@ -55,7 +55,7 @@ class Mistral:
             return frozenset()
 
         best = set()
-        x = frozenset([next(iter(fvars))])  # should choose x in a more clever way
+        x = frozenset([next(iter(fvars))]) 
 
         if self.get_model_forall(X.union(x)):
             Y = self.compute_mus(X.union(x), fvars - x, lb - 1)
@@ -72,10 +72,6 @@ class Mistral:
         return best
 
     def get_model_forall(self, x_univl):
-        """
-            Calls either pysmt.shortcuts.get_model() or get_qmodel().
-        """
-
         return get_model(ForAll(x_univl, self.formula),
                 solver_name=self.sname)
 
@@ -131,6 +127,6 @@ def run_get_mus(file = 'ibex_controller'):
 
     d = {}
     assertions = {gen_vars_get_fun(a, d) for a in matches}
-    mus = {str(a) for a in get_mus(assertions, d, m)}
-    underspecified = variables.difference(mus)
+    mas = {str(a) for a in get_mus(assertions, d, m)}
+    underspecified = variables - mas
     return underspecified

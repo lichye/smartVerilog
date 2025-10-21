@@ -161,9 +161,11 @@ if __name__ == "__main__":
     new_result = runBlockSmart()
     
     while new_result >0:
+        print("Generate New SMART blocks based on new found assertions")
         GenerateNewBlocks()
-        runBlockSmart()
+        new_result = runBlockSmart()
 
+    GenerateNewBlocks()
 
     # Count the time
     smart_end_time = time.time()
