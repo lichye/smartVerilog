@@ -100,20 +100,19 @@ def runBlockSmart():
     subprocess.run("rm -rf ./runtime/variables/*", shell=True)
     print("Finish running Smart Block, found "+str(assertion_founded)+" new assertions")
     
-
 def GenerateNewBlocks():
     cmd = ["python", "src/python/generate_variable_subsets.py"]
     subprocess.run(cmd)
     return
 
 if __name__ == "__main__":
-    latency = 0
+    # Count the overall time
     all_start_time = time.time()
-    
-    # parameters
-    assertion = 10000000
-    removeVariables = False
+    latency = 0
 
+    # Result Stored here
+    verified_assertion = set()
+    
     # Set up the file path
     current_path = os.getcwd()
     mverilog_path = current_path+"/runtime/verilog/"
@@ -145,34 +144,27 @@ if __name__ == "__main__":
         print("Stop running")
         exit(1)
 
-    logfile = current_path+"/log_"+main_module+".txt"
 
+    logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
-    
     copy_sv_files(mverilog_path, runtimeFormalDir)
     
-    #Pre analysis of the code
+    # Pre analysis of the code
     pre_start_time = time.time()
     preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir)
     pre_end_time = time.time()  
     
-    # Smart
-    smart_sucess = 0
-    verified_assertion = set()
-
-    loop_count = 0
-    if(assertion == 0):
-        exit(0)
-    
+    # SMART CORE EXECUTION
     smart_start_time = time.time()
 
     runBlockSmart()
     GenerateNewBlocks()
     runBlockSmart()
 
+
+    # Count the time
     smart_end_time = time.time()
     smart_time = smart_end_time - smart_start_time
-
     all_end_time = time.time()
     all_time = all_end_time - all_start_time
 
