@@ -99,6 +99,7 @@ def runBlockSmart():
                 # print(f"Deleted {file_to_delete} due to exception")
     subprocess.run("rm -rf ./runtime/variables/*", shell=True)
     print("Finish running Smart Block, found "+str(assertion_founded)+" new assertions")
+    return assertion_founded
     
 def GenerateNewBlocks():
     cmd = ["python", "src/python/generate_variable_subsets.py"]
@@ -157,9 +158,11 @@ if __name__ == "__main__":
     # SMART CORE EXECUTION
     smart_start_time = time.time()
 
-    runBlockSmart()
-    GenerateNewBlocks()
-    runBlockSmart()
+    new_result = runBlockSmart()
+    
+    while new_result >0:
+        GenerateNewBlocks()
+        runBlockSmart()
 
 
     # Count the time

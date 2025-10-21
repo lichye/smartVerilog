@@ -218,13 +218,13 @@ if __name__ == "__main__":
     size_of_variables = len(variables)
     if size_of_variables >= 400:
         subset_size = 20
-        smart_loop = size_of_variables
+        smart_loop = size_of_variables / 20
     elif size_of_variables >10:
         subset_size = 5
-        smart_loop = size_of_variables*2
+        smart_loop = size_of_variables
     else:
         subset_size = size_of_variables
-        smart_loop = size_of_variables*3
+        smart_loop = size_of_variables
 
 
     init_cnt = 0
