@@ -11,15 +11,23 @@ if [ $# -lt 1 ]; then
 fi
 
 src_benchmarks="Benchmark"
+mutation_dir="MutationBenchmark"
 target_dir="$1"
 
 found_dir=$(find "$src_benchmarks" -type d -name "$target_dir" -print -quit)
+found_mutation_dir=$(find "$mutation_dir" -type d -name "$target_dir" -print -quit)
 
 if [ -n "$found_dir" ]; then
     echo "Directory found: $found_dir"
 else
     echo "Directory $target_dir not found under $src_benchmarks."
     exit 1
+fi
+
+if [ -n "$found_mutation_dir" ]; then
+    echo "Mutation Directory found: $found_mutation_dir"
+else
+    echo "No Mutation found, would generate empty mutation folder."
 fi
 
 # Clean up previous runs
@@ -29,10 +37,12 @@ cd smart
 make all_clean
 cd ..
 
+# Copy benchmark files to smart/user
 DEST_DIR="smart/user"
 cp -r "$found_dir/"* "$DEST_DIR"
 
-
+# Copy mutation files to smart/
+cp -r "$found_mutation_dir/"* smart/
 
 cd smart
 
