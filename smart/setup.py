@@ -161,7 +161,10 @@ if __name__ == "__main__":
     compile_time = compile_end_time - compile_start_time 
 
     #Setup the mutants
-    setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
+    if(os.path.exists(mutant_path)==False):
+        # setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
+    else:
+        print("Mutants already setup")
 
     all_end_time = time.time()
     print("Simulation time: ", sim_time)
