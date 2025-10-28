@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     #Setup the mutants
     if(os.path.exists(mutant_path)==False):
-        # setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
+        setupMutants(mverilog_path,main_file_name,mutant_path,main_module)
     else:
         print("Mutants already setup")
 
