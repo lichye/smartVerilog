@@ -1,0 +1,100 @@
+[tasks]
+taskBMC12_dist_cacheline_plru task_bmc12 files_dist_plru
+taskBMC20_dist_cacheline_plru task_bmc20 files_dist_plru
+taskKIND10_dist_cacheline_plru task_kind10 files_dist_plru_prove
+taskprove_dist_cacheline_plru task_prove files_dist_plru_prove
+taskBMC12_dist_cacheline_nru task_bmc12 files_dist_nru
+taskBMC20_dist_cacheline_nru task_bmc20 files_dist_nru
+taskKIND10_dist_cacheline_nru task_kind10 files_dist_nru_prove
+taskprove_dist_cacheline_nru task_prove files_dist_nru_prove
+
+[options]
+task_bmc12:
+mode bmc
+depth 12
+--
+
+task_bmc20:
+mode bmc
+depth 20
+--
+
+task_kind10:
+mode prove
+depth 10
+--
+
+task_prove:
+mode prove
+--
+
+[engines]
+task_bmc12:
+smtbmc boolector
+--
+
+task_bmc20:
+smtbmc boolector
+--
+
+task_kind10:
+smtbmc boolector
+--
+
+task_prove:
+abc pdr
+--
+
+[script]
+files_dist_plru:
+read -formal /Path_To/cacheline_formal.v
+read -formal /Path_To/cacheline_plru.v
+read -formal /Path_To/cacheline_consts.vh
+prep -top cacheline_formal
+--
+
+files_dist_plru_prove:
+read -formal -DINVARIANTS -DIS_PLRU /Path_To/cacheline_formal.v
+read -formal -DINVARIANTS -DIS_PLRU /Path_To/cacheline_plru.v
+read -formal /Path_To/cacheline_consts.vh
+prep -top cacheline_formal
+--
+
+files_dist_nru:
+read -formal /Path_To/cacheline_formal.v
+read -formal /Path_To/cacheline_nru.v
+read -formal /Path_To/cacheline_consts.vh
+prep -top cacheline_formal
+--
+
+files_dist_nru_prove:
+read -formal -DINVARIANTS -DIS_NRU /Path_To/cacheline_formal.v
+read -formal -DINVARIANTS -DIS_NRU /Path_To/cacheline_nru.v
+read -formal /Path_To/cacheline_consts.vh
+prep -top cacheline_formal
+--
+
+[files]
+files_dist_plru:
+/Path_To/cacheline_formal.v
+/Path_To/cacheline_plru.v
+/Path_To/cacheline_consts.vh
+--
+
+files_dist_plru_prove:
+/Path_To/cacheline_formal.v
+/Path_To/cacheline_plru.v
+/Path_To/cacheline_consts.vh
+--
+
+files_dist_nru:
+/Path_To/cacheline_formal.v
+/Path_To/cacheline_nru.v
+/Path_To/cacheline_consts.vh
+--
+
+files_dist_nru_prove:
+/Path_To/cacheline_formal.v
+/Path_To/cacheline_nru.v
+/Path_To/cacheline_consts.vh
+--

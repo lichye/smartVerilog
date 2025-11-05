@@ -97,7 +97,7 @@ def runBlockSmart():
             if os.path.exists(file_to_delete):
                 os.remove(file_to_delete)
                 # print(f"Deleted {file_to_delete} due to exception")
-    subprocess.run("rm -rf ./runtime/variables/*", shell=True)
+    # subprocess.run("rm -rf ./runtime/variables/*", shell=True)
     print("Finish running Smart Block, found "+str(assertion_founded)+" new assertions")
     return assertion_founded
     

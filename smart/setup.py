@@ -8,7 +8,7 @@ import time
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
         for file in files:
-            if file.endswith(".sv"):
+            if file.endswith(".sv") or file.endswith(".svh") or file.endswith(".vh"):
                 shutil.copy(os.path.join(root, file), target_path)
             elif file.endswith(".v"):
                 print("Please convert the verilog files to system verilog")
@@ -53,7 +53,7 @@ def sv_prep(sv_path,rst_path):
     
     for root, dirs, files in os.walk(sv_path):
         for file in files:
-            if file.endswith(".sv"):
+            if file.endswith(".sv") or file.endswith(".svh") or file.endswith(".vh"):
                 sv_file_names.append(file)
                 sv_file_paths.append(os.path.join(root, file))
                 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     mverilog_path = current_path+"/runtime/verilog/"
 
-    setup_path = current_path+"/src/python/setUp.py"
+    setup_path = current_path+"/src/python/setDir.py"
     
     dir_path = os.path.dirname(os.path.realpath(__file__))
     

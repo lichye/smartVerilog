@@ -20,6 +20,7 @@ yes | pip install more_itertools
 yes | pip install matplotlib
 yes | pip install igraph
 yes | pip install z3-solver
+yes | pip install pysmt
 
 cd smart
 mkdir user/

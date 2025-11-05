@@ -56,8 +56,10 @@ VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string homePath,B
     try {
         for (const auto& entry : fs::directory_iterator(relatePath)) {
             if (entry.is_regular_file()) {
-                if(entry.path()!=verilogSrcPath)
-                    relatedFilePaths.push_back(entry.path());
+                auto path = entry.path();
+                if (path.extension() == ".sv" && path != verilogSrcPath) {
+                    relatedFilePaths.push_back(path);
+                }
             }
         }
     } catch (const fs::filesystem_error& e) {
@@ -303,8 +305,8 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
     
     //if the property is verified, then the state is safe
     printDebug("The safety result is: "+std::to_string(result),1);
-    if(deleteTempFile)
-        deleteVerilogFile();
+    // if(deleteTempFile)
+    //     deleteVerilogFile();
     return result;
 }
 

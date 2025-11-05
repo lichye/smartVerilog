@@ -18,7 +18,7 @@ verilog_keywords = [
     # Control Flow
     "always", "initial", "if", "else", "for", "while", "do", "repeat", 
     "forever", "case", "endcase", "casex", "casez", "default", "disable",
-    "wait", "fork", "join",
+    "wait", "fork", "join", "init", 
     
     # Procedural Blocks
     "begin", "end", "assign", "deassign", "force", "release",
@@ -116,7 +116,7 @@ def extract_variables(module_content):
             matches = pattern.findall(line)
             if(matches):
             # print("\t\t We found matches")
-                variable_pattern = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
+                variable_pattern = re.compile(r'\b_?[a-zA-Z][a-zA-Z0-9_]*\b')
                 variable = variable_pattern.findall(line)
                 # print("\t\t\t We found variables "+str(variable))
                 variables.update(variable)
@@ -151,9 +151,9 @@ def extract_variables_from_file(verilog_code):
     verilog_code = clean_verilog_input(verilog_code)
     matches = pattern.findall(verilog_code)
     variables_list = list()
-    for always_block in matches:
-        varibales = extract_variables_from_block(always_block)
-        variables_list.append(varibales)
+    # for always_block in matches:
+    #     varibales = extract_variables_from_block(always_block)
+    #     variables_list.append(varibales)
     return variables_list
 
 def extract_variables_from_block(block):
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         if var in vcd_variables and var not in verilog_keywords and var != top_module:
             variables.add(var)
 
-    print("Filtered variabls size is "+str(len(variables)))
+
     # print("The final variables are "+str(variables))
 
     for var in variables:
@@ -207,44 +207,22 @@ if __name__ == "__main__":
 
     resultfile = work_dir+"/result_"+top_module+".txt"
 
-    # with open(resultfile, "a") as f:
-    #     f.write("There is "+str(len(variables))+" variables\n")
-    #     f.write("The variables are\n")
-    #     f.write(" ".join([f"{var}" for var in variables]))
-    #     f.write("\n")
-    
-    
-    
-    variables = sorted(list(variables))
+    print("Filtered variables size is "+str(len(variables)))
     V = len(variables)
     k = round(2.7+1.6*math.log(V,10))
     n = max(int(0.5*V**0.9), os.cpu_count())
+    print("Underspecified variable size is "+str(V))
+    print("Subset size k is "+str(k))
+    print("Number of threads n is "+str(n))
 
+
+    underspecified = list(variables)
 
     init_cnt = 0
-    # subsets = generate_combinations(variables, subset_size)
-    if(V >10):
-        for i in range(0,int(n)):
-            subset = get_random_subset(variables, k)
-            write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
-    else:
-        print("The subset size is "+str(k))
-        subsets = generate_subsets(n, k)
-        for subset in subsets:
-            if(len(subset) >=2):
-                write_to_file(output_file+"Init_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in subset]))
-                init_cnt += 1
+    for i in range(int(n)):
+       variable_set = random.sample(underspecified, k)
+    #    print(f"variable_set_{i}: {variable_set}")
+       with open(f"runtime/variables/thread_{i}.txt", 'w') as f:
+           f.write('\n'.join(variable_set))
 
-    # top_module_content
-
-    variables_list = extract_variables_from_file(top_module_content)
-    for variables in variables_list:
-        write_varibles = set()
-        for var in variables:
-            if var in vcd_variables and var not in verilog_keywords:
-                write_varibles.add(var)
-        if len(write_varibles) > 0:
-            write_to_file(output_file+"always_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in write_varibles]))
-            init_cnt += 1
-    
     

@@ -26,6 +26,7 @@ fi
 
 if [ -n "$found_mutation_dir" ]; then
     echo "Mutation Directory found: $found_mutation_dir"
+    cp -r "$found_mutation_dir/"* smart/
 else
     echo "No Mutation found, would generate empty mutation folder."
 fi
@@ -41,8 +42,7 @@ cd ..
 DEST_DIR="smart/user"
 cp -r "$found_dir/"* "$DEST_DIR"
 
-# Copy mutation files to smart/
-cp -r "$found_mutation_dir/"* smart/
+
 
 cd smart
 
@@ -55,6 +55,7 @@ python smart.py $1
 rm -rf *.sby
 rm -rf *task
 
+exit 0
 
 # # Run the evaluator 
 python checker.py $1

@@ -26,6 +26,8 @@ def setup(current_path):
 
     mutant_path = current_path+"/benchmarks/"
 
+    SygusResultDir = current_path+"/runtime/SygusResult.sl"
+
     # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
     if not os.path.exists(sim_target_dir):
         os.makedirs(sim_target_dir)
@@ -45,34 +47,12 @@ def setup(current_path):
         os.makedirs(variables_dir)
     if not os.path.exists(mutant_path):
         os.makedirs(mutant_path)
+    if not os.path.exists(SygusResultDir):
+        open(SygusResultDir, 'a').close()
 
     subprocess.run(["cp", user_verilog_path+"/sim.py",runtime_cocotb_path+"sim.py"])
-
-def get_sv_file_paths(directory):
-    sv_files = []
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith(".sv"):
-                sv_files.append(os.path.join(root, file))
-            elif file.endswith(".v"):
-                print("Please convert the verilog files to system verilog")
-                exit(1)
-    return sv_files
-
-def move_User_verilog(current_path):
-    runtime_ebmc_path = current_path+"/runtime/formal/"
-    runtime_verilog_path = current_path+"/runtime/verilog/"
-    user_verilog_path = current_path+"/User"
-    sim_build_path = current_path+"/sim_build"
-
-    #get all the sv files in the user directory
-    sv_files = get_sv_file_paths(user_verilog_path)
-
-    for file in sv_files:
-        subprocess.run(["cp", file, runtime_verilog_path])
 
 if __name__ == "__main__":
     file_name = ""
     current_path = os.getcwd()
     setup(current_path)
-    # move_User_verilog(current_path)

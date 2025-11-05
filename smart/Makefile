@@ -90,6 +90,7 @@ clean:
 	rm -rf $(LEX_OUT) $(LEX_HEADER) $(YAC_OUT) $(YAC_HEADER)
 	rm -rf $(OBJS) $(SMART_TARGET) $(ASSERTION_TARGET)
 	rm -rf $(RUNTIME_DIR)/smt_results/*.vcd
+	rm -rf ${RUNTIME_DIR}/variables/*.txt
 	mkdir $(BUILD_DIR)
 
 smart_clean:
