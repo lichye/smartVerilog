@@ -183,13 +183,13 @@ std::string SygusOperator::toString()
         case BVGUE:
             return ">=";
         case BVSLT:
-            return "s<";
+            return "<";
         case BVSLE:
-            return "s<=";
+            return "<=";
         case BVSGT:
-            return "s>";
+            return ">";
         case BVSGE:
-            return "s>=";
+            return ">=";
         case BOOLIMPL:
             return "|->";
         default:

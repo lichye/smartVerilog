@@ -214,6 +214,7 @@ void VerilogChecker::cleanProperties() {
 bool VerilogChecker::runEBMC(){
     std::string command = "";
     command += "ebmc "+formalFilePath;
+    command += "-D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
     for(auto &path : relatedFilePaths) {
@@ -239,6 +240,7 @@ bool VerilogChecker::runEBMC(){
 bool VerilogChecker::runEBMC(std::string tracePath){
     std::string command = "";
     command += "ebmc "+formalFilePath;
+    command += " -D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
     for(auto &path : relatedFilePaths) {
@@ -305,8 +307,8 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
     
     //if the property is verified, then the state is safe
     printDebug("The safety result is: "+std::to_string(result),1);
-    // if(deleteTempFile)
-    //     deleteVerilogFile();
+    if(deleteTempFile)
+        deleteVerilogFile();
     return result;
 }
 

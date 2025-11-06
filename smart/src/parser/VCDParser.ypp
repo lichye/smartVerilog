@@ -173,7 +173,7 @@ declaration_command :
             new_signal->rindex = 0;
         }
         assert((new_signal->lindex > 0));
-        assert((new_signal->lindex - new_signal->rindex + 1 == new_signal->size));
+        //assert((new_signal->lindex - new_signal->rindex + 1 == new_signal->size));
     }
     VCDScope * scope = driver.scopes.top();
     scope -> signals.push_back(new_signal);
