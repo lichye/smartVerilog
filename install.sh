@@ -21,6 +21,8 @@ yes | pip install matplotlib
 yes | pip install igraph
 yes | pip install z3-solver
 yes | pip install pysmt
+yes | pip install utils
+yes | pip install cvc5
 
 cd smart
 mkdir user/

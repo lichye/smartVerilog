@@ -1,13 +1,16 @@
 import random
 import math
+import json
 import os
 
-from maximal_universal_subset import run_get_mus
+from minimal_satisfiable_assignment import get_mus
 
 if __name__ == "__main__":
    random.seed(42)
-   underspecified = sorted(run_get_mus())
+   underspecified,model = get_mus("runtime/variables.txt", "runtime/SygusResult.sl", timeout=300)
    print(f"Underspecified variables size: {len(underspecified)}")
+
+   underspecified = list(underspecified)
 
    num_cores = os.cpu_count()
 

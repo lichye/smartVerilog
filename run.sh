@@ -55,8 +55,6 @@ python smart.py $1
 rm -rf *.sby
 rm -rf *task
 
-exit 0
-
 # # Run the evaluator 
 python checker.py $1
 python evaluater.py $1
