@@ -9,7 +9,6 @@ def load_reduced_results(filename):
                 results.add(line)
     return results
 
-
 def extract_define_funs(filename):
     entries = set()
     with open(filename, "r", encoding="utf-8") as f:
@@ -73,7 +72,6 @@ def main():
 
     write_exprs_to_file(entries, "assertions.txt")
     print(f"Wrote {len(entries)} assertions to assertions.txt")
-
 
 if __name__ == "__main__":
     main()

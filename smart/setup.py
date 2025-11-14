@@ -5,6 +5,7 @@ import subprocess
 import shutil
 import time
 
+
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
         for file in files:
@@ -67,11 +68,55 @@ def sv_prep(sv_path,rst_path):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
 
-def preAnalysis(work_dir,file_path,top_module,output_file):
-    cmd = ["python", "src/python/preAnalyzer.py",work_dir,file_path, top_module, output_file]
-    print("Run cmd: ", cmd)
-    subprocess.run(cmd)
-    return 0
+def setupDir(current_path):
+    if not os.path.exists(current_path+"/runtime"):
+        os.makedirs(current_path+"/runtime")
+
+    runtime_formal_path = current_path+"/runtime/formal/"
+
+    runtime_verilog_path = current_path+"/runtime/verilog/"
+
+    runtime_cocotb_path = current_path+"/runtime/cocotb/"
+
+    sim_build_path = current_path+"/sim_build"
+
+    user_verilog_path = current_path+"/user"
+    
+    sim_target_dir = current_path+"/runtime/sim_results"
+
+    smt_target_dir = current_path+"/runtime/smt_results"
+
+    variables_dir = current_path+"/runtime/variables"
+
+    result_dir = current_path+"/result"
+
+    mutant_path = current_path+"/benchmarks/"
+
+    SygusResultDir = current_path+"/runtime/SygusResult.sl"
+
+    # subprocess.run(["cp", current_path+"/src/runtime/Makefile",current_path+"/runtime/Makefile"])
+    if not os.path.exists(sim_target_dir):
+        os.makedirs(sim_target_dir)
+    if not os.path.exists(smt_target_dir):
+        os.makedirs(smt_target_dir)
+    if not os.path.exists(runtime_verilog_path):
+        os.makedirs(runtime_verilog_path)
+    if not os.path.exists(runtime_formal_path):
+        os.makedirs(runtime_formal_path)
+    if not os.path.exists(sim_build_path):
+        os.makedirs(sim_build_path)
+    if not os.path.exists(runtime_cocotb_path):
+        os.makedirs(runtime_cocotb_path)
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+    if not os.path.exists(variables_dir):
+        os.makedirs(variables_dir)
+    if not os.path.exists(mutant_path):
+        os.makedirs(mutant_path)
+    if not os.path.exists(SygusResultDir):
+        open(SygusResultDir, 'a').close()
+
+    subprocess.run(["cp", user_verilog_path+"/sim.py",runtime_cocotb_path+"sim.py"])
 
 def writeLog(file,content):
     with open(file, "a") as f:
@@ -99,8 +144,6 @@ if __name__ == "__main__":
     mutant_path = current_path+"/benchmarks/"
 
     mverilog_path = current_path+"/runtime/verilog/"
-
-    setup_path = current_path+"/src/python/setDir.py"
     
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -119,7 +162,7 @@ if __name__ == "__main__":
         exit(1)
 
     #Start the preporcessing
-    subprocess.run(["python",setup_path]) # this will setup the directories and files needed for the smart compiler
+    setupDir(current_path) # this will setup the runtime directory structure
     sv_prep(user_path,mverilog_path) # this will prepare the system verilog files for cocotb
     print("Finish Initial Setup")
     

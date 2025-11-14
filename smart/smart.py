@@ -9,15 +9,6 @@ import subprocess
 import threading
 from concurrent.futures import ProcessPoolExecutor
 
-def copy_sv_files(original_path, target_path):
-    for root, dirs, files in os.walk(original_path):
-        for file in files:
-            if file.endswith(".sv"):
-                shutil.copy(os.path.join(root, file), target_path)
-            elif file.endswith(".v"):
-                print("Please convert the verilog files to system verilog")
-                exit(1)
-
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
     cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency]
@@ -148,7 +139,6 @@ if __name__ == "__main__":
 
     logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
-    copy_sv_files(mverilog_path, runtimeFormalDir)
     
     # Pre analysis of the code
     pre_start_time = time.time()
