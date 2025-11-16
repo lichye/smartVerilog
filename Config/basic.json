@@ -1,0 +1,20 @@
+{
+    "Parallel": false,
+    "Subset selection":{
+        "Random":true,
+        "MSA":true
+    },
+    "MSA settings": {
+        "MSA max iterations": 5,
+        "MSA timeout (seconds)": 300
+    },
+    "Minizer settings":{
+        "run minizer": true,
+        "each-level": false
+    },
+    "LTL settings":{
+        "run LTL": false,
+        "LTL timeout (seconds)": 300
+    },
+    "Evaluation": "true"
+}

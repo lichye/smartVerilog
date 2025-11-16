@@ -1,5 +1,6 @@
 import time
 import sys
+import json
 import os
 import subprocess
 import shutil
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     elif(len(sys.argv)==3):
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"
-        latency = int(sys.argv[2])
+        Config = sys.argv[2]
     else:
         print("Should give the main module name")
         exit(1)

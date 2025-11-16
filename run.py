@@ -1,6 +1,8 @@
 import os
+import sys
 import shutil
 import subprocess
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -27,7 +29,8 @@ def clean_smart():
     shutil.rmtree(smart / "src/python/__pycache__", ignore_errors=True)
     subprocess.run(["bash", "-c", "cd smart && make all_clean"], check=True)
 
-def run_experiment(target):
+def run_experiment(target,Config):
+    Config = Path(Config).resolve()
     print(f"=== Running experiment: {target} ===")
 
     # 1. Setup environment
@@ -80,13 +83,20 @@ def run_experiment(target):
     bash(f"python setup.py {target}")
     bash("rm -rf *task")
 
-    bash(f"python smart.py {target}")
+    bash(f"python smart.py {target} {Config}")
     bash("rm -rf *.sby")
     bash("rm -rf *task")
 
     # evaluate results
-    bash(f"python checker.py {target}")
-    bash(f"python evaluater.py {target}")
+    with open(Config) as f:
+        config = json.load(f)
+        evaluate = config.get("Evaluation")
+    if evaluate.lower == "false":
+        print("Skipping evaluation as per config.")
+        os.chdir("..")
+    else:
+        bash(f"python checker.py {target}")
+        bash(f"python evaluater.py {target}")
 
     os.chdir("..")
 
@@ -98,9 +108,11 @@ def run_experiment(target):
     print(f"Done: {target}")
 
 if __name__ == "__main__":
-    import sys
+    ## Set up default config
+    Config = "Config/basic.json"
+
     if len(sys.argv) < 2:
         print("Usage: python run.py <benchmark_name>")
         exit(1)
-
-    run_experiment(sys.argv[1])
+    
+    run_experiment(sys.argv[1],Config)
