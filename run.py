@@ -90,15 +90,15 @@ def run_experiment(target,Config):
     # evaluate results
     with open(Config) as f:
         config = json.load(f)
-        evaluate = config.get("Evaluation")
-    if evaluate.lower == "false":
+        Workflow = config.get("Workflow")
+    if Workflow["Evaluation"] == False:
         print("Skipping evaluation as per config.")
         os.chdir("..")
     else:
         bash(f"python checker.py {target}")
         bash(f"python evaluater.py {target}")
+        os.chdir("..")
 
-    os.chdir("..")
 
     # save results
     os.makedirs(f"Results/{target}", exist_ok=True)

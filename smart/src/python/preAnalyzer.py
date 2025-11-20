@@ -4,6 +4,7 @@ import sys
 import math
 import random
 import os
+import json
 from itertools import combinations, chain
 
 verilog_keywords = [
@@ -169,7 +170,7 @@ def extract_variables_from_block(block):
 
 if __name__ == "__main__":
     random.seed(42)
-    if(len(sys.argv)!=5):
+    if(len(sys.argv)!=6):
         print("Usage: python3 preAnalyzer.py <input_file> <top_module> <runtimeVariablesDir>")
         sys.exit(1)
     else:
@@ -177,6 +178,7 @@ if __name__ == "__main__":
         input_file = sys.argv[2]
         top_module = sys.argv[3]
         output_file = sys.argv[4]
+        Config = sys.argv[5]
 
     vcd_file = readFile(work_dir+"/runtime/sim_results/sim1.vcd")
 
@@ -206,6 +208,42 @@ if __name__ == "__main__":
         write_to_file("runtime/variables.txt", "\n".join([f"{var}" for var in variables]))
 
     resultfile = work_dir+"/result_"+top_module+".txt"
+
+    with open(Config) as f:
+        Workflow = json.load(f).get("Workflow")
+
+    if Workflow["Blockified"] == False:
+        variables = sorted(list(variables))
+        size_of_variables = len(variables)
+        if size_of_variables >= 400:
+            subset_size = 20
+            smart_loop = size_of_variables
+        elif size_of_variables >10:
+            subset_size = 5
+            smart_loop = size_of_variables*2
+        else:
+            subset_size = size_of_variables-3
+            smart_loop = size_of_variables*2
+
+
+        init_cnt = 0
+        # subsets = generate_combinations(variables, subset_size)
+        for i in range(0,smart_loop):
+            subset = get_random_subset(variables, subset_size)
+            write_to_file(output_file+"Init_"+str(i)+".txt", "\n".join([f"{var}" for var in subset]))
+
+        # top_module_content
+
+        variables_list = extract_variables_from_file(top_module_content)
+        print("the always variables size is "+str(len(variables_list)))
+        for variables in variables_list:
+            write_varibles = set()
+            for var in variables:
+                if var in vcd_variables and var not in verilog_keywords:
+                    write_varibles.add(var)
+            if len(write_varibles) > 0:
+                write_to_file(output_file+"always_"+str(init_cnt)+".txt", "\n".join([f"{var}" for var in write_varibles]))
+                init_cnt += 1
 
     print("Filtered variables size is "+str(len(variables)))
     V = len(variables)

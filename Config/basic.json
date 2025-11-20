@@ -1,20 +1,32 @@
 {
-    "Parallel": false,
-    "Subset selection":{
-        "Random":true,
-        "MSA":true
+    "Workflow": {
+        "Blockified": false,
+        "Parallel": true,
+        "Minimizer": false,
+        "LTL": false,
+        "Evaluation": true
     },
-    "MSA settings": {
+    "Blockified": {
+        "stop threadhold": 0,
+        "max iterations": 100
+    },
+    "Parallel_mode": {
+        "threads": 32
+    },
+    "Subset_selection":{
+        "Random":true,
+        "MSA":false
+    },
+    "MSA": {
         "MSA max iterations": 5,
         "MSA timeout (seconds)": 300
     },
-    "Minizer settings":{
-        "run minizer": true,
-        "each-level": false
+    "Minimizer settings":{
+        "each-level": false,
+        "timeout (seconds)": 300
     },
     "LTL settings":{
         "run LTL": false,
         "LTL timeout (seconds)": 300
-    },
-    "Evaluation": "true"
+    }
 }

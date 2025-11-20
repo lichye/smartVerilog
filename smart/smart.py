@@ -22,8 +22,8 @@ def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("Result: ", result)
     return result.returncode
 
-def preAnalysis(work_dir,file_path,top_module,output_file):
-    cmd = ["python", "src/python/preAnalyzer.py",work_dir,file_path, top_module, output_file]
+def preAnalysis(work_dir,file_path,top_module,output_file,Config):
+    cmd = ["python", "src/python/preAnalyzer.py",work_dir,file_path, top_module, output_file,Config]
     print("Run cmd: ", cmd)
     subprocess.run(cmd)
     return 0
@@ -44,8 +44,11 @@ def runBlockSmart():
     print("Start running Smart Block of "+str(all_work)+" threads")
 
     assertion_founded = 0
-     # start new process from the pool
-    with ProcessPoolExecutor() as executor:
+    # Read Config
+    workers = 1 # default single thread
+    
+    
+    with ProcessPoolExecutor(max_workers=workers) as executor:
         # all works
         smart_loop = 0
 
@@ -137,13 +140,18 @@ if __name__ == "__main__":
         print("Stop running")
         exit(1)
 
+    with open(Config) as f:
+        config = json.load(f)
+        Workflow = config.get("Workflow")
+        Blockified = config.get("Blockified")
+        Parallel_mode = config.get("Parallel_mode")
 
     logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
     
     # Pre analysis of the code
     pre_start_time = time.time()
-    preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir)
+    preAnalysis(current_path,mverilog_path+main_file_name,main_module,runtimeVariablesDir,Config)
     pre_end_time = time.time()  
     
     # SMART CORE EXECUTION
@@ -151,12 +159,14 @@ if __name__ == "__main__":
 
     new_result = runBlockSmart()
     
+    if Workflow["Blockified"] == False:
+        print("Non-blockified mode, stop after first iteration")
+        new_result = 0
+    
     while new_result >0:
         print("Generate New SMART blocks based on new found assertions")
         GenerateNewBlocks()
         new_result = runBlockSmart()
-
-    GenerateNewBlocks()
 
     # Count the time
     smart_end_time = time.time()
