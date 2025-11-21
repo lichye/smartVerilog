@@ -1,21 +1,19 @@
 {
     "Workflow": {
-        "Blockified": false,
+        "Blockified": true,
         "Parallel": true,
         "Minimizer": false,
         "LTL": false,
         "Evaluation": true
     },
-    "Blockified": {
-        "stop threadhold": 0,
-        "max iterations": 100
+    "Blockified_settings": {
+        "Threadhold": 0,
+        "Max_iterations": 100,
+        "MSA": true,
+        "Random": true
     },
     "Parallel_mode": {
         "threads": 32
-    },
-    "Subset_selection":{
-        "Random":true,
-        "MSA":false
     },
     "MSA": {
         "MSA max iterations": 5,

@@ -96,8 +96,8 @@ def runBlockSmart():
     print("Finish running Smart Block, found "+str(assertion_founded)+" new assertions")
     return assertion_founded
     
-def GenerateNewBlocks():
-    cmd = ["python", "src/python/generate_variable_subsets.py"]
+def GenerateNewBlocks(Config):
+    cmd = ["python", "src/python/generate_variable_subsets.py",Config]
     subprocess.run(cmd)
     return
 
@@ -143,8 +143,8 @@ if __name__ == "__main__":
     with open(Config) as f:
         config = json.load(f)
         Workflow = config.get("Workflow")
-        Blockified = config.get("Blockified")
-        Parallel_mode = config.get("Parallel_mode")
+        Blockified_settings = config.get("Blockified_settings")
+        Threadhold = Blockified_settings.get("Threadhold")
 
     logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
@@ -163,9 +163,9 @@ if __name__ == "__main__":
         print("Non-blockified mode, stop after first iteration")
         new_result = 0
     
-    while new_result >0:
+    while new_result > Threadhold:
         print("Generate New SMART blocks based on new found assertions")
-        GenerateNewBlocks()
+        GenerateNewBlocks(Config)
         new_result = runBlockSmart()
 
     # Count the time
