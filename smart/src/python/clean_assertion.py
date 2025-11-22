@@ -1,5 +1,7 @@
 import re
 
+from minimise_assertions import run_minimisation
+
 def load_reduced_results(filename):
     results = set()
     with open(filename, "r", encoding="utf-8") as f:
@@ -62,9 +64,10 @@ def write_exprs_to_file(entries, output_file="assertions.txt"):
         for sva in sorted(svas):
             f.write(sva + "\n")
 
-def main():
+if __name__ == "__main__":
     reduced_file = "runtime/reducedResult.txt"
     sygus_file = "runtime/CompareResult.txt"
+    run_minimisation(sygus_file, reduced_file, timeout=300)
 
     reduced_results = load_reduced_results(reduced_file)
     entries = extract_define_funs(sygus_file)
@@ -72,6 +75,3 @@ def main():
 
     write_exprs_to_file(entries, "assertions.txt")
     print(f"Wrote {len(entries)} assertions to assertions.txt")
-
-if __name__ == "__main__":
-    main()

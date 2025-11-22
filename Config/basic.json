@@ -2,7 +2,7 @@
     "Workflow": {
         "Blockified": true,
         "Parallel": true,
-        "Minimizer": false,
+        "Minimizer": true,
         "LTL": false,
         "Evaluation": true
     },
@@ -10,17 +10,12 @@
         "Threadhold": 0,
         "Max_iterations": 100,
         "MSA": true,
-        "Random": true
+        "Random": false
     },
-    "Parallel_mode": {
-        "threads": 32
-    },
-    "MSA": {
-        "MSA max iterations": 5,
-        "MSA timeout (seconds)": 300
+    "Parallel_settings": {
+        "max_threads": 32
     },
     "Minimizer settings":{
-        "each-level": false,
         "timeout (seconds)": 300
     },
     "LTL settings":{

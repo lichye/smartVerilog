@@ -91,6 +91,13 @@ def run_experiment(target,Config):
     with open(Config) as f:
         config = json.load(f)
         Workflow = config.get("Workflow")
+        Minimizer = Workflow.get("Minimizer")
+
+    if Minimizer == True:
+        print("Running assertion minimization...")
+        bash(f"python src/python/clean_assertion.py")    
+    
+
     if Workflow["Evaluation"] == False:
         print("Skipping evaluation as per config.")
         os.chdir("..")

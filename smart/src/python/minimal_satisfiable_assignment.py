@@ -1,9 +1,11 @@
 import time
+import sys
+import os
 from collections import defaultdict
 from cvc5.pythonic import *
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src", "python")))
 from utils import *
-
 
 seen_mus = []
 seen_notmus = []

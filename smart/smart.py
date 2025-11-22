@@ -1,14 +1,19 @@
 import time
+import os
 import sys
 import json
-import os
 import subprocess
 import shutil
 import time
 import glob
+import math
 import subprocess
 import threading
+import random
 from concurrent.futures import ProcessPoolExecutor
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src", "python")))
+from minimal_satisfiable_assignment import get_mus
 
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
@@ -45,7 +50,8 @@ def runBlockSmart():
 
     assertion_founded = 0
     # Read Config
-    workers = 1 # default single thread
+    cpu_cores = os.cpu_count()
+    workers = min(max_threads, all_work, cpu_cores) # do not exceed the number of works
     
     
     with ProcessPoolExecutor(max_workers=workers) as executor:
@@ -96,10 +102,77 @@ def runBlockSmart():
     print("Finish running Smart Block, found "+str(assertion_founded)+" new assertions")
     return assertion_founded
     
-def GenerateNewBlocks(Config):
-    cmd = ["python", "src/python/generate_variable_subsets.py",Config]
-    subprocess.run(cmd)
-    return
+def GenerateNewBlocks():
+    # clean the "runtime/variables/" folder
+    shutil.rmtree(runtimeVariablesDir, ignore_errors=True)
+    os.makedirs(runtimeVariablesDir, exist_ok=True)
+    if(Blockified_settings["MSA"]== True and Blockified_settings["Random"]== False):
+        underspecified,model = get_mus("runtime/variables.txt", "runtime/SygusResult.sl", timeout=300)
+        print(f"Underspecified variables size: {len(underspecified)}")
+        underspecified = list(underspecified)
+
+        num_cores = os.cpu_count()
+
+        V = len(underspecified)
+        k = round(2.7+1.6*math.log(V,10))
+        n = max(int(0.5*V**0.9), num_cores)
+
+        for i in range(int(n)):
+            variable_set = random.sample(underspecified, k)
+        #    print(f"variable_set_{i}: {variable_set}")
+            with open(f"runtime/variables/thread_{i}.txt", 'w') as f:
+                f.write('\n'.join(variable_set))
+   
+    if(Blockified_settings["Random"]== True and Blockified_settings["MSA"]== False):
+        with open("runtime/variables.txt") as f:
+            variables = f.read().splitlines()
+        variables = list(set(variables))
+        V = len(variables)
+        k = round(2.7+1.6*math.log(V,10))
+        n = max(int(0.5*V**0.9), os.cpu_count())
+        print("Underspecified variable size is "+str(V))
+        print("Subset size k is "+str(k))
+        print("Number of threads n is "+str(n))
+
+        underspecified = list(variables)
+
+        for i in range(int(n)):
+            variable_set = random.sample(underspecified, k)
+        #    print(f"variable_set_{i}: {variable_set}")
+            with open(f"runtime/variables/thread_{i}.txt", 'w') as f:
+                f.write('\n'.join(variable_set))
+
+    if(Blockified_settings["Random"]== True and Blockified_settings["MSA"]== True):
+        # Do 50% MSA
+        underspecified,model = get_mus("runtime/variables.txt", "runtime/SygusResult.sl", timeout=300)
+        print(f"Underspecified variables size from MSA: {len(underspecified)}")
+        underspecified = list(underspecified)
+        V = len(underspecified)
+        k = round(2.7+1.6*math.log(V,10))
+        n = max(int(0.5*V**0.9), os.cpu_count())
+        msa_n = int(n/2)
+        for i in range(int(msa_n)):
+            variable_set = random.sample(underspecified, k)
+            with open(f"runtime/variables/thread_{i}.txt", 'w') as f:
+                f.write('\n'.join(variable_set))
+      
+      # Do 50% Random
+        with open("runtime/variables.txt") as f:
+            variables = f.read().splitlines()
+        variables = list(set(variables))
+        V = len(variables)
+        k = round(2.7+1.6*math.log(V,10))
+        random_n = n - msa_n
+        print("Underspecified variable size from Random is "+str(V))
+        print("Subset size k is "+str(k))
+        print("Number of threads n is "+str(random_n))
+        underspecified = list(variables)
+        for i in range(int(random_n)):
+            variable_set = random.sample(underspecified, k)
+            with open(f"runtime/variables/thread_{i+msa_n}.txt", 'w') as f:
+                f.write('\n'.join(variable_set))
+    
+    return len(underspecified)
 
 if __name__ == "__main__":
     # Count the overall time
@@ -145,6 +218,8 @@ if __name__ == "__main__":
         Workflow = config.get("Workflow")
         Blockified_settings = config.get("Blockified_settings")
         Threadhold = Blockified_settings.get("Threadhold")
+        Parallel_settings = config.get("Parallel_settings")
+        max_threads = Parallel_settings.get("max_threads")
 
     logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
@@ -163,9 +238,16 @@ if __name__ == "__main__":
         print("Non-blockified mode, stop after first iteration")
         new_result = 0
     
+    last_size = math.inf
+
     while new_result > Threadhold:
         print("Generate New SMART blocks based on new found assertions")
-        GenerateNewBlocks(Config)
+        msa_size = GenerateNewBlocks()
+        if msa_size > last_size:
+            break
+        else:
+            last_size = msa_size
+        
         new_result = runBlockSmart()
 
     # Count the time
