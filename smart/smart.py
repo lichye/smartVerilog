@@ -14,6 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src", "python")))
 from minimal_satisfiable_assignment import get_mus
+from minimise_assertions import run_minimisation
 
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
@@ -220,6 +221,8 @@ if __name__ == "__main__":
         Threadhold = Blockified_settings.get("Threadhold")
         Parallel_settings = config.get("Parallel_settings")
         max_threads = Parallel_settings.get("max_threads")
+        Minizer_settings = config.get("Minimizer_settings")
+        Block_minimizer = Minizer_settings.get("Block_minimizer")
 
     logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
@@ -242,6 +245,9 @@ if __name__ == "__main__":
 
     while new_result > Threadhold:
         print("Generate New SMART blocks based on new found assertions")
+        if Block_minimizer == True:
+            # Minimize the found assertions to reduce the variable set
+            run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", timeout=300)
         msa_size = GenerateNewBlocks()
         
         if msa_size > last_size:

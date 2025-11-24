@@ -85,5 +85,4 @@ if __name__ == "__main__":
     entries = filter_entries(entries, reduced_results)
 
     write_exprs_to_file(entries, "assertions.txt")
-    exit(0)
     print(f"Wrote {len(entries)} assertions to assertions.txt")

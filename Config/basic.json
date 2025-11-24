@@ -1,11 +1,11 @@
 {
     "Workflow": {
-        "Blockified": false,
+        "Blockified": true,
         "Parallel": true,
         "Minimizer": true,
         "LTL": false,
-        "Evaluation": false,
-        "Move_results": false
+        "Evaluation": true,
+        "Move_results": true
     },
     "Blockified_settings": {
         "Threadhold": 0,
