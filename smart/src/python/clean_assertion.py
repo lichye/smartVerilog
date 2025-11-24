@@ -1,4 +1,5 @@
 import re
+import sys
 
 from minimise_assertions import run_minimisation
 
@@ -55,7 +56,11 @@ def extract_define_funs(filename):
     return entries
 
 def filter_entries(entries, reduced_results):
-    filtered = [(sva, expr) for sva, expr in entries if expr in reduced_results]
+    filtered = [
+        (sva, expr)
+        for sva, expr in entries
+        if any(expr in r for r in reduced_results)
+    ]
     return filtered
 
 def write_exprs_to_file(entries, output_file="assertions.txt"):
@@ -65,13 +70,20 @@ def write_exprs_to_file(entries, output_file="assertions.txt"):
             f.write(sva + "\n")
 
 if __name__ == "__main__":
-    reduced_file = "runtime/reducedResult.txt"
-    sygus_file = "runtime/CompareResult.txt"
-    run_minimisation(sygus_file, reduced_file, timeout=300)
+    if(len(sys.argv)==4):
+        reduced_file = sys.argv[1]
+        sygus_file = sys.argv[2]
+        timeout = int(sys.argv[3])
+    else:
+        reduced_file = "runtime/reducedResult.sl"
+        sygus_file = "runtime/CompareResult.txt"
+        timeout = 300
 
+    run_minimisation(sygus_file, reduced_file, timeout=300)
     reduced_results = load_reduced_results(reduced_file)
     entries = extract_define_funs(sygus_file)
     entries = filter_entries(entries, reduced_results)
 
     write_exprs_to_file(entries, "assertions.txt")
+    exit(0)
     print(f"Wrote {len(entries)} assertions to assertions.txt")

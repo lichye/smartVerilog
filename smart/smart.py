@@ -243,6 +243,7 @@ if __name__ == "__main__":
     while new_result > Threadhold:
         print("Generate New SMART blocks based on new found assertions")
         msa_size = GenerateNewBlocks()
+        
         if msa_size > last_size:
             break
         else:

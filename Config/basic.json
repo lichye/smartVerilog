@@ -1,10 +1,11 @@
 {
     "Workflow": {
-        "Blockified": true,
+        "Blockified": false,
         "Parallel": true,
         "Minimizer": true,
         "LTL": false,
-        "Evaluation": true
+        "Evaluation": false,
+        "Move_results": false
     },
     "Blockified_settings": {
         "Threadhold": 0,
@@ -15,10 +16,12 @@
     "Parallel_settings": {
         "max_threads": 32
     },
-    "Minimizer settings":{
+    "Minimizer_settings":{
+        "End_minimizer": true,
+        "Block_minimizer": true,
         "timeout (seconds)": 300
     },
-    "LTL settings":{
+    "LTL_settings":{
         "run LTL": false,
         "LTL timeout (seconds)": 300
     }

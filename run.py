@@ -92,12 +92,13 @@ def run_experiment(target,Config):
         config = json.load(f)
         Workflow = config.get("Workflow")
         Minimizer = Workflow.get("Minimizer")
+        Minimizer_settings = config.get("Minimizer_settings")
+        Move_results = Workflow.get("Move_results", False)
 
-    if Minimizer == True:
+    if Minimizer == True and Minimizer_settings.get("End_minimizer") == True:
         print("Running assertion minimization...")
         bash(f"python src/python/clean_assertion.py")    
     
-
     if Workflow["Evaluation"] == False:
         print("Skipping evaluation as per config.")
         os.chdir("..")
@@ -108,9 +109,14 @@ def run_experiment(target,Config):
 
 
     # save results
-    os.makedirs(f"Results/{target}", exist_ok=True)
-    bash(f"mv smart/*.txt Results/{target}")
-    bash(f"mv smart/user/* Results/{target}")
+    if not Move_results:
+        print("Skipping moving results as per config.")
+        return
+    else:
+        print("Moving results...")
+        os.makedirs(f"Results/{target}", exist_ok=True)
+        bash(f"mv smart/*.txt Results/{target}")
+        bash(f"mv smart/user/* Results/{target}")
 
     print(f"Done: {target}")
 
