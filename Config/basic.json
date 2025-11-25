@@ -5,7 +5,8 @@
         "Minimizer": true,
         "LTL": false,
         "Evaluation": true,
-        "Move_results": true
+        "Move_results": true,
+        "Logging": true
     },
     "Blockified_settings": {
         "Threadhold": 0,
@@ -19,10 +20,10 @@
     "Minimizer_settings":{
         "End_minimizer": true,
         "Block_minimizer": true,
-        "timeout (seconds)": 300
+        "End_Minimizer_timeout": 300,
+        "Block_Minimizer_timeout": 300
     },
     "LTL_settings":{
-        "run LTL": false,
-        "LTL timeout (seconds)": 300
+        "LTL_depth": 1
     }
 }

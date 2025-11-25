@@ -204,6 +204,11 @@ if __name__ == "__main__":
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"
         Config = sys.argv[2]
+    elif(len(sys.argv)==4):
+        main_module = sys.argv[1]
+        main_file_name = main_module+".sv"
+        Config = sys.argv[2]
+        latency = int(sys.argv[3])
     else:
         print("Should give the main module name")
         exit(1)
@@ -247,7 +252,8 @@ if __name__ == "__main__":
         print("Generate New SMART blocks based on new found assertions")
         if Block_minimizer == True:
             # Minimize the found assertions to reduce the variable set
-            run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", timeout=300)
+            Block_Minimizer_timeout = Minizer_settings.get("Block_Minimizer_timeout")
+            run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", {Block_Minimizer_timeout})
         msa_size = GenerateNewBlocks()
         
         if msa_size > last_size:

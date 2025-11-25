@@ -31,6 +31,16 @@ def clean_smart():
 
 def run_experiment(target,Config):
     Config = Path(Config).resolve()
+    # Read the expriment configuration
+    with open(Config) as f:
+        config = json.load(f)
+        Workflow = config.get("Workflow")
+        Minimizer = Workflow.get("Minimizer")
+        Minimizer_settings = config.get("Minimizer_settings")
+        Move_results = Workflow.get("Move_results", False)
+        LTL = Workflow.get("LTL")
+        LTL_settings = config.get("LTL_settings")
+
     print(f"=== Running experiment: {target} ===")
 
     # 1. Setup environment
@@ -83,21 +93,25 @@ def run_experiment(target,Config):
     bash(f"python setup.py {target}")
     bash("rm -rf *task")
 
-    bash(f"python smart.py {target} {Config}")
+    if LTL == True:
+        print("Running LTL synthesis...")
+        LTL_depth = LTL_settings.get("LTL_depth")
+        LTL_timeout = LTL_settings.get("LTL_timeout")
+        for i in range(LTL_depth):
+            print(f"LTL synthesis Latency {i}/{LTL_depth}...")
+            bash(f"python smart.py {target} {Config} {i}")
+    else:
+        bash(f"python smart.py {target} {Config}")
+
+
     bash("rm -rf *.sby")
     bash("rm -rf *task")
 
-    # evaluate results
-    with open(Config) as f:
-        config = json.load(f)
-        Workflow = config.get("Workflow")
-        Minimizer = Workflow.get("Minimizer")
-        Minimizer_settings = config.get("Minimizer_settings")
-        Move_results = Workflow.get("Move_results", False)
-
+    
     if Minimizer == True and Minimizer_settings.get("End_minimizer") == True:
         print("Running assertion minimization...")
-        bash(f"python src/python/clean_assertion.py")    
+        End_Minimizer_timeout = Minimizer_settings.get("End_Minimizer_timeout")
+        bash(f"python src/python/clean_assertion.py runtime/reducedResult.sl runtime/CompareResult.txt {End_Minimizer_timeout}")   
     
     if Workflow["Evaluation"] == False:
         print("Skipping evaluation as per config.")
