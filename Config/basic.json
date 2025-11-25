@@ -4,13 +4,14 @@
         "Parallel": true,
         "Minimizer": true,
         "LTL": true,
+        "Checker": true,
         "Evaluation": true,
-        "Move_results": true,
-        "Logging": true
+        "Log_result": true
     },
     "Blockified_settings": {
         "Threadhold": 0,
         "Max_iterations": 100,
+        "MSA_stable_end": true,
         "MSA": true,
         "Random": false
     },
@@ -25,5 +26,15 @@
     },
     "LTL_settings":{
         "LTL_depth": 1
+    },
+    "Checker_settings":{
+        "Check_unbounded": false
+    },
+    "Evaluation_settings":{
+        "bounded_depth": 10,
+        "Check_unbounded": false
+    },
+    "Log_result_settings":{
+        "log_file": "experiment_results.log"
     }
 }

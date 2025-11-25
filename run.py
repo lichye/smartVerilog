@@ -37,9 +37,11 @@ def run_experiment(target,Config):
         Workflow = config.get("Workflow")
         Minimizer = Workflow.get("Minimizer")
         Minimizer_settings = config.get("Minimizer_settings")
-        Move_results = Workflow.get("Move_results", False)
+        Log_result = Workflow.get("Log_result", False)
         LTL = Workflow.get("LTL")
         LTL_settings = config.get("LTL_settings")
+        Evaluation = Workflow.get("Evaluation")
+        Evaluation_settings = config.get("Evaluation_settings")
 
     print(f"=== Running experiment: {target} ===")
 
@@ -97,7 +99,7 @@ def run_experiment(target,Config):
         print("Running LTL synthesis...")
         LTL_depth = LTL_settings.get("LTL_depth")
         LTL_timeout = LTL_settings.get("LTL_timeout")
-        for i in range(LTL_depth):
+        for i in range(LTL_depth+1):
             print(f"LTL synthesis Latency {i}/{LTL_depth}...")
             bash(f"python smart.py {target} {Config} {i}")
     else:
@@ -117,13 +119,17 @@ def run_experiment(target,Config):
         print("Skipping evaluation as per config.")
         os.chdir("..")
     else:
-        bash(f"python checker.py {target}")
-        bash(f"python evaluater.py {target}")
+        if Evaluation_settings.get("Check_unbounded") == True:
+            bash(f"python checker.py {target}")
+            bash(f"python evaluater.py {target}")
+        else:
+            bound = Evaluation_settings.get("bounded_depth")
+            bash(f"python checker.py {target} {bound}")
+            bash(f"python evaluater.py {target} {bound}")
         os.chdir("..")
 
-
     # save results
-    if not Move_results:
+    if not Log_result:
         print("Skipping moving results as per config.")
         return
     else:
