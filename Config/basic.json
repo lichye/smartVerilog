@@ -3,7 +3,7 @@
         "Blockified": true,
         "Parallel": true,
         "Minimizer": true,
-        "LTL": false,
+        "LTL": true,
         "Evaluation": true,
         "Move_results": true,
         "Logging": true

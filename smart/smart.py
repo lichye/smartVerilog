@@ -253,7 +253,7 @@ if __name__ == "__main__":
         if Block_minimizer == True:
             # Minimize the found assertions to reduce the variable set
             Block_Minimizer_timeout = Minizer_settings.get("Block_Minimizer_timeout")
-            run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", {Block_Minimizer_timeout})
+            run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", Block_Minimizer_timeout)
         msa_size = GenerateNewBlocks()
         
         if msa_size > last_size:
