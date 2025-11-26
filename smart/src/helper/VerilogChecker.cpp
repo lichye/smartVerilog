@@ -35,14 +35,15 @@ VerilogChecker::VerilogChecker() {
     formalFilePath = "";
     tracePath = "";
     moduleTime = "";
-    bound = 10;
+    bound = 3;
 }
 
 VerilogChecker::VerilogChecker(std::string verilogSrcPath, BackEndSolver solver) {
     this->verilogSrcPath = verilogSrcPath;
     this->solver = solver;
     moduleTime = "";
-    bound = 10;
+    bound = 3;
+    unboundCheck = false;
 }
 
 VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string homePath,BackEndSolver solver) {
@@ -50,7 +51,8 @@ VerilogChecker::VerilogChecker(std::string verilogSrcPath,std::string homePath,B
     this->homePath = homePath;
     this->solver = solver;
     moduleTime = "";
-    bound = 10;
+    bound = 3;
+    unboundCheck = false;
     std::string relatePath = homePath+"/runtime/verilog";
 
     try {
@@ -221,7 +223,7 @@ bool VerilogChecker::runEBMC(){
         command +=" "+path+ " ";
     }
     
-    if(unboundChecker)
+    if(unboundCheck)
         command += " --k-induction";
     else
         command += " --bound "+std::to_string(bound);
@@ -247,7 +249,7 @@ bool VerilogChecker::runEBMC(std::string tracePath){
         command +=" "+path+ " ";
     }
 
-    if(unboundChecker)
+    if(unboundCheck)
         command += " --k-induction";
     else
         command += " --bound "+std::to_string(bound);
@@ -346,6 +348,10 @@ std::string VerilogChecker::generateFormalFilePath(PropertyType type) {
 
 void VerilogChecker::setBound(int bound) {
     this->bound = bound;
+}
+
+void VerilogChecker::setUnboundCheck(bool unboundCheck) {
+    this->unboundCheck = unboundCheck;
 }
 
 void VerilogChecker::setTopModule(std::string topModule) {

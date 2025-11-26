@@ -52,6 +52,7 @@ class VerilogChecker {
         bool checkStateReachability(State*);
         bool checkExprSafety(SygusFunction*,std::string);
         void setBound(int);
+        void setUnboundCheck(bool);
         void setTopModule(std::string);
         void setModuleTime(std::string);
         void setHomePath(std::string);
@@ -60,9 +61,11 @@ class VerilogChecker {
         void setTimer(Timer*);
     private:
         Timer* timer;
+        bool unboundCheck;
         int bound;
         //BackEndSolver
         BackEndSolver solver;
+        
 
         //parameters of ebmc
         std::string verilogSrcPath;

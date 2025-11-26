@@ -1,11 +1,6 @@
 #ifndef SETUPS_H
 #define SETUPS_H
 
-// Property mining Settings
-#define unboundChecker false
-#define LTLproperty true
-#define LTLpropertyDepth 1
-
 // Debugging Settings
 #define smartVerbose 1
 #define deleteTempFile true

@@ -11,6 +11,7 @@ yes | sudo apt-get install cmake gcc g++ bison flex unzip wget make
 yes | sudo apt-get install python3 python-is-python3
 yes | sudo apt-get install pip
 yes | sudo apt-get install python3-venv
+yes | sudo apt install nlohmann-json3-dev
 yes | sudo pip3 install pytest
 
 python3 -m venv otherTools/venv

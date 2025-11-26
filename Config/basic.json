@@ -9,7 +9,7 @@
         "Log": true
     },
     "PreAnalysis_settings": {
-        "Number_Trace": 4,
+        "Number_Trace": 3,
         "Depth_Trace": "Default is 10 and hard to change"
     },
     "Blockified_settings": {
@@ -18,6 +18,13 @@
         "MSA_stable_end": true,
         "MSA": true,
         "Random": false
+    },
+    "SMART_settings": {
+        "Refinement": true,
+        "Refinement_depth": 5,
+        "Nagative_state_number": 1,
+        "unbound_check": false,
+        "bounded_depth": 10
     },
     "Parallel_settings": {
         "max_threads": 32

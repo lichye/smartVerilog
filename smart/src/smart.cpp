@@ -21,6 +21,8 @@ namespace fs = std::filesystem;
 #include <unistd.h>     
 #include <sys/file.h>  
 #include <sys/types.h>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 //global variables
 int latency = 0;
@@ -37,6 +39,7 @@ std::string initVariables = "";
 std::string currentDir = "";
 std::string core_id = "0";
 std::string Cvc5result;
+std::string configPath;
 std::vector<Signal>* signals;
 SyGuSGenerater* sygus;
 Module* module;
@@ -55,8 +58,8 @@ SygusFunction* parseSygusFunction(const std::string&,SyGuSGenerater*,bool);
 State* createNegativeState();
 
 int main(int argc, char* argv[]){
-  if(argc!=7){
-    print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id> <Latency>\n");
+  if(argc!=8){
+    print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id> <Latency> <Config_Path)\n");
     return -1;
   }
   else{
@@ -66,7 +69,19 @@ int main(int argc, char* argv[]){
     initVariables = argv[4];
     core_id = argv[5];
     latency = std::stoi(argv[6]);
+    configPath = argv[7];
   }
+
+  std::ifstream configFile(configPath);
+  if(!configFile.is_open()){
+    print("Error: Unable to open config file "+configPath);
+    return -1;
+  }
+  json configJson;
+  configFile >> configJson;
+  bool RefinementSet = configJson["SMART_settings"]["Refinement"];
+  bool unboundCheckSet = configJson["SMART_settings"]["unbound_check"];
+  int boundedDepth = configJson["SMART_settings"]["bounded_depth"];
 
   bool isLTL = (latency > 0);
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
@@ -80,8 +95,11 @@ int main(int argc, char* argv[]){
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::EBMC);
   timer = new Timer();  
 
+
   checker->setTopModule(moduleName);
   checker->setTimer(timer);
+  checker->setBound(boundedDepth);
+  checker->setUnboundCheck(unboundCheckSet);
   
   //Read from trace & Generate Signals
   module->addTracesfromDir(SIM,sim_path);
@@ -103,8 +121,12 @@ int main(int argc, char* argv[]){
     sygus->addConstraintComments("Getting constraints from the trace :\t"+constrain.tracePath,constrain.isTrue);
   }
 
-  State* negativeState = createNegativeState();
-  sygus->addConstraints(negativeState,false);
+  //Add random negative states
+  for(int i=0;i<configJson["SMART_settings"]["Nagative_state_number"];i++){
+    State* negativeState = createNegativeState();
+    sygus->addConstraints(negativeState,false);
+  }
+
   if(latency == 0){
     sygus->printSysgusPath(sygusPath);
   }
@@ -123,8 +145,8 @@ int main(int argc, char* argv[]){
   int timeOut = 0;
   int mostRun = signals->size();
 
-  while(!verifiedResult){
-    if(timeOut++>mostRun||verifiedResult){
+  while(!verifiedResult&&RefinementSet){
+    if(timeOut++>mostRun||verifiedResult||timeOut>configJson["SMART_settings"]["Refinement_depth"]){
       print("Time out\n");
       break;
     }

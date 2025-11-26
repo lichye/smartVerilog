@@ -18,7 +18,7 @@ from minimise_assertions import run_minimisation
 
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
     # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
-    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency]
+    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency,Config]
     # print("Run cmd: ", str(cmd))
     # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -230,6 +230,7 @@ if __name__ == "__main__":
         max_threads = Parallel_settings.get("max_threads")
         Minizer_settings = config.get("Minimizer_settings")
         Block_minimizer = Minizer_settings.get("Block_minimizer")
+        MSA_stable_end = Blockified_settings.get("MSA_stable_end")
 
     logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
@@ -258,7 +259,7 @@ if __name__ == "__main__":
             run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", Block_Minimizer_timeout)
         msa_size = GenerateNewBlocks()
         
-        if msa_size > last_size:
+        if MSA_stable_end == True and msa_size >= last_size:
             break
         else:
             last_size = msa_size
