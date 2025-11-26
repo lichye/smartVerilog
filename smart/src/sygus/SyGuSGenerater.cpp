@@ -277,6 +277,15 @@ std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
   }
   printDebug("CVC5 Return code: " + std::to_string(exitCode),3);
   printDebug("The Result from cvc5 is: " + result,3);
+  if(deleteTempFile){
+      std::string command = "rm -rf "+sygusPath;
+      int status = system(command.c_str());
+      if(status!=0) {
+          printError("Error: Unable to delete file "+sygusPath+"\n");
+          exit(1);
+      }
+      printDebug("Deleted file "+sygusPath,3);
+  }
   return result;
 }
 

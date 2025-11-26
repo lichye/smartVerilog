@@ -3,10 +3,14 @@
         "Blockified": true,
         "Parallel": true,
         "Minimizer": true,
-        "LTL": true,
+        "LTL": false,
         "Checker": true,
         "Evaluation": true,
-        "Log_result": true
+        "Log": true
+    },
+    "PreAnalysis_settings": {
+        "Number_Trace": 4,
+        "Depth_Trace": "Default is 10 and hard to change"
     },
     "Blockified_settings": {
         "Threadhold": 0,
@@ -28,13 +32,11 @@
         "LTL_depth": 1
     },
     "Checker_settings":{
-        "Check_unbounded": false
+        "Check_unbounded": false,
+        "bounded_depth": 10
     },
     "Evaluation_settings":{
-        "bounded_depth": 10,
-        "Check_unbounded": false
-    },
-    "Log_result_settings":{
-        "log_file": "experiment_results.log"
+        "Check_unbounded": false,
+        "bounded_depth": 10
     }
 }

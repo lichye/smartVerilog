@@ -4,7 +4,7 @@ import os
 import subprocess
 import shutil
 import time
-
+import json
 
 def copy_sv_files(original_path, target_path):
     for root, dirs, files in os.walk(original_path):
@@ -151,9 +151,22 @@ if __name__ == "__main__":
     if(len(sys.argv)==2):
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"
+        parent_dir = os.path.dirname(current_path)
+        Config = parent_dir+"/Config/basic.json"
+
+    elif(len(sys.argv)==3):
+        main_module = sys.argv[1]
+        main_file_name = main_module+".sv"
+        Config = sys.argv[2]
+    
     else:
         print("Should give the main module name")
         exit(1)
+    
+    with open(Config) as f:
+        config_data = json.load(f)
+        Number_Trace = config_data["PreAnalysis_settings"]["Number_Trace"]
+        sim_loop = Number_Trace
 
     files = os.listdir(dir_path)
     if len(files) == 0:

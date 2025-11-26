@@ -200,6 +200,8 @@ if __name__ == "__main__":
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"
         latency = 0
+        parent_dir = os.path.dirname(current_path)
+        Config = parent_dir+"/Config/basic.json"
     elif(len(sys.argv)==3):
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"

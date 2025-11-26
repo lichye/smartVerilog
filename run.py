@@ -37,9 +37,11 @@ def run_experiment(target,Config):
         Workflow = config.get("Workflow")
         Minimizer = Workflow.get("Minimizer")
         Minimizer_settings = config.get("Minimizer_settings")
-        Log_result = Workflow.get("Log_result", False)
+        Log_result = Workflow.get("Log", False)
         LTL = Workflow.get("LTL")
         LTL_settings = config.get("LTL_settings")
+        Checker = Workflow.get("Checker")
+        Checker_settings = config.get("Checker_settings")
         Evaluation = Workflow.get("Evaluation")
         Evaluation_settings = config.get("Evaluation_settings")
 
@@ -92,7 +94,7 @@ def run_experiment(target,Config):
 
     os.makedirs("user", exist_ok=True)
 
-    bash(f"python setup.py {target}")
+    bash(f"python setup.py {target} {Config}")
     bash("rm -rf *task")
 
     if LTL == True:
@@ -115,16 +117,25 @@ def run_experiment(target,Config):
         End_Minimizer_timeout = Minimizer_settings.get("End_Minimizer_timeout")
         bash(f"python src/python/clean_assertion.py runtime/reducedResult.sl runtime/CompareResult.txt {End_Minimizer_timeout}")   
     
+    # Step 4: Check all assertions correctness on the original design
+    if Workflow["Checker"] == False:
+        print("Skipping checker as per config.")
+        os.chdir("..")
+    else:
+        if Checker_settings.get("Check_unbounded") == True:
+            bash(f"python checker.py {target}")
+        else:
+            bound = Checker_settings.get("bounded_depth")
+            bash(f"python checker.py {target} {bound}")
+
     if Workflow["Evaluation"] == False:
         print("Skipping evaluation as per config.")
         os.chdir("..")
     else:
         if Evaluation_settings.get("Check_unbounded") == True:
-            bash(f"python checker.py {target}")
             bash(f"python evaluater.py {target}")
         else:
             bound = Evaluation_settings.get("bounded_depth")
-            bash(f"python checker.py {target} {bound}")
             bash(f"python evaluater.py {target} {bound}")
         os.chdir("..")
 
