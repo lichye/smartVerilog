@@ -115,8 +115,8 @@ def GenerateNewBlocks():
         num_cores = os.cpu_count()
 
         V = len(underspecified)
-        k = round(2.7+1.6*math.log(V,10))
-        n = max(int(0.5*V**0.9), num_cores)
+        k = round(2.7+k_size*math.log(V,10))
+        n = max(int(Block_size*V**0.9), num_cores)
 
         for i in range(int(n)):
             variable_set = random.sample(underspecified, k)
@@ -129,8 +129,8 @@ def GenerateNewBlocks():
             variables = f.read().splitlines()
         variables = list(set(variables))
         V = len(variables)
-        k = round(2.7+1.6*math.log(V,10))
-        n = max(int(0.5*V**0.9), os.cpu_count())
+        k = round(2.7+k_size*math.log(V,10))
+        n = max(int(Block_size*V**0.9), os.cpu_count())
         print("Underspecified variable size is "+str(V))
         print("Subset size k is "+str(k))
         print("Number of threads n is "+str(n))
@@ -149,8 +149,8 @@ def GenerateNewBlocks():
         print(f"Underspecified variables size from MSA: {len(underspecified)}")
         underspecified = list(underspecified)
         V = len(underspecified)
-        k = round(2.7+1.6*math.log(V,10))
-        n = max(int(0.5*V**0.9), os.cpu_count())
+        k = round(2.7+k_size*math.log(V,10))
+        n = max(int(Block_size*V**0.9), os.cpu_count())
         msa_n = int(n/2)
         for i in range(int(msa_n)):
             variable_set = random.sample(underspecified, k)
@@ -162,7 +162,7 @@ def GenerateNewBlocks():
             variables = f.read().splitlines()
         variables = list(set(variables))
         V = len(variables)
-        k = round(2.7+1.6*math.log(V,10))
+        k = round(2.7+k_size*math.log(V,10))
         random_n = n - msa_n
         print("Underspecified variable size from Random is "+str(V))
         print("Subset size k is "+str(k))
@@ -233,6 +233,9 @@ if __name__ == "__main__":
         MSA_stable_end = Blockified_settings.get("MSA_stable_end")
         Log = Workflow.get("Log")
         Block_Minimizer_timeout = Minizer_settings.get("Block_Minimizer_timeout")
+        Save_temp_assertions = Blockified_settings.get("Save_temp_assertions")
+        Block_size = Blockified_settings.get("Block_size",0.5)
+        k_size = Blockified_settings.get("k_size",1.6)
 
     resultfile = current_path+"/result_"+main_module+".txt"
     detail_logfile = current_path+"/log_"+main_module+".txt"
@@ -267,6 +270,13 @@ if __name__ == "__main__":
     loop_count = 1
 
     while new_result > Threadhold:
+        if Save_temp_assertions == True:
+            # Save the found assertions to a temp file
+            temp_assertion_file = current_path+"/temp_assertions_block_"+str(loop_count)+".txt"
+            with open(temp_assertion_file,"w") as f:
+                for assertion in verified_assertion:
+                    f.write(assertion+"\n")
+        
         print("Generate New SMART blocks based on new found assertions")
         if Block_minimizer == True:
             # Minimize the found assertions to reduce the variable set
@@ -303,7 +313,7 @@ if __name__ == "__main__":
             with open(detail_logfile,"a") as f:
                 f.write("Block "+str(loop_count+1)+":\n")
                 f.write("\tFound "+str(new_result)+" assertions\n")
-                f.write("\tSmart time taken: "+str(smart_end_time-smart_start_time)+" seconds\n\n")
+                f.write("\tSmart time taken: "+str(smart_end_time-smart_start_time)+" seconds\n")
         loop_count = loop_count + 1
 
     # Count the time

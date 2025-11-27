@@ -14,6 +14,8 @@ if __name__ == "__main__":
    with open(Config) as f:
       config = json.load(f)
       Blockified_settings = config.get("Blockified_settings")
+      k_size = Blockified_settings.get("k_size",1.6)
+      Block_size = Blockified_settings.get("Block_size",0.5)
 
    if(Blockified_settings["MSA"]== True and Blockified_settings["Random"]== False):
       underspecified,model = get_mus("runtime/variables.txt", "runtime/SygusResult.sl", timeout=300)
@@ -23,8 +25,8 @@ if __name__ == "__main__":
       num_cores = os.cpu_count()
 
       V = len(underspecified)
-      k = round(2.7+1.6*math.log(V,10))
-      n = max(int(0.5*V**0.9), num_cores)
+      k = round(2.7+k_size*math.log(V,10))
+      n = max(int(Block_size*V**0.9), num_cores)
 
       for i in range(int(n)):
          variable_set = random.sample(underspecified, k)
@@ -37,8 +39,8 @@ if __name__ == "__main__":
          variables = f.read().splitlines()
       variables = list(set(variables))
       V = len(variables)
-      k = round(2.7+1.6*math.log(V,10))
-      n = max(int(0.5*V**0.9), os.cpu_count())
+      k = round(2.7+k_size*math.log(V,10))
+      n = max(int(Block_size*V**0.9), os.cpu_count())
       print("Underspecified variable size is "+str(V))
       print("Subset size k is "+str(k))
       print("Number of threads n is "+str(n))
@@ -59,8 +61,8 @@ if __name__ == "__main__":
       print(f"Underspecified variables size from MSA: {len(underspecified)}")
       underspecified = list(underspecified)
       V = len(underspecified)
-      k = round(2.7+1.6*math.log(V,10))
-      n = max(int(0.5*V**0.9), os.cpu_count())
+      k = round(2.7+k_size*math.log(V,10))
+      n = max(int(Block_size*V**0.9), os.cpu_count())
       msa_n = int(n/2)
       for i in range(int(msa_n)):
          variable_set = random.sample(underspecified, k)
@@ -72,7 +74,7 @@ if __name__ == "__main__":
          variables = f.read().splitlines()
       variables = list(set(variables))
       V = len(variables)
-      k = round(2.7+1.6*math.log(V,10))
+      k = round(2.7+k_size*math.log(V,10))
       random_n = n - msa_n
       print("Underspecified variable size from Random is "+str(V))
       print("Subset size k is "+str(k))

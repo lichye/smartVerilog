@@ -41,6 +41,9 @@ class PowerLattice:
 
             curr_best, l = self.curr_best
             level = l - 1
+            if l == 0 :
+                self.curr_best = frozenset(), 0
+                return 
             if level != self.l:
                 self.rel_lattice = self.generate_rel_lattice(curr_best, l)
                 self.l = level

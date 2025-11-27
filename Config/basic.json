@@ -18,7 +18,9 @@
         "MSA_stable_end": true,
         "MSA": true,
         "Random": false,
-        "Save_temp_assertions": false
+        "k_size": 1.6,
+        "Block_size": 0.5,
+        "Save_temp_assertions": true
     },
     "SMART_settings": {
         "Refinement": true,
