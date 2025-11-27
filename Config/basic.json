@@ -17,7 +17,8 @@
         "Max_iterations": 100,
         "MSA_stable_end": true,
         "MSA": true,
-        "Random": false
+        "Random": false,
+        "Save_temp_assertions": false
     },
     "SMART_settings": {
         "Refinement": true,

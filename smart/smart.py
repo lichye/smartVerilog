@@ -231,9 +231,11 @@ if __name__ == "__main__":
         Minizer_settings = config.get("Minimizer_settings")
         Block_minimizer = Minizer_settings.get("Block_minimizer")
         MSA_stable_end = Blockified_settings.get("MSA_stable_end")
+        Log = Workflow.get("Log")
+        Block_Minimizer_timeout = Minizer_settings.get("Block_Minimizer_timeout")
 
-    logfile = current_path+"/log_"+main_module+".txt"
     resultfile = current_path+"/result_"+main_module+".txt"
+    detail_logfile = current_path+"/log_"+main_module+".txt"
     
     # Pre analysis of the code
     pre_start_time = time.time()
@@ -242,45 +244,89 @@ if __name__ == "__main__":
     
     # SMART CORE EXECUTION
     smart_start_time = time.time()
-
+    total_smart_time = 0
+    total_msa_time = 0
+    total_minizer_time = 0
+    
+    # Run one iteration of Smart core
     new_result = runBlockSmart()
+
+    smart_end_time = time.time()
+    total_smart_time = smart_end_time - smart_start_time + total_smart_time
+    if Log == True:
+        with open(detail_logfile,"a") as f:
+            f.write("Block 1:\n")
+            f.write("\tFound "+str(new_result)+" assertions\n")
+            f.write("\tSmart time taken: "+str(smart_end_time-smart_start_time)+" seconds\n")
     
     if Workflow["Blockified"] == False:
         print("Non-blockified mode, stop after first iteration")
         new_result = 0
     
     last_size = math.inf
+    loop_count = 1
 
     while new_result > Threadhold:
         print("Generate New SMART blocks based on new found assertions")
         if Block_minimizer == True:
             # Minimize the found assertions to reduce the variable set
-            Block_Minimizer_timeout = Minizer_settings.get("Block_Minimizer_timeout")
+            min_start_time = time.time()
             run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", Block_Minimizer_timeout)
+            min_end_time = time.time()
+            total_minizer_time = total_minizer_time + (min_end_time - min_start_time)
+            if Log == True:
+                with open(detail_logfile,"a") as f:
+                    f.write("\tMinimizer time taken: "+str(min_end_time - min_start_time)+" seconds\n")
+        
+
+        msa_start_time = time.time()
         msa_size = GenerateNewBlocks()
+        msa_end_time = time.time()
+
+        total_msa_time = total_msa_time + (msa_end_time - msa_start_time)
+        if Log == True:
+            with open(detail_logfile,"a") as f:
+                f.write("\tMSA time taken: "+str(msa_end_time - msa_start_time)+" seconds\n")
+                f.write("\tMSA set size: "+str(msa_size)+"\n\n")
+                f.write("--------------------------------\n")
         
         if MSA_stable_end == True and msa_size >= last_size:
             break
         else:
             last_size = msa_size
         
+        smart_start_time = time.time()
         new_result = runBlockSmart()
+        smart_end_time = time.time()
+        total_smart_time = smart_end_time - smart_start_time + total_smart_time
+        if Log == True:
+            with open(detail_logfile,"a") as f:
+                f.write("Block "+str(loop_count+1)+":\n")
+                f.write("\tFound "+str(new_result)+" assertions\n")
+                f.write("\tSmart time taken: "+str(smart_end_time-smart_start_time)+" seconds\n\n")
+        loop_count = loop_count + 1
 
     # Count the time
-    smart_end_time = time.time()
-    smart_time = smart_end_time - smart_start_time
+
     all_end_time = time.time()
     all_time = all_end_time - all_start_time
 
-    print("Smart Time: ", smart_time)
-    print("Overall Time: ", all_time)
-    print("all Assertion: ", len(verified_assertion))
-    with open(resultfile,"a") as f:
-        f.write("\n")
-        f.write("Smart Time: "+str(smart_time)+"\n")
-        f.write("Overall Time: "+str(all_time)+"\n")
-        f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
-        f.write("We found "+str(len(verified_assertion))+" assertions\n")
+    print("Total runtime: "+str(all_time)+" seconds")
+    print("Pre analysis Time: "+str(pre_end_time-pre_start_time)+" seconds")
+    print("Total Smart Time: "+str(total_smart_time)+" seconds")
+    print("Total MSA Time: "+str(total_msa_time)+" seconds")
+    print("Total Minimizer Time: "+str(total_minizer_time)+" seconds")
+    
+    if Log == True:
+        with open(resultfile,"a") as f:
+            f.write("\n")
+            f.write("Total runtime: "+str(all_time)+"\n")
+            f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
+            f.write("Total Smart Time: "+str(total_smart_time)+"\n")
+            f.write("Total MSA Time: "+str(total_msa_time)+"\n")
+            f.write("Total Minimizer Time: "+str(total_minizer_time)+"\n")
+            f.write("We found "+str(len(verified_assertion))+" assertions\n\n")
+
     with open("assertions.txt","a") as f:
         for assertion in verified_assertion:
             f.write(assertion+"\n")
