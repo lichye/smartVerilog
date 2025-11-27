@@ -39,6 +39,4 @@ RUN wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x8
     mv cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin/
 
 WORKDIR /workspace/smartVerilog
-RUN git clone https://github.com/lichye/MutationBenchmark.git
-
 CMD ["/bin/bash"]
