@@ -46,6 +46,17 @@ def sim(current_path,file_name):
     
     shutil.move(sourceVcdFile, target_file)
     
+    if main_module and (main_module.endswith("_a") or main_module.endswith("_assume")):
+        if main_module.endswith("_a"):
+            base_module = main_module[:-2]
+        if main_module.endswith("_assume"):
+            base_module = main_module[:-7]
+        with open(target_file,"r") as f:
+            content = f.read()
+        new_content = content.replace(base_module, main_module)
+        with open(target_file,"w") as f:
+            f.write(new_content)
+        f.close()
     print("Finish Verilog simulation")
 
 def sv_prep(sv_path,rst_path):
