@@ -1,0 +1,52 @@
+{
+    "Workflow": {
+        "Blockified": false,
+        "Parallel": false,
+        "Minimizer": false,
+        "LTL": false,
+        "Checker": true,
+        "Evaluation": true,
+        "Log": true
+    },
+    "PreAnalysis_settings": {
+        "Number_Trace": 3,
+        "Depth_Trace": "Default is 10 and hard to change"
+    },
+    "Blockified_settings": {
+        "Threadhold": 0,
+        "Max_iterations": 100,
+        "MSA_stable_end": true,
+        "MSA": true,
+        "Random": false,
+        "k_size": 1.6,
+        "Block_size": 0.5,
+        "Save_temp_assertions": true
+    },
+    "SMART_settings": {
+        "Refinement": true,
+        "Refinement_depth": 5,
+        "Nagative_state_number": 1,
+        "unbound_check": false,
+        "bounded_depth": 10
+    },
+    "Parallel_settings": {
+        "max_threads": 32
+    },
+    "Minimizer_settings":{
+        "End_minimizer": true,
+        "Block_minimizer": true,
+        "End_Minimizer_timeout": 300,
+        "Block_Minimizer_timeout": 300
+    },
+    "LTL_settings":{
+        "LTL_depth": 1
+    },
+    "Checker_settings":{
+        "Check_unbounded": true,
+        "bounded_depth": 10
+    },
+    "Evaluation_settings":{
+        "Check_unbounded": true,
+        "bounded_depth": 10
+    }
+}

@@ -1,27 +1,28 @@
-## Install  in clean ubuntu(related work is NOT supported):
+# Install 
+## Install-1  in clean ubuntu(related work is NOT supported):
 Download the zip file and unzip the whole file, then run the command line below smartVerilog/.
 
     bash install.sh
 
-## Install in Docker(Preferred):
+## Install-2 in Docker(Preferred):
 
     docker pull magna2024/smart 
 
+## stability of result
+
+    git clone https://github.com/lichye/MutationBenchmark.git
+
 # Usage
 
-    bash run.sh filename
+    python run.py [benchmarkName]
+
 ## Example
 
-    bash run.sh c17
+    python run.py c17
 
-Result will be in SmartVerilog/c17/
+Result will be in SmartVerilog/Result/c17/
 
-# The resource requirements:
-## SMART
-RAM: 16GB Core: 4+
-
-## HARM
-RAM: 32GB Core: 8+
+There is some setup Config for usage, change it in run.py or default.json.
 
 ## Expriment time cost:
 From 1min to 1.5day for different cases.

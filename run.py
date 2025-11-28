@@ -153,7 +153,7 @@ def run_experiment(target,Config):
 
 if __name__ == "__main__":
     ## Set up default config
-    Config = "Config/basic.json"
+    Config = "Config/fmcad.json"
 
     if len(sys.argv) < 2:
         print("Usage: python run.py <benchmark_name>")
