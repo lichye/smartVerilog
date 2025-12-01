@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y \
         cmake gcc g++ bison flex unzip wget make \
-        nlohmann-json3-dev \
+        nlohmann-json3-dev vim nano \
         python3 python3-pip python3-venv && \
     ln -sf python3 /usr/bin/python && \
     pip3 install pytest

@@ -267,6 +267,7 @@ if __name__ == "__main__":
         new_result = 0
     
     last_size = math.inf
+    last_min_size = 0
     loop_count = 1
 
     while new_result > Threadhold:
@@ -281,12 +282,15 @@ if __name__ == "__main__":
         if Block_minimizer == True:
             # Minimize the found assertions to reduce the variable set
             min_start_time = time.time()
-            run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", Block_Minimizer_timeout)
+            min_core,deffuns = run_minimisation("runtime/SygusResult.sl","runtime/SygusResult.sl", Block_Minimizer_timeout)
             min_end_time = time.time()
             total_minizer_time = total_minizer_time + (min_end_time - min_start_time)
             if Log == True:
                 with open(detail_logfile,"a") as f:
+                    f.write("Assertion before minizier: "+str(last_min_size+new_result)+"\n")
+                    f.write("Assertion after minizier: "+str((min_core))+"\n")
                     f.write("\tMinimizer time taken: "+str(min_end_time - min_start_time)+" seconds\n")
+            last_min_size = len(min_core)
         
 
         msa_start_time = time.time()
@@ -296,8 +300,8 @@ if __name__ == "__main__":
         total_msa_time = total_msa_time + (msa_end_time - msa_start_time)
         if Log == True:
             with open(detail_logfile,"a") as f:
-                f.write("\tMSA time taken: "+str(msa_end_time - msa_start_time)+" seconds\n")
-                f.write("\tMSA set size: "+str(msa_size)+"\n\n")
+                f.write("\tMUS time taken: "+str(msa_end_time - msa_start_time)+" seconds\n")
+                f.write("\tMUS set size: "+str(msa_size)+"\n\n")
                 f.write("--------------------------------\n")
         
         if MSA_stable_end == True and msa_size >= last_size:
@@ -324,7 +328,7 @@ if __name__ == "__main__":
     print("Total runtime: "+str(all_time)+" seconds")
     print("Pre analysis Time: "+str(pre_end_time-pre_start_time)+" seconds")
     print("Total Smart Time: "+str(total_smart_time)+" seconds")
-    print("Total MSA Time: "+str(total_msa_time)+" seconds")
+    print("Total MUS Time: "+str(total_msa_time)+" seconds")
     print("Total Minimizer Time: "+str(total_minizer_time)+" seconds")
     
     if Log == True:
@@ -333,7 +337,7 @@ if __name__ == "__main__":
             f.write("Total runtime: "+str(all_time)+"\n")
             f.write("Pre analysis Time: "+str(pre_end_time-pre_start_time)+"\n")
             f.write("Total Smart Time: "+str(total_smart_time)+"\n")
-            f.write("Total MSA Time: "+str(total_msa_time)+"\n")
+            f.write("Total MUS Time: "+str(total_msa_time)+"\n")
             f.write("Total Minimizer Time: "+str(total_minizer_time)+"\n")
             f.write("We found "+str(len(verified_assertion))+" assertions\n\n")
 

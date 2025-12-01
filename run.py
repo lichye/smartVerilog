@@ -158,5 +158,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python run.py <benchmark_name>")
         exit(1)
+    elif len(sys.argv) == 3:
+        Config = sys.argv[2]
+    
     
     run_experiment(sys.argv[1],Config)

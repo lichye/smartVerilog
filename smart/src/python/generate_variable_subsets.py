@@ -16,17 +16,17 @@ if __name__ == "__main__":
       Blockified_settings = config.get("Blockified_settings")
       k_size = Blockified_settings.get("k_size",1.6)
       Block_size = Blockified_settings.get("Block_size",0.5)
+      Parallel_settings = config.get("Parallel_settings")
+      max_threads = Parallel_settings.get("max_threads",os.cpu_count())
 
    if(Blockified_settings["MSA"]== True and Blockified_settings["Random"]== False):
       underspecified,model = get_mus("runtime/variables.txt", "runtime/SygusResult.sl", timeout=300)
       print(f"Underspecified variables size: {len(underspecified)}")
       underspecified = list(underspecified)
 
-      num_cores = os.cpu_count()
-
       V = len(underspecified)
       k = round(2.7+k_size*math.log(V,10))
-      n = max(int(Block_size*V**0.9), num_cores)
+      n = max(int(Block_size*V**0.9), max_threads)
 
       for i in range(int(n)):
          variable_set = random.sample(underspecified, k)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
       variables = list(set(variables))
       V = len(variables)
       k = round(2.7+k_size*math.log(V,10))
-      n = max(int(Block_size*V**0.9), os.cpu_count())
+      n = max(int(Block_size*V**0.9), max_threads)
       print("Underspecified variable size is "+str(V))
       print("Subset size k is "+str(k))
       print("Number of threads n is "+str(n))
@@ -62,7 +62,7 @@ if __name__ == "__main__":
       underspecified = list(underspecified)
       V = len(underspecified)
       k = round(2.7+k_size*math.log(V,10))
-      n = max(int(Block_size*V**0.9), os.cpu_count())
+      n = max(int(Block_size*V**0.9), max_threads)
       msa_n = int(n/2)
       for i in range(int(msa_n)):
          variable_set = random.sample(underspecified, k)
