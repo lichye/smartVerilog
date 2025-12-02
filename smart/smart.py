@@ -288,7 +288,7 @@ if __name__ == "__main__":
             if Log == True:
                 with open(detail_logfile,"a") as f:
                     f.write("Assertion before minizier: "+str(last_min_size+new_result)+"\n")
-                    f.write("Assertion after minizier: "+str((min_core))+"\n")
+                    f.write("Assertion after minizier: "+str(len((min_core)))+"\n")
                     f.write("\tMinimizer time taken: "+str(min_end_time - min_start_time)+" seconds\n")
             last_min_size = len(min_core)
         
