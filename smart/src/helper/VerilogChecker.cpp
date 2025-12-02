@@ -219,9 +219,9 @@ bool VerilogChecker::runEBMC(){
     command += "-D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
-    for(auto &path : relatedFilePaths) {
-        command +=" "+path+ " ";
-    }
+    // for(auto &path : relatedFilePaths) {
+    //     command +=" "+path+ " ";
+    // }
     
     if(unboundCheck)
         command += " --k-induction";
@@ -245,9 +245,9 @@ bool VerilogChecker::runEBMC(std::string tracePath){
     command += " -D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
-    for(auto &path : relatedFilePaths) {
-        command +=" "+path+ " ";
-    }
+    // for(auto &path : relatedFilePaths) {
+    //     command +=" "+path+ " ";
+    // }
 
     if(unboundCheck)
         command += " --k-induction";

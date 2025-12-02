@@ -1,6 +1,6 @@
 {
     "Workflow": {
-        "Blockified": true,
+        "Blockified": false,
         "Parallel": true,
         "Minimizer": true,
         "LTL": false,
