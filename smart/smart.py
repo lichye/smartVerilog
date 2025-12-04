@@ -236,6 +236,7 @@ if __name__ == "__main__":
         Save_temp_assertions = Blockified_settings.get("Save_temp_assertions")
         Block_size = Blockified_settings.get("Block_size",0.5)
         k_size = Blockified_settings.get("k_size",1.6)
+        MSA_stable_depth = Blockified_settings.get("MSA_stable_depth",3)
 
     resultfile = current_path+"/result_"+main_module+".txt"
     detail_logfile = current_path+"/log_"+main_module+".txt"
@@ -269,6 +270,7 @@ if __name__ == "__main__":
     last_size = math.inf
     last_min_size = 0
     loop_count = 1
+    stable_depth_count = 0
 
     while new_result > Threadhold:
         if Save_temp_assertions == True:
@@ -305,9 +307,12 @@ if __name__ == "__main__":
                 f.write("--------------------------------\n")
         
         if MSA_stable_end == True and msa_size >= last_size:
-            break
+            stable_depth_count = stable_depth_count + 1
+            if stable_depth_count >= MSA_stable_depth:
+                break
         else:
             last_size = msa_size
+            stable_depth_count = 0
         
         smart_start_time = time.time()
         new_result = runBlockSmart()

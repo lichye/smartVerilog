@@ -16,6 +16,7 @@
         "Threadhold": 0,
         "Max_iterations": 100,
         "MSA_stable_end": true,
+        "MSA_stable_depth": 3,
         "MSA": true,
         "Random": false,
         "k_size": 1.6,
