@@ -40,6 +40,14 @@ def writeLog(file,content):
     f.close()
 
 def runBlockSmart():
+    total_core_time = time.time() - smart_core_start_time
+    if(total_core_time > SMART_Time_out):
+        print("Reach the SMART Time out limit, stop running further Smart Blocks")
+        return 0
+    else:
+        print("Total Smart Time used so far: "+str(total_core_time)+" seconds")
+
+    
     cnt = 0
     all_work = len(os.listdir(runtimeVariablesDir))
     
@@ -68,8 +76,20 @@ def runBlockSmart():
             result_files.append(result_file)
         
         done_set = set()
+        
         while len(done_set) < len(futures):
             time.sleep(10)
+            total_core_time = time.time() - smart_core_start_time
+            if total_core_time > SMART_Time_out:
+                print("Cancel unfinished Smart Blocks due to time out")
+                done_now = [f for f in futures if f.done() and f not in done_set]
+                done_set.update(done_now)
+                print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} Smart Cores")
+                for f in futures:
+                    if not f.done():
+                        f.cancel()
+                break
+
             done_now = [f for f in futures if f.done() and f not in done_set]
             done_set.update(done_now)
             print(f"[{time.strftime('%X')}] Completed {len(done_set)}/{len(futures)} Smart Cores")
@@ -224,6 +244,7 @@ if __name__ == "__main__":
     with open(Config) as f:
         config = json.load(f)
         Workflow = config.get("Workflow")
+        SMART_Time_out = Workflow.get("SMART_Time_out",43200)
         Blockified_settings = config.get("Blockified_settings")
         Threadhold = Blockified_settings.get("Threadhold")
         Parallel_settings = config.get("Parallel_settings")
@@ -247,6 +268,7 @@ if __name__ == "__main__":
     pre_end_time = time.time()  
     
     # SMART CORE EXECUTION
+    smart_core_start_time = time.time()
     smart_start_time = time.time()
     total_smart_time = 0
     total_msa_time = 0
@@ -300,6 +322,11 @@ if __name__ == "__main__":
         msa_end_time = time.time()
 
         total_msa_time = total_msa_time + (msa_end_time - msa_start_time)
+        smart_core_time = time.time() - smart_core_start_time
+        if smart_core_time > SMART_Time_out:
+            print("Reach the SMART Time out limit, stop running further Smart Blocks")
+            break
+        
         if Log == True:
             with open(detail_logfile,"a") as f:
                 f.write("\tMUS time taken: "+str(msa_end_time - msa_start_time)+" seconds\n")

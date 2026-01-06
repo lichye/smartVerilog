@@ -1,5 +1,6 @@
 {
     "Workflow": {
+        "SMART_Time_out":43200,
         "Blockified": true,
         "Parallel": true,
         "Minimizer": true,
