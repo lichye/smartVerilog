@@ -17,8 +17,8 @@ fi
 
 cd $1
 
-harm --vcd $1.vcd --clk top::CK --conf $1.xml --generate-config
-harm --vcd $1.vcd --clk top::CK --conf $1.xml --sva --dump-to result.txt
+harm --vcd $1.vcd --clk top::CK --conf $1.xml --generate-config --max-threads 32
+harm --vcd $1.vcd --clk top::CK --conf $1.xml --sva --dump-to result.txt --max-threads 32
 
 cd ..
 

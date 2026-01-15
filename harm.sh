@@ -34,11 +34,12 @@ cd ..
 mv smart/runtime/sim_results/sim1.vcd otherToolsResult/harm/$1/$1.vcd
 
 cd otherToolsResult/harm
-bash run.sh $1
+{ time bash run.sh "$1"; } 2> time.txt
 python getResult.py
 cd ..
 cd ..
 cp otherToolsResult/harm/assertions.txt smart/assertions.txt
+cp otherToolsResult/harm/time.txt smart/time.txt
 cd otherToolsResult/harm
 make clean
 cd ..
