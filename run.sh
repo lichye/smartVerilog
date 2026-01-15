@@ -15,6 +15,16 @@ else
     exit 1
 fi
 
+src_fix_benchmarks="MutationBenchmark/$1/benchmarks"
+
+if [ -d "$src_fix_benchmarks" ]; then
+    echo "Directory $src_fix_benchmarks exists."
+    mkdir -p smart/benchmarks
+    cp $src_fix_benchmarks/* smart/benchmarks/
+else
+    echo "Directory $src_fix_benchmarks does not exist."
+fi
+
 source otherTools/venv/bin/activate
 source otherTools/oss-cad-suite/environment
 
