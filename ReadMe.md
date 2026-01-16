@@ -1,30 +1,95 @@
-# Install 
-## Install-1  in clean ubuntu(related work is NOT supported):
-Download the zip file and unzip the whole file, then run the command line below smartVerilog/.
+# SMART
 
-    bash install.sh
+SMART is an automated specification mining tool for Verilog designs.  
+It synthesizes **SystemVerilog Assertions (SVA)** — including **LTL (Linear Temporal Logic) properties** — from simulation traces using oracle-guided synthesis.
 
-## Install-2 in Docker(Preferred):
+The goal of SMART is to reduce the manual effort required to write correct and meaningful formal specifications for hardware verification.
 
-    docker pull magna2024/smart 
+---
 
-## stability of result
+## 1. Features
 
-    git clone https://github.com/lichye/MutationBenchmark.git
+- Automatic generation of SystemVerilog Assertions (SVA)
+- **Support for LTL (Linear Temporal Logic) properties**
+- Works with both **structural** and **behavioral** Verilog
+- No hand-written assertion templates required
+- All generated assertions are formally verified
+- Effective at detecting hardware mutations
 
-# Usage
+---
 
-    python run.py [benchmarkName]
+## 2. Installation
 
-## Example
+### 2.1 Native Ubuntu (limited support)
 
-    python run.py c17
+```bash
+git clone https://github.com/lichye/smartVerilog.git
+cd smartVerilog
+bash install.sh
+```
 
-Result will be in SmartVerilog/Result/c17/
+### 2.2 Docker (Recommended)
 
-There is some setup Config for usage, change it in run.py or default.json.
+```bash
+docker pull magna2024/smart
+```
 
-## Expriment time cost:
-From 1min to 1.5day for different cases.
+### 2.3 Benchmark 
+To make sure the evalute benchmark is stable, we can use the pre-generated benchmark.
+```bash
+cd smartVerilog/
+git clone https://github.com/lichye/MutationBenchmark.git
+```
 
-To run all the benchmark needs totally 10days for smart and 5days for HARM.
+## 3. Usage
+
+Run SMART on a benchmark:
+```bash
+python run.py c17
+```
+Results will be generated in:
+```
+/smartVerilog/Result/c17/
+```
+### 3.1 User own case
+The use test cases should be in one directory like this:
+```bash
+smartVerilog/User/test/
+--> test.sv
+--> sim.py (This should be the simulation cocotb file)
+```
+The user can run with command
+```bash
+python run.py test
+```
+## 4. Configuration
+
+SMART can be configured via:
+
+- run.py
+
+- default.json
+
+You can control synthesis limits, verification timeouts, trace handling, and assertion generation options (including LTL-related settings).
+
+## 5. Output
+
+SMART produces verified SystemVerilog Assertions (SVA), including:
+
+- State invariants
+
+- Bit-vector relational properties
+
+- LTL temporal properties
+
+Only assertions that pass formal verification are kept. The runing result will be in the directory:
+```bash
+Result/c17/c17_result.txt
+Result/c17/assertions.txt
+```
+
+## Citation
+If you use our work, please cite this paper.
+```
+Leiqi Ye, Yixuan Li, Guy Frankel, Jianyi Cheng, Elizabeth Polgreen. Unlocking Hardware Verification with Oracle Guided Synthesis. The 25rd Conference on Formal Methods in Computer-Aided Design (FMCAD)
+```
