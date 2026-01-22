@@ -55,7 +55,7 @@ def runBlockSmart():
     futures = []
 
     print("-------------------------------")
-    print("Start running Smart Block of "+str(all_work)+" threads")
+    print("Start running Smart Block of "+str(all_work)+" works")
 
     assertion_founded = 0
     # Read Config

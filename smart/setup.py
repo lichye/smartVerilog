@@ -17,7 +17,11 @@ def copy_sv_files(original_path, target_path):
 
 def sim(current_path,file_name):
     print("Verilog Simulating")
-    
+    sim_target_dir = current_path+"/runtime/sim_results"
+
+    if not os.path.exists(sim_target_dir):
+        os.makedirs(sim_target_dir)
+
     simPython = current_path+"/runtime/cocotb/sim.py"
 
     verilogDesign = current_path+"/runtime/verilog/"+file_name
@@ -30,8 +34,7 @@ def sim(current_path,file_name):
         return
 
     sourceVcdFile = current_path+"/sim_build/dump.vcd"
-    
-    sim_target_dir = current_path+"/runtime/sim_results"
+
 
     if not os.path.exists(sim_target_dir):
         os.makedirs(sim_target_dir)

@@ -5,8 +5,8 @@
         "Parallel": true,
         "Minimizer": true,
         "LTL": false,
-        "Checker": true,
-        "Evaluation": true,
+        "Checker": false,
+        "Evaluation": false,
         "Log": true
     },
     "PreAnalysis_settings": {
@@ -21,7 +21,7 @@
         "Random": false,
         "k_size": 1.6,
         "Block_size": 0.5,
-        "Save_temp_assertions": true
+        "Save_temp_assertions": false
     },
     "SMART_settings": {
         "Refinement": true,

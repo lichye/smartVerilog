@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import shutil
 import subprocess
@@ -6,6 +7,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).parent
+
+size_pat = re.compile('\w*?(\d+)')
 
 def bash(cmd):
     subprocess.run(["bash", "-c", cmd], check=True)
@@ -30,6 +33,10 @@ def clean_smart():
     subprocess.run(["bash", "-c", "cd smart && make all_clean"], check=True)
 
 def run_experiment(target,Config):
+
+    conf = Config.removeprefix('Config/').removesuffix('.json')
+    result_name = f"{conf}_{target}"
+
     Config = Path(Config).resolve()
     # Read the expriment configuration
     with open(Config) as f:
@@ -80,7 +87,7 @@ def run_experiment(target,Config):
         print("No mutation found.")
 
     # delete previous results
-    shutil.rmtree(f"Results/{target}", ignore_errors=True)
+    shutil.rmtree(f"Results/{result_name}", ignore_errors=True)
 
     # make clean
     bash("cd smart && make all_clean")
@@ -111,16 +118,15 @@ def run_experiment(target,Config):
     bash("rm -rf *.sby")
     bash("rm -rf *task")
 
-    
+
     if Minimizer == True and Minimizer_settings.get("End_minimizer") == True:
         print("Running assertion minimization...")
         End_Minimizer_timeout = Minimizer_settings.get("End_Minimizer_timeout")
-        bash(f"python src/python/clean_assertion.py runtime/reducedResult.sl runtime/CompareResult.txt {End_Minimizer_timeout}")   
-    
+        bash(f"python src/python/clean_assertion.py runtime/reducedResult.sl runtime/CompareResult.txt {End_Minimizer_timeout}")
+
     # Step 4: Check all assertions correctness on the original design
     if Workflow["Checker"] == False:
         print("Skipping checker as per config.")
-        os.chdir("..")
     else:
         if Checker_settings.get("Check_unbounded") == True:
             bash(f"python checker.py {target}")
@@ -130,26 +136,23 @@ def run_experiment(target,Config):
 
     if Workflow["Evaluation"] == False:
         print("Skipping evaluation as per config.")
-        os.chdir("..")
     else:
         if Evaluation_settings.get("Check_unbounded") == True:
             bash(f"python evaluater.py {target}")
         else:
             bound = Evaluation_settings.get("bounded_depth")
             bash(f"python evaluater.py {target} {bound}")
-        os.chdir("..")
+    
+    # get out of smart directory
+    os.chdir("..")
 
     # save results
-    if not Log_result:
-        print("Skipping moving results as per config.")
-        return
-    else:
-        print("Moving results...")
-        os.makedirs(f"Results/{target}", exist_ok=True)
-        bash(f"mv smart/*.txt Results/{target}")
-        bash(f"mv smart/user/* Results/{target}")
+    print("Moving results...")
+    os.makedirs(f"Results/{result_name}", exist_ok=True)
+    bash(f"mv smart/*.txt Results/{result_name}")
+    bash(f"mv smart/user/* Results/{result_name}")
 
-    print(f"Done: {target}")
+    print(f"Done run.py: {result_name}")
 
 if __name__ == "__main__":
     ## Set up default config
@@ -158,5 +161,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python run.py <benchmark_name>")
         exit(1)
-    
+    elif len(sys.argv) == 3:
+        Config = sys.argv[2]
+
+    clean_smart()
     run_experiment(sys.argv[1],Config)

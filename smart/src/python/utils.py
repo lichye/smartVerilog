@@ -110,6 +110,9 @@ def _eval(ast, env, bv_widths):
     if op == 'bvule':
         a,b = _eval(args[0], env, bv_widths), _eval(args[1], env, bv_widths)
         return ULE(a,b)
+    if op == 'bvsle':
+        a,b = _eval(args[0], env, bv_widths), _eval(args[1], env, bv_widths)
+        return SLE(a,b)
     if op == 'bvugt':
         a,b = _eval(args[0], env, bv_widths), _eval(args[1], env, bv_widths)
         return UGT(a,b)
