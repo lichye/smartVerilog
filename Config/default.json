@@ -5,8 +5,8 @@
         "Parallel": true,
         "Minimizer": true,
         "LTL": false,
-        "Checker": true,
-        "Evaluation": true,
+        "Checker": false,
+        "Evaluation": false,
         "Log": true
     },
     "PreAnalysis_settings": {
