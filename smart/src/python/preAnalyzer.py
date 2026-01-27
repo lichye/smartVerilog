@@ -210,20 +210,25 @@ if __name__ == "__main__":
     resultfile = work_dir+"/result_"+top_module+".txt"
 
     with open(Config) as f:
-        Workflow = json.load(f).get("Workflow")
+        config = json.load(f)
+        Workflow = config.get("Workflow")
+        Block_size = config.get("Blockified_settings").get("Block_size")*2
 
     if Workflow["Blockified"] == False:
         variables = sorted(list(variables))
         size_of_variables = len(variables)
         if size_of_variables >= 400:
             subset_size = 20
-            smart_loop = size_of_variables
+            smart_loop = size_of_variables*Block_size
+            smart_loop = int(smart_loop)
         elif size_of_variables >10:
             subset_size = 5
-            smart_loop = size_of_variables*2
+            smart_loop = size_of_variables*2*Block_size
+            smart_loop = int(smart_loop)
         else:
             subset_size = size_of_variables-3
-            smart_loop = size_of_variables*2
+            smart_loop = size_of_variables*2*Block_size
+            smart_loop = int(smart_loop)
 
 
         init_cnt = 0

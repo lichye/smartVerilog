@@ -61,6 +61,8 @@ def runBlockSmart():
     # Read Config
     cpu_cores = os.cpu_count()
     workers = min(max_threads, all_work, cpu_cores) # do not exceed the number of works
+
+    print("Run with "+str(workers)+" threads")
     
     
     with ProcessPoolExecutor(max_workers=workers) as executor:

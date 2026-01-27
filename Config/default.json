@@ -1,13 +1,13 @@
 {
     "Workflow": {
         "SMART_Time_out":43200,
-        "Blockified": true,
+        "Blockified": false,
         "Parallel": true,
-        "Minimizer": true,
+        "Minimizer": false,
         "LTL": false,
         "Checker": false,
         "Evaluation": false,
-        "Log": true
+        "Log": false
     },
     "PreAnalysis_settings": {
         "Number_Trace": 3,
@@ -18,7 +18,7 @@
         "Max_iterations": 100,
         "MSA_stable_end": true,
         "MSA_stable_depth": 3,
-        "MSA": true,
+        "MSA": false,
         "Random": false,
         "k_size": 1.6,
         "Block_size": 0.5,

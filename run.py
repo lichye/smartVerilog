@@ -89,9 +89,6 @@ def run_experiment(target,Config):
     # delete previous results
     shutil.rmtree(f"Results/{result_name}", ignore_errors=True)
 
-    # make clean
-    bash("cd smart && make all_clean")
-
     # copy benchmark files to smart/user
     dest_user = smart_dir / "user"
     shutil.rmtree(dest_user, ignore_errors=True)
