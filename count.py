@@ -356,21 +356,138 @@ def writeCSV_by_benchmark_config(
 
                 f.write(",".join(row) + "\n")
 
+def write_filecontents_by_config_key(
+    results,
+    config_list,
+    benchmark_list,
+    value_key: str,
+    out_file="data.dat",
+    precision: int = 0,
+):
+    """
+    Output LaTeX filecontents:
+
+    bench | idx | <config1> | <config2> | ...
+
+    value_key controls which field is written.
+    precision controls numeric formatting.
+    """
+
+    fmt = f"{{:.{precision}f}}"
+
+    def fnum(x):
+        try:
+            return fmt.format(float(x))
+        except Exception:
+            return fmt.format(0.0)
+
+    with open(out_file, "w", encoding="utf-8") as f:
+        f.write(f"\\begin{{filecontents}}{{{out_file}}}\n")
+
+        # header
+        f.write(f"{'bench':<20}{'idx':<6}")
+        for c in config_list:
+            f.write(f"{c:<14}")
+        f.write("\n")
+
+        for idx, bench in enumerate(benchmark_list, start=1):
+            f.write(f"{bench:<20}{idx:<6}")
+
+            for config in config_list:
+                d = results.get(config, {}).get(bench)
+
+                if d is None or (
+                    isinstance(d, dict) and d.get("status") == "parse_error"
+                ):
+                    v = 0.0
+                else:
+                    v = d.get(value_key, 0.0)
+
+                f.write(f"{fnum(v):<14}")
+
+            f.write("\n")
+
+        f.write("\\end{filecontents}\n")
+
+def write_latex_table_for_config(
+    results,
+    config_name: str,
+    benchmark_list,
+    key_list,
+    out_file="table.tex",
+    precision: int = 2,
+    caption=None,
+    label=None,
+):
+    fmt = f"{{:.{precision}f}}"
+
+    def fnum(x):
+        try:
+            return fmt.format(float(x))
+        except Exception:
+            return fmt.format(0.0)
+
+    caption = caption or f"Results for \\texttt{{{config_name}}}."
+    label = label or f"tab:{config_name.replace('_', '-')}"
+
+    with open(out_file, "w", encoding="utf-8") as f:
+        f.write("\\begin{table}[t]\n")
+        f.write("\\centering\n")
+        f.write("\\small\n")
+        f.write("\\setlength{\\tabcolsep}{6pt}\n")
+        f.write("\\renewcommand{\\arraystretch}{1.15}\n")
+
+        col_spec = "l" + "r" * len(key_list)
+        f.write(f"\\begin{{tabular}}{{{col_spec}}}\n")
+        f.write("\\toprule\n")
+
+        header = ["Benchmark"] + [f"\\texttt{{{k}}}" for k in key_list]
+        f.write(" & ".join(header) + " \\\\\n")
+        f.write("\\midrule\n")
+
+        for bench in benchmark_list:
+            d = results.get(config_name, {}).get(bench)
+            row = [bench]
+
+            for k in key_list:
+                if d is None or (
+                    isinstance(d, dict) and d.get("status") == "parse_error"
+                ):
+                    v = 0.0
+                else:
+                    v = d.get(k, 0.0)
+
+                row.append(f"${fnum(v)}$")
+
+            f.write(" & ".join(row) + " \\\\\n")
+
+        f.write("\\bottomrule\n")
+        f.write("\\end{tabular}\n")
+        f.write(f"\\caption{{{caption}}}\n")
+        f.write(f"\\label{{{label}}}\n")
+        f.write("\\end{table}\n")
+
 def main():
     config_list = get_config_list("Results")
-    benchmark_list = get_benchmark_list("Results", config_list)
+    benchmark_list = ["arb2","c1355","c17","c2670","c3540","c432","c499","c6288",
+    "c7552","c880","ibex_controller","ibex_decoder","ibex_id_stage","ibex_multdiv_slow",
+    "s1238","s13207","s1488","s15850","s27","s298","s344","s349","s35932","s382",
+    "s38417","s38584","s386","s400","s420","s444","s510","s5378","s641","s713","s820","s832",
+    "s838","s9234","s953"]
+    sorted(benchmark_list)
+
 
     results = collect_results("Results", config_list, benchmark_list)
 
-    plot_metric_bar(
-        results,
-        config_list,
-        benchmark_list,
-        metric_key="md_rate",
-        ylabel="MD rate (%)",
-        title="Mutation Detection Rate by Benchmark",
-        out_file="md_rate.png",
-    )
+    # plot_metric_bar(
+    #     results,
+    #     config_list,
+    #     benchmark_list,
+    #     metric_key="md_rate",
+    #     ylabel="MD rate (%)",
+    #     title="Mutation Detection Rate by Benchmark",
+    #     out_file="md_rate.png",
+    # )
 
     key_list = ["md_rate"]
     writeCSV_by_benchmark_config(
@@ -381,6 +498,37 @@ def main():
         out_file="md_rate_flat.csv",
         precision=2,
     )
+
+    write_filecontents_by_config_key(
+    results,
+    config_list,
+    benchmark_list,
+    value_key="md_rate",
+    out_file="md.dat",
+    precision=2,
+    )
+
+    write_filecontents_by_config_key(
+    results,
+    config_list,
+    benchmark_list,
+    value_key="num_assertions",
+    out_file="assertions_found.dat",
+    precision=0,
+    )
+    full_result_list = [
+        "md_rate",
+        "num_assertions",
+        "total_runtime",
+        ]
+    write_latex_table_for_config(
+    results,
+    config_name="block_msa",
+    benchmark_list=benchmark_list,
+    key_list=full_result_list,
+    out_file="table_block_msa.tex",
+    precision=2,
+)
 
 if __name__ == "__main__":
     main()
