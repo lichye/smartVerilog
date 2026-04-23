@@ -3,7 +3,7 @@
         "SMART_Time_out":43200,
         "Blockified": true,
         "Parallel": true,
-        "Minimizer": true,
+        "Minimizer": false,
         "LTL": false,
         "Checker": true,
         "Evaluation": true,

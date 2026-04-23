@@ -34,7 +34,12 @@ bash install.sh
 docker pull magna2024/smart
 ```
 
-### 2.3 Benchmark 
+### 2.3 Artifact Release
+
+For a reproducible artifact package, use the self-contained image flow documented in [ARTIFACT.md](ARTIFACT.md).  
+It includes a release-oriented Dockerfile, quick-start commands, and image export guidance.
+
+### 2.4 Benchmark 
 To make sure the evalute benchmark is stable, we can use the pre-generated benchmark.
 ```bash
 cd smartVerilog/
@@ -68,7 +73,7 @@ SMART can be configured via:
 
 - run.py
 
-- default.json
+- smart.json
 
 You can control synthesis limits, verification timeouts, trace handling, and assertion generation options (including LTL-related settings).
 

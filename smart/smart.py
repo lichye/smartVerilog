@@ -129,6 +129,11 @@ def GenerateNewBlocks():
     # clean the "runtime/variables/" folder
     shutil.rmtree(runtimeVariablesDir, ignore_errors=True)
     os.makedirs(runtimeVariablesDir, exist_ok=True)
+    if not Blockified_settings["MSA"] and not Blockified_settings["Random"]:
+        raise ValueError(
+            "Invalid Blockified_settings: at least one of 'MSA' or 'Random' must be true."
+        )
+
     if(Blockified_settings["MSA"]== True and Blockified_settings["Random"]== False):
         underspecified,model = get_mus("runtime/variables.txt", "runtime/SygusResult.sl", timeout=300)
         print(f"Underspecified variables size: {len(underspecified)}")
@@ -194,7 +199,7 @@ def GenerateNewBlocks():
             variable_set = random.sample(underspecified, k)
             with open(f"runtime/variables/thread_{i+msa_n}.txt", 'w') as f:
                 f.write('\n'.join(variable_set))
-    
+
     return len(underspecified)
 
 if __name__ == "__main__":
@@ -223,7 +228,7 @@ if __name__ == "__main__":
         main_file_name = main_module+".sv"
         latency = 0
         parent_dir = os.path.dirname(current_path)
-        Config = parent_dir+"/Config/default.json"
+        Config = parent_dir+"/Config/smart.json"
     elif(len(sys.argv)==3):
         main_module = sys.argv[1]
         main_file_name = main_module+".sv"

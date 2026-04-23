@@ -41,7 +41,7 @@
         "Block_Minimizer_timeout": 300
     },
     "LTL_settings":{
-        "LTL_depth": 2
+        "LTL_depth": 1
     },
     "Checker_settings":{
         "Check_unbounded": false,

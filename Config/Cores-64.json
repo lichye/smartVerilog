@@ -3,11 +3,11 @@
         "SMART_Time_out":43200,
         "Blockified": true,
         "Parallel": true,
-        "Minimizer": false,
+        "Minimizer": true,
         "LTL": false,
         "Checker": true,
         "Evaluation": true,
-        "Log": false
+        "Log": true
     },
     "PreAnalysis_settings": {
         "Number_Trace": 3,
@@ -18,7 +18,7 @@
         "Max_iterations": 100,
         "MSA_stable_end": true,
         "MSA_stable_depth": 3,
-        "MSA": false,
+        "MSA": true,
         "Random": false,
         "k_size": 1.6,
         "Block_size": 0.5,
@@ -32,7 +32,7 @@
         "bounded_depth": 10
     },
     "Parallel_settings": {
-        "max_threads": 32
+        "max_threads": 64
     },
     "Minimizer_settings":{
         "End_minimizer": true,

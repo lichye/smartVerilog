@@ -5,9 +5,9 @@
         "Parallel": true,
         "Minimizer": false,
         "LTL": false,
-        "Checker": false,
-        "Evaluation": false,
-        "Log": false
+        "Checker": true,
+        "Evaluation": true,
+        "Log": true
     },
     "PreAnalysis_settings": {
         "Number_Trace": 3,
@@ -18,7 +18,7 @@
         "Max_iterations": 100,
         "MSA_stable_end": true,
         "MSA_stable_depth": 3,
-        "MSA": false,
+        "MSA": true,
         "Random": false,
         "k_size": 1.6,
         "Block_size": 0.5,
@@ -41,7 +41,7 @@
         "Block_Minimizer_timeout": 300
     },
     "LTL_settings":{
-        "LTL_depth": 1
+        "LTL_depth": 2
     },
     "Checker_settings":{
         "Check_unbounded": false,

@@ -19,3 +19,6 @@ generateFixBenchmark.sh
 MutationBenchmark/
 Results/
 CaseStudy/
+artifact/
+.codex
+.dockerignore
