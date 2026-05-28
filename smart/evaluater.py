@@ -278,7 +278,7 @@ if __name__ == "__main__":
         with open(resultfile,"a") as f:
             f.write("The Mutation Detection(MD) rate: 0\n")
 
-        exit(1)
+        exit(0)
     
     find_files = set()
     # find_files.update(run_ebmc_on_verilog_files(directory,properties,bound,ebmc_path))
@@ -303,12 +303,13 @@ if __name__ == "__main__":
         # print("Found mutations: ",find_files)
 
     total_mutations = len(unfind_file)+len(find_files)
+    mutation_detection_rate = (len(find_files)/total_mutations)*100 if total_mutations else 0
 
     print("Found mutations: ",len(find_files))
     print("Timeout mutations: ",len(timeout_list))
     print("Total mutations: ",total_mutations+len(timeout_list))
     print("Total mutations(Without timeout file): ",total_mutations)
-    print("The Mutation Detection(MD) rate: ",(len(find_files)/total_mutations)*100)
+    print("The Mutation Detection(MD) rate: ",mutation_detection_rate)
     
     log_result = count_logfile()
 
@@ -320,6 +321,6 @@ if __name__ == "__main__":
         # f.write("UnFound mutations: "+str(len(unfind_file))+"\n")
         # f.write("Timeout mutations: "+str(len(timeout_list))+"\n")
         f.write("Total mutations(Without timeout file): "+str(total_mutations)+"\n")
-        f.write("The Mutation Detection(MD) rate: "+str((len(find_files)/total_mutations)*100)+"\n\n")
+        f.write("The Mutation Detection(MD) rate: "+str(mutation_detection_rate)+"\n\n")
     
     print("Finish running evaluater.py")

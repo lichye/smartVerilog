@@ -196,11 +196,12 @@ if __name__ == "__main__":
     print("The verified assertions are written to invariants.txt")
 
     resultfile = os.getcwd()+"/result_"+top_module+".txt"
+    verified_rate = verified_cnt / total_cnt * 100 if total_cnt else 0
 
     with open(resultfile,"a") as f:
         f.write("The number of verified assertions is: "+str(verified_cnt)+"\n")
         f.write("The number of assertions is: "+str(total_cnt)+"\n")
-        f.write("The Verified correctness(VC) rate is: "+str(verified_cnt/total_cnt*100)+"\n")
+        f.write("The Verified correctness(VC) rate is: "+str(verified_rate)+"\n")
     
     print("Finish running checker.py")
     print("-------------------------------")

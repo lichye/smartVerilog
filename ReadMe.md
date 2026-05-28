@@ -54,19 +54,66 @@ python run.py c17
 ```
 Results will be generated in:
 ```
-/smartVerilog/Result/c17/
+/smartVerilog/Results/smart_c17/
 ```
-### 3.1 User own case
-The use test cases should be in one directory like this:
+
+### 3.1 Running a new hardware design
+
+To run SMART/MAPminer on a design that is not one of the included paper
+benchmarks, add a benchmark directory under `Benchmark/`:
+
+```text
+Benchmark/user/my_design/
+  my_design.sv      # SystemVerilog design under test
+  sim.py            # cocotb simulation that drives the design
+  Makefile          # optional cleanup/build helper
+  *.sv              # optional dependency modules/packages
+```
+
+The directory must contain the top-level RTL file and a cocotb `sim.py` that
+drives representative traces. In `sim.py`, set `hdl_toplevel` to the top module
+name and include any local RTL dependency files.
+
+For a source checkout with the Python/toolchain dependencies installed:
+
 ```bash
-smartVerilog/User/test/
---> test.sv
---> sim.py (This should be the simulation cocotb file)
+python run.py my_design Config/block_msa.json
 ```
-The user can run with command
+
+For a quick smoke test of the input format, this repository includes:
+
+```text
+Benchmark/user/tiny_and/
+  tiny_and.sv
+  sim.py
+```
+
+Run it with:
+
 ```bash
-python run.py test
+python run.py tiny_and Config/smart.json
 ```
+
+The recommended artifact path is to use the Docker image or rebuild it from the
+artifact Dockerfile. The Docker environment includes cocotb, Verilator, EBMC,
+CVC5, and the other dependencies needed by the pipeline. Native source-checkout
+runs require those dependencies to be installed locally.
+
+For a benchmark named `my_design`, the pipeline is:
+
+1. `run.py` finds `Benchmark/**/my_design/`.
+2. The benchmark files are copied into `smart/user/`.
+3. `sim.py` is run through cocotb/Verilator to collect traces.
+4. SMART/MAPminer synthesizes candidate SVA from those traces.
+5. The checker formally verifies generated assertions on the original design.
+6. If mutation data is available, the evaluator computes mutation-detection
+   metrics.
+7. Results are written to `Results/<config>_my_design/`.
+
+Mutation benchmarks are optional for bring-up. If no matching directory exists
+under `MutationBenchmark/`, SMART/MAPminer still generates and verifies
+assertions, but mutation-detection metrics are unavailable for that design.
+
 ## 4. Configuration
 
 SMART can be configured via:
@@ -87,10 +134,10 @@ SMART produces verified SystemVerilog Assertions (SVA), including:
 
 - LTL temporal properties
 
-Only assertions that pass formal verification are kept. The runing result will be in the directory:
+Only assertions that pass formal verification are kept. The running result will be in the directory:
 ```bash
-Result/c17/c17_result.txt
-Result/c17/assertions.txt
+Results/smart_c17/result_c17.txt
+Results/smart_c17/assertions.txt
 ```
 
 ## Citation
