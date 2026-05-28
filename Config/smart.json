@@ -32,7 +32,7 @@
         "bounded_depth": 10
     },
     "Parallel_settings": {
-        "max_threads": 32
+        "max_threads": 1
     },
     "Minimizer_settings":{
         "End_minimizer": true,
