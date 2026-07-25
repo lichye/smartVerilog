@@ -25,7 +25,7 @@ Branch: `new-interface`.
 | WP1 | CMake build (incl. hw-cbmc libs) | DONE | coordinator (Claude/Opus) | WP2A |
 | WP2 | frontend adapter: ModuleInfo from hw-cbmc | DONE | coordinator (Claude/Opus) | WP2A |
 | WP2-regex | regex frontend (SVModule) — DEMOTED to oracle/fallback | DONE (198a0aa) | coordinator (Claude/Fable) | — |
-| WP3 | simgen (iverilog testbench) | NOT STARTED | — | — (uses ModuleInfo; oracle supplies it meanwhile) |
+| WP3 | simgen (iverilog testbench) | DONE | coordinator (Claude/Opus) | WP2 |
 | WP4 | pipeline (orchestration, Options/Config §1.1) | NOT STARTED | — | WP2, WP3 |
 | WP5 | mus (MSA/MUS + minimizer, libcvc5) | NOT STARTED | — | WP1 |
 | WP6 | sygus via libcvc5 API | NOT STARTED | — | WP1 |
@@ -140,17 +140,32 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   `g++ -std=c++17 -O1 smart/src/frontend/SVModule.cpp
   smart/src/frontend/{frontend_dump,test_svmodule}.cpp`
 
-### WP3 — simgen (iverilog, decided 2026-07-25)
-- [ ] `Harness.{h,cpp}`: `tb.sv` generation (stimulus semantics per plan)
-- [ ] iverilog/vvp subprocess wrapper (`-g2012`, `-I <design dir>`)
-- [ ] assume-stripped sim copies vs original formal copies
-- [ ] VCD scope contract honoured: DUT instance name == top module name
-      (the trace loader matches `scope->name`); verified against a
-      cocotb-produced VCD
-- [ ] `--cycles` genuinely controls trace depth (gotcha 12)
-- [ ] Acceptance: tiny_and / s27 / axis_fifo / nru_a VCDs load with same
-      signal set as cocotb flow
+### WP3 — simgen (iverilog) — DONE
+- [x] `Harness.{h,cpp}`: `tb.sv` generation (stimulus semantics per plan);
+      `renderTestbench` is a pure function, so it is diffable and testable
+- [x] iverilog/vvp subprocess wrapper (`-g2012`, `-I sim_src`, `-I <design
+      dir>`); one compile, N runs via `+seed=` / `+vcd=` plusargs
+- [x] assume-stripped sim copies in `<workdir>/sim_src/`, originals untouched
+- [x] VCD scope contract honoured: the DUT instance is named after the top
+      module, and `$dumpvars(0, tb.<top>)` dumps just that scope
+- [x] `--cycles` genuinely controls trace depth (gotcha 12): 10 cycles -> 20
+      VCD timestamps, 25 -> 50
+- [x] Acceptance: c17 signal set from iverilog VCDs is IDENTICAL to the one
+      the cocotb/verilator flow produced, read through the pipeline's own
+      loader
 - Evidence:
+  - `vcd_signals c17 smart/runtime/sim_results` (cocotb VCDs) vs
+    `vcd_signals c17 <workdir>/sim_results` (iverilog VCDs) -> identical
+    11-signal set
+  - tiny_and 3, s27 20, axis_fifo 62, nru_a 41 signals loaded
+  - sweep over every design with a `sim.py`: 55 simulate and load signals,
+    1 fails (s1196, see below)
+  - nru_a: `sim_src/nru_a.sv` contains 0 `assume`, VCD still loads 41 signals
+- KNOWN LIMITATION: `Benchmark/fmcad2025/other/s1196` instantiates its 3-port
+  `dff` with 2 arguments. iverilog rejects it ("Wrong number of ports") and
+  hw-cbmc aborts elaborating it; Verilator tolerated it. The design is
+  malformed, not the harness. If it ever matters, that is what the Verilator
+  fallback is for.
 
 ### WP4 — pipeline
 - [ ] `Options/Config` from single option table (§1.1), legacy adapter,
@@ -298,3 +313,22 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   the module (parameter and localparam), not the subset the regex could
   evaluate — hence 1279 `param-extra` entries. Deliberate: the values are
   exact, and nothing downstream needs the oracle's narrower set.
+- 2026-07-25 (WP3): the VCD parser had TWO bugs that only Verilator's output
+  hid. (a) `$dumpall` and friends switch the scanner to IN_VAL_CHANGES, but
+  that state had no `$end` rule, so Icarus Verilog's empty `$dumpall $end`
+  fell through to flex's default rule and SEGFAULTED the loader. (b) A
+  `$comment ... $end` in the simulation section was parsed as if its body were
+  value changes. Fixed: IN_VAL_CHANGES added to the `$end` rule, empty dump
+  sections spelled out in the grammar, and `$comment` now swallowed by the
+  scanner (expressing it in the grammar makes the declaration and simulation
+  sections ambiguous — 10 reduce/reduce conflicts). Gotcha 11 predicted a
+  silent breakage here; it was a loud one.
+- 2026-07-25 (WP3): `$value$plusargs("vcd=%s", ...)` right-aligns into a fixed
+  register, so a path longer than the register silently loses its LEADING
+  characters and vvp then fails to open "ome/user/...". The buffer is 512
+  chars and `runSimulations` rejects longer paths with a clear message.
+- 2026-07-25 (WP3): stimulus uses `$random(seed)` with an inout seed, so each
+  run is reproducible from `+seed=`. It is NOT Python's Mersenne Twister, so
+  same-seed traces differ from the legacy pipeline's — as does the port order
+  (WP2). Distribution and reproducibility are preserved; byte equality with
+  the old traces is not achievable and is not the goal.

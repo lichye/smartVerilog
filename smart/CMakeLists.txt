@@ -81,6 +81,19 @@ target_link_libraries(smart_hwcbmc_frontend PUBLIC smart_frontend hwcbmc_fronten
 add_executable(hwcbmc_dump EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_dump.cpp)
 target_link_libraries(hwcbmc_dump PRIVATE smart_hwcbmc_frontend)
 
+# --- simgen (WP3): testbench generation + iverilog/vvp ----------------------
+add_library(smart_simgen STATIC ${SMART_SRC}/simgen/Harness.cpp)
+target_include_directories(smart_simgen PUBLIC ${SMART_SRC}/simgen)
+target_link_libraries(smart_simgen PUBLIC smart_frontend)
+
+add_executable(simgen_run EXCLUDE_FROM_ALL ${SMART_SRC}/simgen/simgen_run.cpp)
+target_link_libraries(simgen_run PRIVATE smart_simgen smart_hwcbmc_frontend)
+
+# WP3 acceptance instrument: what the pipeline's OWN trace loader sees in a
+# VCD. Builds without hw-cbmc, so it stays in `all`.
+add_executable(vcd_signals ${SMART_SRC}/simgen/vcd_signals.cpp)
+target_link_libraries(vcd_signals PRIVATE smart_core)
+
 # WP2A link spike: proves the hw-cbmc frontend links and exposes what
 # ModuleInfo needs. Kept as the minimal reproducer if linking ever breaks.
 add_executable(hwcbmc_spike EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_spike.cpp)

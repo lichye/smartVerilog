@@ -108,10 +108,7 @@ simulation_commands:
 ;
 
 declaration_command :
-    TOK_KW_COMMENT  comment_text     TOK_KW_END {
-    driver.fh -> comment = $2;
-}
-|   TOK_KW_DATE     date_text        TOK_KW_END {
+    TOK_KW_DATE     date_text        TOK_KW_END {
     driver.fh -> date = $2;
 }
 |   TOK_KW_ENDDEFINITIONS TOK_KW_END
@@ -191,7 +188,13 @@ simulation_command :
 |   TOK_KW_DUMPOFF  value_changes TOK_KW_END
 |   TOK_KW_DUMPON   value_changes TOK_KW_END
 |   TOK_KW_DUMPVARS value_changes TOK_KW_END
-|   TOK_KW_COMMENT  value_changes TOK_KW_END
+    /* Icarus Verilog writes an EMPTY `$dumpall $end` at time 0. Spelled out
+       as separate rules rather than an optional list, which would make the
+       grammar ambiguous. */
+|   TOK_KW_DUMPALL  TOK_KW_END
+|   TOK_KW_DUMPOFF  TOK_KW_END
+|   TOK_KW_DUMPON   TOK_KW_END
+|   TOK_KW_DUMPVARS TOK_KW_END
 |   simulation_time
 |   value_change
 ;

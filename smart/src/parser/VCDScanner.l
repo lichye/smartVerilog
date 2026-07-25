@@ -110,20 +110,26 @@ VERSION_TEXT        {COMMENT_TEXT}
     return VCDParser::parser::make_TOK_KW_END(loc);
 }
 
-<IN_VAL_IDCODE,IN_VAR,IN_VAR_PID,IN_VAR_RNG,IN_VERSION,IN_DATE,IN_COMMENT,IN_TIMESCALE,IN_SCOPE>{KW_END} {
+<IN_COMMENT>{KW_END} {
+    BEGIN(INITIAL);
+}
+
+<IN_VAL_CHANGES,IN_VAL_IDCODE,IN_VAR,IN_VAR_PID,IN_VAR_RNG,IN_VERSION,IN_DATE,IN_TIMESCALE,IN_SCOPE>{KW_END} {
     BEGIN(INITIAL);
     return VCDParser::parser::make_TOK_KW_END(loc);
 }
 
 {KW_COMMENT} {
+    /* $comment blocks are swallowed here rather than parsed. They can appear
+       in the simulation section as well as the declaration section (Icarus
+       Verilog writes `$comment Show the parameter values. $end` right after
+       $enddefinitions), and saying that in the grammar makes the two sections
+       ambiguous. Nothing downstream reads the comment text. */
     BEGIN(IN_COMMENT);
-    //std::cout << yytext << ", ";
-    return VCDParser::parser::make_TOK_KW_COMMENT(loc);
 }
 
 <IN_COMMENT>{COMMENT_TEXT} {
-    //std::cout << yytext << ", ";
-    return VCDParser::parser::make_TOK_COMMENT_TEXT(std::string(yytext),loc);
+    /* skipped, see above */
 }
 
 {KW_DATE} {
