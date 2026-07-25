@@ -38,6 +38,20 @@ need bison "bison"
 need git "git"
 need curl "curl (cvc5 and CBMC download dependencies)"
 need cmake "cmake >= 3.16 — 'python3 -m pip install --user cmake' works"
+need python3 "python3 (cvc5's build scripts)"
+
+# cvc5's build creates a virtual environment for its own tooling, and on
+# Debian/Ubuntu `python3` alone does not provide that — the failure surfaces
+# deep inside cvc5's cmake as "Could not create Python virtual environment".
+if command -v python3 >/dev/null 2>&1; then
+    if python3 -m venv --help >/dev/null 2>&1; then
+        echo "[ok]      python3-venv"
+    else
+        echo "[MISSING] python3-venv — cvc5 cannot build without it"
+        echo "          Debian/Ubuntu: apt-get install python3-venv"
+        missing=1
+    fi
+fi
 
 if [ "$missing" = 1 ] && [ "$check_only" = 0 ]; then
     echo
