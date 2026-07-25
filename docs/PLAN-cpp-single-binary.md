@@ -21,11 +21,28 @@ mines candidate SVA via SyGuS (cvc5), verifies them with EBMC, and emits
 **Decisions already made (do not relitigate):**
 - Mutation evaluation (`evaluater.py`, `mutation.py`) does NOT go into the
   binary. It stays as Python experiment tooling in the repo, unchanged.
-- Verilator and EBMC remain external PATH dependencies (subprocess).
+- **The Verilog frontend is hw-cbmc's, not ours.** We do NOT write a
+  SystemVerilog parser (regex or otherwise — SV is not a regular language;
+  hand-rolling is a maintenance sink). hw-cbmc (the project EBMC ships from,
+  BSD-3-Clause) is added as a **git submodule under `third_party/hw-cbmc`**,
+  built as part of our build, and its Verilog frontend produces the module
+  model we consume. Rationale: EBMC is already our verification backend, so
+  using the same toolchain for parsing gives one dependency, consistent
+  semantics (it natively understands `assume` / `(* anyseq *)` /
+  `(* anyconst *)`), and — critically — **upstream maintains the frontend
+  for us**. See WP2A/WP2.
+- Verilator and EBMC remain external tools; Verilator via subprocess for
+  simulation. EBMC is now also built from the submodule (single source of
+  truth for the CBMC toolchain) but still invoked as a subprocess for
+  verification (no EBMC C++ API to link).
 - cvc5 is used via **libcvc5 C++ API** (the Python side already uses
   `cvc5.pythonic`, so this unifies the solver story; no z3 in the binary).
 - Build system: **CMake**.
 - cocotb / venv / all Python leaves the runtime path of the tool.
+- The regex frontend committed in WP2 (`smart/src/frontend/SVModule.*`,
+  `gen_bench.py`) is DEMOTED to (a) the interface contract — the `ModuleInfo`
+  fields the hw-cbmc adapter must fill — and (b) a cross-check oracle for the
+  parity harness. It is NOT the shipping parser. Do not extend it.
 
 ## 1. CLI contract (freeze this first)
 
@@ -95,7 +112,9 @@ is mined. `smart a.sv b.sv --top a` should work (first file or --top decides).
 
 ```
 smart (single binary)
- ├─ frontend/   SV module model: ports, params, free regs, assume strip/inject   [WP2]
+ ├─ frontend/   ModuleInfo{ports,params,freeRegs,assumes} — FILLED by the
+ │              hw-cbmc adapter (WP2); assume strip/inject (textual, WP2).
+ │              SVModule.* regex kept only as oracle/fallback.
  ├─ simgen/     C++ Verilator harness generation + verilator subprocess + VCD    [WP3]
  ├─ pipeline/   orchestration: workdir, stages, thread pool, config              [WP4]
  ├─ mus/        MSA/MUS via libcvc5 (port of minimal_satisfiable_assignment.py)  [WP5]
@@ -105,6 +124,11 @@ smart (single binary)
  │    sygus/   SyGuSGenerater (WP6 converts subprocess cvc5 -> libcvc5), StateMaker
  │    helper/  VerilogChecker (EBMC subprocess), Timer, Utils
  └─ emit/      <top>_assertion.sv writer                                          [WP7]
+
+third_party/
+ └─ hw-cbmc/   git submodule (BSD-3); nested submodule: cbmc. Built by CMake.
+               Provides: EBMC binary (verification) + the Verilog frontend
+               (libverilog + CBMC util libs) that WP2 links against.          [WP2A]
 ```
 
 Workdir layout must stay byte-compatible with today's `smart/runtime/` tree
@@ -119,7 +143,7 @@ The Python files below are the executable spec. Port behavior, not code.
 
 | Behavior | Reference | Notes |
 |---|---|---|
-| Port/param/free-reg parsing, assume strip/inject, clock/reset guessing | `smart/src/python/gen_bench.py` + `test_gen_bench.py` | Validated on all 54 repo benchmarks. C++ parser must pass a parity diff against it (WP2 acceptance). |
+| ModuleInfo field contract (what ports/params/freeRegs/assume flags the pipeline needs) + assume strip/inject + clock/reset guessing | `smart/src/frontend/SVModule.{h,cpp}` + `smart/src/python/gen_bench.py` + `test_gen_bench.py` | The regex impl is the CONTRACT and the parity ORACLE, not the shipping parser. WP2 fills the same `ModuleInfo` from hw-cbmc's frontend and must match this oracle on the 56 repo designs (differences that are genuinely the regex's fault are documented, not forced). |
 | Trace collection flow | `smart/setup.py` | dir setup lines 85-133; sim loop 200-211; the `_a`/`_assume` VCD rename (52-62) is legacy — do NOT port; single-module flow makes it obsolete. |
 | Synthesis loop, block scheduling, timeout semantics | `smart/smart.py` | `runBlockSmart()` 42-126, `GenerateNewBlocks()` 128-203 (MSA/Random/mixed block generation with k = round(2.7+k_size*log10(V)), n = max(Block_size*V^0.9, cores)). |
 | MUS/MSA | `smart/src/python/minimal_satisfiable_assignment.py` (`get_mus(v_file, a_file, timeout)`) + `utils.py` | Uses cvc5.pythonic with produce-unsat-cores + minimal-unsat-cores; port to libcvc5. |
@@ -132,10 +156,11 @@ The Python files below are the executable spec. Port behavior, not code.
 ## 4. Work packages
 
 Each WP states: deliverable, references, steps, acceptance. WPs are sized for
-one agent each. **Parallelizable groups:** {WP1, WP2, WP3} can run
-concurrently; WP5 and WP6 concurrently after WP1; WP4 after WP2+WP3; WP7+WP8
-last. Run everything inside the Docker image (`Docker/Dockerfile` /
-`artifact/Dockerfile`) — the host may lack verilator/ebmc/nlohmann-json.
+one agent each. **Dependency order:** WP2A (submodule + build) is now on the
+critical path — WP1 and WP2 both need it. **Parallelizable groups:** {WP1,
+WP2A} first; then {WP2, WP3, WP5, WP6}; WP4 after WP2+WP3; WP7+WP8 last. Run
+everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
+— the host lacks verilator/ebmc/nlohmann-json and cannot build hw-cbmc.
 
 ### WP1 — CMake build (no behavior change)
 - **Deliverable:** `smart/CMakeLists.txt` building today's `smart.out` and
@@ -150,30 +175,78 @@ last. Run everything inside the Docker image (`Docker/Dockerfile` /
   `smart/third_party/`.
 - Keep the old Makefile working until WP8 removes it (setup.py calls
   `make compile`).
+- Also add/build the `hw-cbmc` submodule targets (coordinate with WP2A):
+  an ExternalProject or custom target that runs the submodule's `cd src;
+  make` (or its CMake, if the pinned revision has one) and exposes the
+  produced static libs + the `ebmc` binary path to the rest of the build.
 - **Acceptance:** in Docker, `cmake -B build && cmake --build build` produces
   a `smart.out` that passes an existing benchmark run (`python run.py c17`)
-  when copied in place of the make-built one.
+  when copied in place of the make-built one; and the hw-cbmc submodule
+  builds and its `ebmc` runs `--version`.
 
-### WP2 — frontend: SV module model in C++
-- **Deliverable:** `smart/src/frontend/SVModule.{h,cpp}` with:
-  `parse(text, top)` -> {ports(dir,width,name), params, freeRegs(kind,width,name),
-  hasAssume}; `stripAssumes(text)`; `injectAssumes(text, top, exprs, clock)`;
-  `guessClock/guessReset`. Pure functions, no I/O.
-- **Reference/spec:** `gen_bench.py` — mirror its regex semantics exactly:
-  comment stripping preserving newlines; ANSI header vs non-ANSI body port
-  decls; comma-separated name lists stopped at direction keywords; width from
-  `[msb:lsb]` with parameter substitution and integer arithmetic (unresolvable
-  -> width unknown -> treat as 1 with a warning); Verilog sized literals
-  (8'hFF); `(* anyseq|anyconst *)` regs; assume stripping replaces the whole
-  statement with `;` so `if (c) assume(x); else ...` stays legal.
-- Use std::regex or hand-rolled scanning (preferred for the balanced-paren
-  pieces, as in the Python).
-- **Acceptance (parity harness, part of this WP):**
-  `tools/parity_frontend.py`: for every `Benchmark/**/<top>.sv` and
-  `artifact/CaseStudy/Input/nru_a/nru_a.sv`, dump JSON from gen_bench.py and
-  from a `smart --dump-frontend <file>` debug flag; diff must be empty for
-  all 54+ designs. Also port the 6 cases of `test_gen_bench.py` to a C++
-  test (`ctest`).
+### WP2A — hw-cbmc submodule + build integration (critical path)
+- **Deliverable:** `third_party/hw-cbmc` git submodule pinned to a specific
+  tag/commit (pick the release matching EBMC 5.6, our current backend, unless
+  a newer tag is deliberately chosen — record the choice); `.gitmodules`;
+  Docker/CMake steps that fetch nested submodules (`git submodule update
+  --init --recursive` — hw-cbmc itself vendors cbmc as a submodule) and build
+  it.
+- **Build facts (verified from upstream):** BSD-3-Clause; build is
+  `git submodule update --init --recursive` then `cd src && make` (compiles
+  the bundled cbmc automatically); needs flex + bison + a C++ toolchain;
+  produces the `ebmc` binary under `src/ebmc/` and static libraries for the
+  Verilog frontend + CBMC util. Building is slow (compiles much of CBMC) —
+  cache it as a Docker layer.
+- Steps: add the submodule; teach `Docker/Dockerfile` + `artifact/Dockerfile`
+  to init+build it (replacing the current `apt`/`.deb` EBMC install so the
+  binary and the linkable libs come from ONE source); export to the smart
+  build: the include dirs (`third_party/hw-cbmc/src`,
+  `third_party/hw-cbmc/lib/cbmc/src`), the static libs needed to link the
+  Verilog frontend (at minimum `libverilog.a` + `libbigint.a`/`libutil.a` +
+  `libsolvers.a`/`liblangapi.a` — determine the exact set by trial-link), and
+  the built `ebmc` path for the checker.
+- **Decision to record for WP2 (link vs subprocess):** two ways to consume
+  the frontend, pick per what actually links cleanly:
+  - **Link (preferred):** link `libverilog` + CBMC util into `smart`, call
+    `verilog_languaget::parse()/typecheck()`, walk `get_parse_tree()` /
+    symbol table. Structured, no text parsing, exact widths. Risk: CBMC's
+    `.a`s are not a curated public API; link order / include coupling is
+    fiddly (irept, message handlers, cmdline). Spike this first.
+  - **Subprocess fallback:** run `ebmc --show-parse` / `--show-varmap` on the
+    design and parse the dump. Lighter to wire, but the text format is not a
+    stability contract. Use only if the link spike is too costly.
+- **Acceptance:** in Docker, from a clean checkout,
+  `git submodule update --init --recursive` + the build produces a working
+  `ebmc` AND either (link path) a trivial C++ program that links libverilog
+  and prints a parsed module's port count, or (subprocess path) a documented
+  `ebmc --show-parse`/`--show-varmap` invocation whose output contains the
+  ports/params/attributes WP2 needs. Document which path was chosen and why.
+
+### WP2 — frontend adapter: fill ModuleInfo from hw-cbmc
+- **Deliverable:** `smart/src/frontend/HwcbmcFrontend.{h,cpp}` that produces
+  the SAME `ModuleInfo` struct already defined in `SVModule.h`
+  (ports{dir,width,name}, params, freeRegs{kind,width,name}, hasAssume) from a
+  `.sv` file + top name, via the WP2A-chosen mechanism (link or subprocess).
+  `smart --dump-frontend <file>` prints the canonical JSON (reuse
+  `dumpJson`).
+- **Keep from the existing WP2 code (do NOT rewrite):** the `ModuleInfo`
+  struct and `dumpJson` (interface + JSON contract); `stripAssumes` and
+  `injectAssumes` — these are TEXTUAL source surgery (remove/insert assume
+  statements while preserving the user's formatting for re-emission); a real
+  AST would force lossy pretty-printing, so text surgery stays. With hw-cbmc
+  you additionally get exact assume source locations from the parse tree —
+  use them to make stripping precise instead of the current scanner if it
+  proves more robust, but the textual re-emit contract is unchanged.
+  `guessClock`/`guessReset` stay as-is (pure functions over ModuleInfo).
+- **anyseq/anyconst:** hw-cbmc understands these natively — extract them from
+  the parse tree/symbol table (they are the `freeRegs` with kind anyseq/
+  anyconst). This is the main thing the regex was approximating.
+- **Acceptance:** `tools/parity_frontend.py` (already written) run with the
+  hw-cbmc-backed `--dump-frontend` must match the gen_bench.py oracle on the
+  56 repo designs, OR every divergence is listed with a note explaining why
+  hw-cbmc is right and the regex was wrong (e.g. a width the regex couldn't
+  resolve). The 6 `test_svmodule.cpp` spec cases still pass. Net goal: the
+  pipeline gets a MORE correct ModuleInfo than the regex, never a worse one.
 
 ### WP3 — simgen: Verilator harness instead of cocotb
 - **Deliverable:** `smart/src/simgen/Harness.{h,cpp}`: given the WP2 model +
@@ -328,15 +401,35 @@ last. Run everything inside the Docker image (`Docker/Dockerfile` /
 12. Trace depth 10 was historically hardcoded ("Depth_Trace: Default is 10
     and hard to change") — after WP3 it must genuinely follow `--cycles`.
 13. Widths that don't resolve to integers (complex param exprs) fall back to
-    width 1 + warning in gen_bench; keep that behavior, don't crash.
+    width 1 + warning in the regex oracle; hw-cbmc should resolve most of
+    these correctly — where it does, prefer its width and note the oracle diff.
 14. `run.py --list-benchmarks / --check-env` UX from this branch should have
-    equivalents in the binary (`--check-env` is in WP4/WP8 scope).
+    equivalents in the binary (`--check-env` is in WP4/WP8 scope);
+    `--check-env` must also report the hw-cbmc-built EBMC version.
+15. hw-cbmc vendors cbmc as a NESTED submodule — always
+    `git submodule update --init --recursive`, and the Docker build must too.
+    A plain `--init` silently yields an unbuildable hw-cbmc.
+16. hw-cbmc's static libs are NOT a curated public API. If the WP2A link
+    spike drags, fall back to `ebmc --show-parse`/`--show-varmap` subprocess
+    rather than fighting CBMC's link graph — the ModuleInfo contract is the
+    same either way.
+17. Building hw-cbmc compiles much of CBMC and is slow; it MUST be a cached
+    Docker layer, not rebuilt per run. Pin the submodule commit so the cache
+    is stable.
+18. std::regex on libstdc++ stack-overflows on large ISCAS netlists (WP2
+    discovery); the regex oracle avoids it by hand-scanning. Any new C++ that
+    must scan whole files: do NOT use std::regex over the full text.
+19. The regex-oracle spec bug fixed at 198a0aa (missing `\b` after type
+    keywords → `regfile_we_o` truncated to `file_we_o`) shows why the regex
+    is being retired; hw-cbmc won't have this class of bug.
 
 ## 6. Validation strategy (cross-cutting)
 
-- **Frontend parity:** WP2's 54-design JSON diff vs `gen_bench.py` (the
-  committed Python is the spec; if the C++ finds a Python bug, fix Python
-  first, keep them in lockstep until WP8).
+- **Frontend parity:** `tools/parity_frontend.py` compares the hw-cbmc-backed
+  `--dump-frontend` against the gen_bench.py/SVModule regex ORACLE on the 56
+  repo designs. Goal is not byte-identity but "hw-cbmc is at least as correct":
+  each diff is either fixed or documented as a regex limitation hw-cbmc gets
+  right. The regex oracle is frozen (do not extend it).
 - **End-to-end parity:** same-seed assertion-set comparison vs the legacy
   Python pipeline on {tiny_and, c17, s27, arb2} before removing anything.
 - **Fixtures:** capture `.sl`/VCD fixtures from Docker runs into
@@ -348,9 +441,13 @@ last. Run everything inside the Docker image (`Docker/Dockerfile` /
 
 | Agent | WPs | Can start |
 |---|---|---|
-| A | WP1 CMake | immediately |
-| B | WP2 frontend | immediately |
-| C | WP3 simgen | immediately (uses gen_bench.py spec while WP2 lands) |
+| A | WP2A hw-cbmc submodule+build, then WP1 CMake | immediately (critical path) |
+| B | WP2 frontend adapter | after WP2A picks link-vs-subprocess |
+| C | WP3 simgen | immediately (consumes ModuleInfo; regex oracle fills it meanwhile) |
 | D | WP5 mus + WP6 sygus | after WP1 (needs libcvc5 in build) |
 | E | WP4 pipeline | after WP2+WP3 |
 | F | WP7 emit + WP8 cleanup | last |
+
+Note: WP2A is the new critical-path item. WP3 does not block on it (it takes
+a `ModuleInfo`, which the regex oracle can supply during development); WP2's
+adapter and WP1's link step both need WP2A's chosen mechanism + libs.
