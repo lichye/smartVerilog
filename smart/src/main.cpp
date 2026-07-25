@@ -7,6 +7,7 @@
 // out to a separate worker, so there is still exactly one binary to ship —
 // see BlockRunner.h for why blocks are processes and not threads.
 
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -22,6 +23,32 @@
 namespace {
 
 namespace fs = std::filesystem;
+
+// Make the tools that live in this checkout visible without the user having
+// to arrange it. install.sh builds ebmc into third_party/ and unpacks
+// iverilog into otherTools/, both of which sit at a known place relative to
+// the binary — so `./build/smart design.sv` works straight after an install,
+// which is what the ReadMe promises. An explicit PATH still wins: these are
+// appended, never prepended.
+void addBundledToolsToPath(const std::string& self) {
+    const auto root = fs::path(self).parent_path().parent_path();
+    // Order matters: oss-cad-suite bundles its own, older cvc5, and ours has
+    // to be found first — the solver version decides what gets synthesised.
+    const std::vector<fs::path> candidates = {
+        root / "third_party/hw-cbmc/src/ebmc",
+        root / "otherTools/cvc5/bin",
+        root / "otherTools/oss-cad-suite/bin",
+    };
+
+    std::string path = std::getenv("PATH") != nullptr ? std::getenv("PATH") : "";
+    for (const auto& candidate : candidates) {
+        std::error_code error;
+        if (!fs::is_directory(candidate, error)) continue;
+        if (path.find(candidate.string()) != std::string::npos) continue;
+        path += (path.empty() ? "" : ":") + candidate.string();
+    }
+    setenv("PATH", path.c_str(), 1);
+}
 
 // Absolute path to this executable, for re-exec.
 std::string selfPath(const char* argv0) {
@@ -77,6 +104,7 @@ int main(int argc, char* argv[]) {
     }
 
     const auto self = selfPath(argv[0]);
+    addBundledToolsToPath(self);
 
     if (options.checkEnvRequested())
         return static_cast<int>(checkEnvironment(options, self));

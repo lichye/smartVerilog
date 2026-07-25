@@ -97,6 +97,8 @@ cmake --build build --target smart -j"$jobs"
 
 echo
 echo "== verify =="
+# No PATH juggling here on purpose: the binary finds the tools this script
+# just built, relative to itself. If that stops being true, this fails.
 ./build/smart --check-env
 echo
 echo "Done. Try:  ./build/smart Benchmark/user/tiny_and/tiny_and.sv"
