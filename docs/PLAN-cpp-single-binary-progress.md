@@ -520,3 +520,19 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   called in the subdirectory; it has to be at the top level too. And
   `test_svmodule` reads benchmark sources by relative path, so its test needs
   `WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}`.
+- 2026-07-25 (post-WP8 re-verification): a clean `cmake --build build`
+  produced everything EXCEPT the tool — `smart` was EXCLUDE_FROM_ALL, left
+  over from when hw-cbmc's first build was the slow part of a fresh checkout.
+  hw-cbmc is now built once by install.sh and its custom target is a no-op
+  afterwards, so `smart`, `hwcbmc_dump` and `simgen_run` are back in `all`;
+  only the WP2A link spike stays opt-in. `compare_frontends.py` also crashed
+  with a traceback when a binary it drives was missing, instead of saying
+  which target to build.
+- 2026-07-25 (GAP, LTL): the LTL path is NOT wired into the new pipeline.
+  `ltl` and `ltl_depth` are accepted, dumped and ignored; `BlockJob.latency`
+  is always 0. The legacy run.py looped the whole block stage once per latency
+  0..LTL_depth and passed it through to smart.py, and the block code still
+  supports it (`printLTLSygusPath`, the isLTL branches in runSmartBlock) — the
+  loop around it is what is missing. ReadMe.md advertises LTL support, so this
+  is a real regression against the shipped feature set, not just an unfinished
+  extra. Not covered by any WP acceptance, which is how it got missed.

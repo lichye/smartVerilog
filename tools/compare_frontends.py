@@ -69,6 +69,11 @@ def known_limitation(name):
 
 
 def dump(exe, rtl, top):
+    if not os.path.exists(exe):
+        print(f"error: {exe} is missing. Build it with:\n"
+              f"    cmake --build build --target {os.path.basename(exe)}",
+              file=sys.stderr)
+        sys.exit(2)
     out = subprocess.run([exe, rtl, top], capture_output=True, text=True)
     if out.returncode != 0:
         return None, (out.stderr.strip() or f"exit {out.returncode}")

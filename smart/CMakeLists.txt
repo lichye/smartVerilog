@@ -99,13 +99,14 @@ add_executable(test_svmodule ${SMART_SRC}/frontend/test_svmodule.cpp)
 target_link_libraries(test_svmodule PRIVATE smart_frontend)
 
 # --- the hw-cbmc-backed frontend (WP2) --------------------------------------
-# These pull in hw-cbmc, whose first build is slow, so they are opt-in rather
-# than part of `all`. Build with: cmake --build build --target hwcbmc_dump
-add_library(smart_hwcbmc_frontend STATIC EXCLUDE_FROM_ALL
+# hw-cbmc itself is built once by install.sh / third_party/build-hw-cbmc.sh;
+# the custom target only re-runs if its libraries are missing, so linking
+# against it costs a plain `all` build nothing.
+add_library(smart_hwcbmc_frontend STATIC
     ${SMART_SRC}/frontend/HwcbmcFrontend.cpp)
 target_link_libraries(smart_hwcbmc_frontend PUBLIC smart_frontend hwcbmc_frontend)
 
-add_executable(hwcbmc_dump EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_dump.cpp)
+add_executable(hwcbmc_dump ${SMART_SRC}/frontend/hwcbmc_dump.cpp)
 target_link_libraries(hwcbmc_dump PRIVATE smart_hwcbmc_frontend)
 
 # --- simgen (WP3): testbench generation + iverilog/vvp ----------------------
@@ -113,7 +114,7 @@ add_library(smart_simgen STATIC ${SMART_SRC}/simgen/Harness.cpp)
 target_include_directories(smart_simgen PUBLIC ${SMART_SRC}/simgen)
 target_link_libraries(smart_simgen PUBLIC smart_frontend)
 
-add_executable(simgen_run EXCLUDE_FROM_ALL ${SMART_SRC}/simgen/simgen_run.cpp)
+add_executable(simgen_run ${SMART_SRC}/simgen/simgen_run.cpp)
 target_link_libraries(simgen_run PRIVATE smart_simgen smart_hwcbmc_frontend)
 
 # --- pipeline (WP4): options/config, workdir, orchestration ----------------
@@ -146,9 +147,9 @@ add_executable(test_emit ${SMART_SRC}/emit/test_emit.cpp)
 target_link_libraries(test_emit PRIVATE smart_emit)
 
 # --- the smart binary -------------------------------------------------------
-# Pulls in hw-cbmc (via the frontend), so it is opt-in like the other
-# hw-cbmc-backed targets: cmake --build build --target smart
-add_executable(smart EXCLUDE_FROM_ALL
+# THE product. It belongs in `all`: a plain `cmake --build build` must produce
+# the tool, not everything except the tool.
+add_executable(smart
     ${SMART_SRC}/main.cpp
     ${SMART_SRC}/pipeline/Pipeline.cpp
     ${SMART_SRC}/pipeline/BlockRunner.cpp
