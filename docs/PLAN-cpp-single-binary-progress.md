@@ -528,7 +528,8 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   only the WP2A link spike stays opt-in. `compare_frontends.py` also crashed
   with a traceback when a binary it drives was missing, instead of saying
   which target to build.
-- 2026-07-25 (GAP, LTL): the LTL path is NOT wired into the new pipeline.
+- 2026-07-25 (GAP, LTL — FIXED, see the entry below): the LTL path was not
+  wired into the new pipeline.
   `ltl` and `ltl_depth` are accepted, dumped and ignored; `BlockJob.latency`
   is always 0. The legacy run.py looped the whole block stage once per latency
   0..LTL_depth and passed it through to smart.py, and the block code still
@@ -536,3 +537,20 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   loop around it is what is missing. ReadMe.md advertises LTL support, so this
   is a real regression against the shipped feature set, not just an unfinished
   extra. Not covered by any WP acceptance, which is how it got missed.
+- 2026-07-25 (LTL wired + a real bug behind it): the pipeline now mines once
+  per latency 0..`ltl_depth`, regenerating the initial blocks for each, as the
+  legacy run.py did by re-invoking smart.py per latency. Wiring it up
+  immediately exposed a bug in `createLTLConstraint`: it prints TWO states per
+  constraint (index and index+latency for a positive example, and both the
+  true and false lists for a negative one) but only checked ONE of them for
+  definedness — the check on the second was commented out in the source. An
+  undefined value prints as the literal token `unknown_Bool`, which is not
+  valid SyGuS, so cvc5 rejected the entire problem and the block died instead
+  of losing one constraint. Verilator's 2-state traces never contain x, which
+  is why this sat unnoticed; Icarus Verilog's do, before the first assignment.
+  Fixed by checking every value the line is about to print, plus a cheap
+  last-line-of-defence that comments out any line still containing a
+  placeholder token. s27 with `ltl_depth: 1` went from 36 assertions (latency
+  1 contributing nothing at all) to 90, all 90 PROVED by an independent EBMC
+  run, and the temporal ones really are temporal:
+  `assert property ((G0 |-> ##1 (! G8)))`.

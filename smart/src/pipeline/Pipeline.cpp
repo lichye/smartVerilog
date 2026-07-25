@@ -282,6 +282,28 @@ ExitCode Pipeline::run(RunSummary& summary) {
     std::set<std::string> mined;
     int round = 0;
     int blockCounter = 0;
+
+    // LTL mode mines once per latency, 0..ltl_depth: latency 0 gives plain
+    // safety properties, and each step above it lets the synthesiser reach one
+    // cycle further back. The block code has always understood the latency
+    // argument (printLTLSygusPath); this is the loop around it.
+    const long long ltlDepth =
+        options_.getBool("ltl") ? options_.getInt("ltl_depth") : 0;
+
+    for (long long latency = 0; latency <= ltlDepth; ++latency) {
+    if (latency > 0) {
+        say("[" + timestamp() + "] LTL latency " + std::to_string(latency) +
+            "/" + std::to_string(ltlDepth));
+        // Each latency starts from the full initial block set, as the legacy
+        // flow did by re-running its pre-analysis per latency.
+        std::error_code error;
+        fs::remove_all(work.variablesDir(), error);
+        fs::create_directories(work.variablesDir());
+        writeInitialBlocks(variables, work.variablesDir(),
+                           options_.getBool("blockified"),
+                           options_.getDouble("block_size"), cores, rng);
+    }
+
     std::size_t lastMsaSize = std::numeric_limits<std::size_t>::max();
     long long stableRounds = 0;
 
@@ -299,6 +321,7 @@ ExitCode Pipeline::run(RunSummary& summary) {
             job.variablesFile = file;
             job.coreId = std::to_string(++blockCounter);
             job.resultFile = work.resultDir() + "/result_" + job.coreId + ".txt";
+            job.latency = static_cast<int>(latency);
             jobsThisRound.push_back(job);
         }
 
@@ -412,6 +435,13 @@ ExitCode Pipeline::run(RunSummary& summary) {
             writeBlocks(pool, count, k, work.variablesDir(), "thread_", rng);
         }
     }
+
+    if (std::chrono::steady_clock::now() >= deadline) {
+        if (latency < ltlDepth) say("global timeout reached; skipping the "
+                                    "remaining LTL latencies");
+        break;
+    }
+    }  // latency
 
     summary.rounds = round;
     summary.minedAssertions = mined.size();

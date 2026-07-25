@@ -607,13 +607,22 @@ std::string SyGuSGenerater::createLTLConstraint(bool constraintType,int index,in
     std::string constraintLine;
     
     printDebug("PASS assertion",3);
-    if(!checkConstraintsDefined(index,constraintType)){
+    // Comment the line out unless EVERY value it is about to print is
+    // defined. Both branches below read two states, not one, and an
+    // undefined value prints as the literal token `unknown_Bool` /
+    // `unknown_bits` — not valid SyGuS, so cvc5 rejects the whole problem and
+    // the block dies rather than just losing this constraint. The check for
+    // the second state used to be commented out; with 4-state simulation
+    // traces (x before the first assignment) that is reachable in practice.
+    const bool defined =
+        constraintType
+            ? (checkConstraintsDefined(index, true) &&
+               checkConstraintsDefined(index + latency, true))
+            : (checkConstraintsDefined(index, true) &&
+               checkConstraintsDefined(index, false));
+    if(!defined){
         constraintLine+="; ";
     }
-    
-    // if(!checkConstraintsDefined(index + latency,constraintType)&&constraintType){
-    //     constraintLine+="; ";
-    // }
     printDebug("After checking constraints defined",3);
 
     constraintLine += "(constraint (=(inv ";
@@ -637,6 +646,13 @@ std::string SyGuSGenerater::createLTLConstraint(bool constraintType,int index,in
     constraintLine += ") ";
     constraintLine += constraintType ? "true" : "false";
     constraintLine += "))\n";
+
+    // Last line of defence: a placeholder token here would make the file
+    // unparseable, which costs the whole block rather than one constraint.
+    if(constraintLine.find("unknown_") != std::string::npos &&
+       constraintLine.rfind("; ", 0) != 0){
+        constraintLine = "; " + constraintLine;
+    }
     return constraintLine;
 }
 
