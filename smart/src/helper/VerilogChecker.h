@@ -65,7 +65,7 @@ class VerilogChecker {
         Timer* timer;
         bool unboundCheck;
         int bound;
-        int reachabilityBound = 40;
+        int reachabilityBound = 10;
         //BackEndSolver
         BackEndSolver solver;
         
