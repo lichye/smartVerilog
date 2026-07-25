@@ -14,7 +14,7 @@ Replace the Python orchestration pipeline with one compiled binary:
 
 The user provides **one** SystemVerilog file. It may contain immediate
 `assume(...)` statements and `(* anyseq *)` / `(* anyconst *)` free registers.
-The binary parses it, generates random simulation traces with Verilator,
+The binary parses it, generates random simulation traces with Icarus Verilog,
 mines candidate SVA via SyGuS (cvc5), verifies them with EBMC, and emits
 `<top>_assertion.sv`.
 
@@ -32,8 +32,9 @@ mines candidate SVA via SyGuS (cvc5), verifies them with EBMC, and emits
   See WP2A/WP2. (Correction from the WP2A spike: hw-cbmc understands `assume`
   natively, but `(* anyseq *)` / `(* anyconst *)` needed a one-line upstream
   grammar fix, carried as a patch — see WP2A "Recorded decisions".)
-- Verilator and EBMC remain external tools; Verilator via subprocess for
-  simulation. EBMC is now also built from the submodule (single source of
+- The simulator and EBMC remain external tools, both driven as subprocesses.
+  Simulation is **Icarus Verilog** (`iverilog` + `vvp`) — see WP3 for the
+  measured rationale; cocotb is gone from the tool path. EBMC is now also built from the submodule (single source of
   truth for the CBMC toolchain) but still invoked as a subprocess for
   verification (no EBMC C++ API to link).
 - cvc5 is used via **libcvc5 C++ API** (the Python side already uses
@@ -77,7 +78,7 @@ smart <design.sv> [options]
                           the misspelled keys `Threadhold` and `Nagative_state_number`)
   --workdir DIR           default: ./smart-work-<top> (kept on failure, printed)
   --keep-work             keep workdir on success too
-  --check-env             report verilator/ebmc/cvc5-lib versions and exit
+  --check-env             report iverilog/ebmc/cvc5-lib versions and exit
   -v / -q                 verbosity (replaces compile-time smartVerbose in setups.h)
 ```
 
@@ -125,7 +126,7 @@ smart (single binary)
  ├─ frontend/   ModuleInfo{ports,params,freeRegs,assumes} — FILLED by the
  │              hw-cbmc adapter (WP2); assume strip/inject (textual, WP2).
  │              SVModule.* regex kept only as oracle/fallback.
- ├─ simgen/     C++ Verilator harness generation + verilator subprocess + VCD    [WP3]
+ ├─ simgen/     testbench generation + iverilog/vvp subprocess + VCD             [WP3]
  ├─ pipeline/   orchestration: workdir, stages, thread pool, config              [WP4]
  ├─ mus/        MSA/MUS via libcvc5 (port of minimal_satisfiable_assignment.py)  [WP5]
  ├─ existing (reuse, refactor to library):
@@ -291,14 +292,36 @@ needs locally and record the install command in that WP's evidence.
   resolve). The 6 `test_svmodule.cpp` spec cases still pass. Net goal: the
   pipeline gets a MORE correct ModuleInfo than the regex, never a worse one.
 
-### WP3 — simgen: Verilator harness instead of cocotb
+### WP3 — simgen: iverilog testbench instead of cocotb
+- **Simulator decision (2026-07-25, measured):** **Icarus Verilog**, not
+  Verilator. Both were on the table; iverilog wins on the three things this
+  pipeline actually needs:
+  1. free registers are driven by plain hierarchical assignment
+     (`dut_inst.free_a = $random;`) — no `--public-flat-rw`, no
+     `rootp->top__DOT__name` mangling;
+  2. we control the VCD scope layout from our own testbench, which retires
+     gotcha 11 (Verilator's extra `TOP` scope) entirely;
+  3. no C++ harness to compile — the generated artifact is readable Verilog.
+  It also handles the hardest SV in the benchmark set (`ibex_decoder`,
+  `ibex_id_stage`) given `-I <design dir>` for their `` `include "ibex_pkg.sv" ``.
+  Verified: `iverilog -g2012` elaborates tiny_and / s27 / axis_fifo /
+  ibex_decoder, and hierarchical assignment to `(* anyseq *)` regs shows up in
+  the VCD. Verilator stays a documented fallback for designs iverilog cannot
+  elaborate.
 - **Deliverable:** `smart/src/simgen/Harness.{h,cpp}`: given the WP2 model +
-  run options, (a) write `sim_main.cpp` (a Verilator C++ testbench), (b) run
-  `verilator --cc --exe --build --trace [-Wno-WIDTHEXPAND -Wno-WIDTHTRUNC
-  -Wno-UNOPTFLAT -Wno-CASEOVERLAP] [--public-flat-rw when freeRegs]`,
-  (c) execute it `traces` times with seeds seed+i, moving each `dump.vcd` to
-  `runtime/sim_results/sim<i>.vcd`.
-- **Stimulus semantics (from the generated sim.py in gen_bench.render_sim_py):**
+  run options, (a) write `tb.sv` (a generated Verilog testbench),
+  (b) run `iverilog -g2012 -I <design dir> -o sim <design.sv> tb.sv`,
+  (c) run `vvp sim` `traces` times with seeds seed+i, moving each `dump.vcd`
+  to `runtime/sim_results/sim<i>.vcd`.
+- **VCD scope contract (load-bearing):** `Trace::createSignal` sets
+  `Signal.moduleName = scope->name`, and `Module::getAllSignals` filters on
+  `moduleName == <top>`. The VCD scope name is the *instance* name, so the
+  testbench MUST instantiate the DUT with the instance name equal to the top
+  module name (`tiny_and tiny_and (...)`) and dump it
+  (`$dumpfile("dump.vcd"); $dumpvars(0, tb);`). Get this wrong and the loader
+  silently finds zero signals.
+- **Stimulus semantics (from the generated sim.py in gen_bench.render_sim_py;
+  the semantics carry over unchanged, only the simulator differs):**
   seed the RNG; set each anyconst reg once to draw(spec); if clocked: start
   clock (toggle every step), apply reset for reset.cycles cycles then
   deassert; per cycle assign every non-clock non-reset input and every anyseq
@@ -306,25 +329,24 @@ needs locally and record the install command in that WP's evidence.
   max/values/const overrides), then advance one clock; unclocked designs
   advance time steps instead. Trace depth = cycles (default 10 — this
   finally makes the config field `Depth_Trace` real; wire it up).
-- Driving internal (* anyseq *) regs from the harness: with
-  `--public-flat-rw` Verilator exposes them on the model as public members;
-  name mangling for scoped signals is `rootp-><top>__DOT__<name>`. Simulation
-  copies of the RTL must be assume-stripped (WP2 stripAssumes) — write the
-  stripped copies into `workdir/sim_src/`, originals into `runtime/verilog/`
-  and `runtime/formal/`.
-- **VCD compatibility caution:** the existing flex/bison VCD parser consumes
-  cocotb/verilator VCDs today; Verilator-direct VCDs have the same format but
-  scope layout may add a `TOP` wrapper scope. Check
-  `smart/src/parser/VCDFileParser.*` + `tracer/Module::addTracesfromDir` for
-  how scopes/signal names are matched, and either configure the trace call
-  (`tfp->dump` under the right scope) or teach the trace loader to skip a
-  `TOP` scope. Validate against a cocotb-produced VCD from the current
-  pipeline (run `python run.py tiny_and` to get one).
+- Driving internal `(* anyseq *)` / `(* anyconst *)` regs from the testbench:
+  hierarchical assignment, `<top>.<name> = <draw>;` — anyconst once in the
+  initial block, anyseq every cycle alongside the inputs. Simulation copies of
+  the RTL must be assume-stripped (WP2 stripAssumes) — write the stripped
+  copies into `workdir/sim_src/`, originals into `runtime/verilog/` and
+  `runtime/formal/`.
+- **VCD compatibility:** today's VCDs come from cocotb driving **verilator**
+  (`sim.py`: `os.getenv("SIM", "verilator")`), so the flex/bison parser is
+  currently fed verilator's layout. iverilog's `$dumpvars` emits the same VCD
+  format; what changes is the scope tree, which the contract above pins down.
+  Still validate against a cocotb-produced VCD from the current pipeline (run
+  `python run.py tiny_and` to get one) and compare signal sets.
 - **Acceptance:** for `tiny_and`, `s27` (non-ANSI, unclocked),
   `axis_fifo` (clocked+reset, parameterized widths), and `nru_a`
-  (anyseq/anyconst/assume): harness builds, produces N VCDs, and
-  `Module::addTracesfromDir` loads them with the same signal set as the
-  cocotb flow (write a small dump-signals debug flag to compare).
+  (anyseq/anyconst/assume): the generated testbench elaborates under
+  `iverilog -g2012`, `vvp` produces N VCDs, and `Module::addTracesfromDir`
+  loads them with the same signal set as the cocotb flow (write a small
+  dump-signals debug flag to compare).
 
 ### WP4 — pipeline: orchestration in C++
 - **Deliverable:** `smart/src/pipeline/Pipeline.{h,cpp}`, `Options.{h,cpp}`
@@ -440,12 +462,15 @@ needs locally and record the install command in that WP's evidence.
 10. SUPERSEDED (2026-07-25): build/test happens on the HOST. `nlohmann/json.hpp`
     is now vendored at `smart/third_party/nlohmann/json.hpp` (v3.11.3) and
     `smart/Makefile` has `-I ./third_party`; EBMC comes from the submodule.
-    Still to install locally when their WP starts: verilator (WP3), libcvc5
-    C++ dev (WP5/WP6 — only the cvc5 *binary* is present at
-    `/usr/local/bin/cvc5`, 1.2.0).
-11. VCD from Verilator-direct may wrap signals in a `TOP` scope (vs cocotb) —
-    see WP3 caution; this is the most likely silent-breakage point of the
-    whole migration.
+    Installed locally since: iverilog 13.0 + verilator 5.011 + yosys, via
+    `otherTools/oss-cad-suite` (the tarball install.sh already used). Still to
+    install: libcvc5 C++ dev (WP5/WP6 — only the cvc5 *binary* is present, and
+    note `oss-cad-suite/bin/cvc5` is 1.0.1-dev and SHADOWS the 1.2.0 at
+    `/usr/local/bin/cvc5` once the suite is on PATH).
+11. RETIRED by the WP3 iverilog decision (Verilator's `TOP` wrapper scope is
+    no longer in the picture). Its replacement is the WP3 "VCD scope contract":
+    the DUT instance name must equal the top module name, because the trace
+    loader matches signals on `scope->name == <top>`.
 12. Trace depth 10 was historically hardcoded ("Depth_Trace: Default is 10
     and hard to change") — after WP3 it must genuinely follow `--cycles`.
 13. Widths that don't resolve to integers (complex param exprs) fall back to

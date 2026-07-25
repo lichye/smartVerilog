@@ -13,6 +13,25 @@ ROOT = Path(__file__).resolve().parent
 def bash(cmd):
     subprocess.run(["bash", "-c", cmd], check=True)
 
+def prefer_system_cvc5():
+    """oss-cad-suite ships an old cvc5 (1.0.1-dev) and puts itself first on
+    PATH, silently shadowing a newer system cvc5. SyGuS results depend on the
+    solver version, so put the newer one back in front."""
+    suite_bin = ROOT / "otherTools/oss-cad-suite/bin"
+    current = shutil.which("cvc5")
+    if not current or Path(current).parent != suite_bin:
+        return
+    for candidate in ("/usr/local/bin/cvc5", "/usr/bin/cvc5"):
+        if Path(candidate).exists():
+            os.environ["PATH"] = f"{Path(candidate).parent}:{os.environ['PATH']}"
+            print(f"Using {candidate} instead of the oss-cad-suite cvc5")
+            return
+
+def venv_python():
+    """The interpreter the pipeline's `python` subprocesses will resolve to."""
+    candidate = ROOT / "otherTools/venv/bin/python"
+    return str(candidate) if candidate.exists() else sys.executable
+
 def load_env(script):
     script_path = Path(script)
     if not script_path.is_absolute():
@@ -46,8 +65,12 @@ def force_rmtree(path: Path):
 def clean_smart():
     smart = ROOT / "smart"
 
+    # Build files live here too — `*.txt` would otherwise eat CMakeLists.txt.
+    keep = {"CMakeLists.txt"}
     for pattern in ["*.txt", "*.sby", "*task", "*.log", "*.sl"]:
         for f in smart.glob(pattern):
+            if f.name in keep:
+                continue
             try:
                 f.unlink()
             except FileNotFoundError:
@@ -109,14 +132,17 @@ def list_configs():
 def check_env():
     load_env(ROOT / "otherTools/venv/bin/activate")
     load_env(ROOT / "otherTools/oss-cad-suite/environment")
+    prefer_system_cvc5()
 
     ok = True
-    for tool in ["verilator", "ebmc", "cvc5", "yosys"]:
+    version_flag = {"iverilog": "-V", "yosys": "-V"}
+    for tool in ["iverilog", "verilator", "ebmc", "cvc5", "yosys"]:
         path = shutil.which(tool)
         if path:
             version = ""
             try:
-                out = subprocess.run([tool, "--version"], capture_output=True,
+                out = subprocess.run([tool, version_flag.get(tool, "--version")],
+                                     capture_output=True,
                                      text=True, timeout=10)
                 version = (out.stdout or out.stderr).strip().splitlines()[0]
             except Exception:
@@ -126,8 +152,11 @@ def check_env():
             print(f"[MISSING] {tool:<10} not found on PATH")
             ok = False
 
-    for module in ["cocotb", "z3"]:
-        ret = subprocess.run([sys.executable, "-c", f"import {module}"],
+    # Check against the venv interpreter, not the one running run.py — the
+    # pipeline's subprocesses use the venv. (z3 is not imported anywhere in
+    # the pipeline; only cvc5.pythonic is.)
+    for module in ["cocotb", "cvc5"]:
+        ret = subprocess.run([venv_python(), "-c", f"import {module}"],
                              capture_output=True)
         if ret.returncode == 0:
             print(f"[ok]      python module {module}")
@@ -138,7 +167,7 @@ def check_env():
     if ok:
         print("Environment looks complete.")
     else:
-        print("Environment is incomplete. Use the Docker image or run install.sh.")
+        print("Environment is incomplete. Run install.sh.")
         sys.exit(1)
 
 def validate_benchmark_dir(found_dir: Path, target):
@@ -195,9 +224,21 @@ def run_experiment(target, Config):
     # 2. Setup environment
     load_env(ROOT / "otherTools/venv/bin/activate")
     load_env(ROOT / "otherTools/oss-cad-suite/environment")
+    prefer_system_cvc5()
 
     # 3. Clean previous runs
     clean_smart()
+
+    # SMART_BIN=<path> runs the pipeline against an already-built smart.out
+    # (e.g. the CMake one) instead of letting setup.py `make compile` a fresh
+    # binary. Must happen after clean_smart(), which deletes smart/smart.out.
+    smart_bin = os.environ.get("SMART_BIN")
+    if smart_bin:
+        dest = ROOT / "smart" / "smart.out"
+        shutil.copy2(smart_bin, dest)
+        dest.chmod(dest.stat().st_mode | stat.S_IXUSR)
+        os.environ["SMART_NO_COMPILE"] = "1"
+        print(f"Using prebuilt binary {smart_bin}")
 
     # copy mutation files if exist
     smart_dir = ROOT / "smart"
@@ -272,7 +313,7 @@ def run_experiment(target, Config):
     print("Moving results...")
     result_dir.mkdir(parents=True, exist_ok=True)
     moved = 0
-    for f in smart_dir.glob("*.txt"):
+    for f in (f for f in smart_dir.glob("*.txt") if f.name != "CMakeLists.txt"):
         shutil.move(str(f), result_dir / f.name)
         moved += 1
     if dest_user.exists():

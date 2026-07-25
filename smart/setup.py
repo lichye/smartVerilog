@@ -154,7 +154,10 @@ if __name__ == "__main__":
     # Set the parameters
     sim_loop = 3
 
-    compile_cmd = 1    
+    # SMART_NO_COMPILE=1 keeps whatever smart.out is already in place — used
+    # to run the pipeline against the CMake-built binary instead of the one
+    # this script's `make compile` would produce (plan WP1 acceptance).
+    compile_cmd = 0 if os.environ.get("SMART_NO_COMPILE") == "1" else 1
 
     mutant_cmd = 1
 
@@ -237,6 +240,11 @@ if __name__ == "__main__":
         if ret.returncode != 0:
             print("Error in compiling")
             exit(-1)
+    else:
+        if not os.path.exists("smart.out"):
+            print("SMART_NO_COMPILE=1 but smart/smart.out is missing")
+            exit(-1)
+        print("SMART_NO_COMPILE=1: using the existing smart.out")
 
     compile_end_time = time.time()
     

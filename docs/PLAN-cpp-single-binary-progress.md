@@ -22,10 +22,10 @@ Branch: `new-interface`.
 | WP | Scope | Status | Agent | Depends on |
 |----|-------|--------|-------|------------|
 | WP2A | hw-cbmc submodule + build integration | DONE | coordinator (Claude/Opus) | — |
-| WP1 | CMake build (incl. hw-cbmc libs) | NOT STARTED | — | WP2A (unblocked) |
+| WP1 | CMake build (incl. hw-cbmc libs) | DONE | coordinator (Claude/Opus) | WP2A |
 | WP2 | frontend adapter: ModuleInfo from hw-cbmc | NOT STARTED | — | WP2A (unblocked) |
 | WP2-regex | regex frontend (SVModule) — DEMOTED to oracle/fallback | DONE (198a0aa) | coordinator (Claude/Fable) | — |
-| WP3 | simgen (Verilator harness) | NOT STARTED | — | — (uses ModuleInfo; oracle supplies it meanwhile) |
+| WP3 | simgen (iverilog testbench) | NOT STARTED | — | — (uses ModuleInfo; oracle supplies it meanwhile) |
 | WP4 | pipeline (orchestration, Options/Config §1.1) | NOT STARTED | — | WP2, WP3 |
 | WP5 | mus (MSA/MUS + minimizer, libcvc5) | NOT STARTED | — | WP1 |
 | WP6 | sygus via libcvc5 API | NOT STARTED | — | WP1 |
@@ -77,14 +77,28 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   - `ebmc --show-symbol-table` on a `#(parameter W=8)` module -> ports as
     `unsignedbv` with resolved `width` (8, 4) — the WP2 width source
 
-### WP1 — CMake
-- [ ] `smart/CMakeLists.txt`: flex (`-P VCDParser` prefix!) + bison codegen
-- [ ] hw-cbmc submodule libs + ebmc exposed to the smart build (with WP2A)
-- [ ] nlohmann-json resolved (find_package or vendored header)
-- [ ] libcvc5 available in Docker image (Dockerfile change, coordinate WP6)
-- [ ] `smart.out` builds via CMake in Docker
-- [ ] Acceptance: CMake-built `smart.out` passes `python run.py c17` in Docker
+### WP1 — CMake — DONE
+- [x] `smart/CMakeLists.txt`: flex (`-P VCDParser`) + bison codegen into
+      `generated/`; `smart_core` static lib; `smart.out`, `frontend_dump`,
+      `test_svmodule` targets; `ctest` runs the SVModule spec tests
+- [x] `third_party/CMakeLists.txt`: `hw-cbmc` custom target (drives
+      `build-hw-cbmc.sh`) + `hwcbmc_frontend` INTERFACE lib carrying the libs,
+      include dirs and `LOCAL_IREP_IDS`; `hwcbmc_spike` target links it
+      (EXCLUDE_FROM_ALL — building it triggers the slow hw-cbmc build)
+- [x] nlohmann-json vendored (`smart/third_party/nlohmann/json.hpp`)
+- [ ] libcvc5 — deferred to WP5/WP6, which are the first consumers
+- [x] `smart.out` builds via CMake on the host
+- [x] Acceptance: CMake-built `smart.out` passes `python run.py c17` locally
 - Evidence:
+  - `cmake -B build -S . && cmake --build build -j32` -> `build/bin/{smart.out,
+    frontend_dump,test_svmodule}`; `test_svmodule` -> "all SVModule tests
+    passed"; `parity_frontend.py build/bin/frontend_dump` -> "parity OK: 56
+    designs"
+  - `SMART_BIN=$PWD/build/bin/smart.out python3 run.py c17` -> exit 0,
+    "found 33 new assertions", "The number of verified assertions is: 33"
+    (verified by the submodule-built EBMC 5.6), `Results/smart_c17/
+    invariants.txt` = 33 lines
+  - local env now complete: `python3 run.py --check-env` -> all [ok]
 
 ### WP2 — frontend adapter (fill ModuleInfo from hw-cbmc)
 - [ ] `HwcbmcFrontend.{h,cpp}` fills the existing `ModuleInfo` via WP2A mechanism
@@ -108,11 +122,13 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   `g++ -std=c++17 -O1 smart/src/frontend/SVModule.cpp
   smart/src/frontend/{frontend_dump,test_svmodule}.cpp`
 
-### WP3 — simgen
-- [ ] `Harness.{h,cpp}`: sim_main.cpp generation (stimulus semantics per plan)
-- [ ] verilator subprocess wrapper (+ flags incl. conditional --public-flat-rw)
+### WP3 — simgen (iverilog, decided 2026-07-25)
+- [ ] `Harness.{h,cpp}`: `tb.sv` generation (stimulus semantics per plan)
+- [ ] iverilog/vvp subprocess wrapper (`-g2012`, `-I <design dir>`)
 - [ ] assume-stripped sim copies vs original formal copies
-- [ ] VCD scope compatibility verified against a cocotb-produced VCD (gotcha 11)
+- [ ] VCD scope contract honoured: DUT instance name == top module name
+      (the trace loader matches `scope->name`); verified against a
+      cocotb-produced VCD
 - [ ] `--cycles` genuinely controls trace depth (gotcha 12)
 - [ ] Acceptance: tiny_and / s27 / axis_fifo / nru_a VCDs load with same
       signal set as cocotb flow
@@ -211,3 +227,35 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
 - 2026-07-25: nlohmann-json vendored at `smart/third_party/nlohmann/json.hpp`
   (v3.11.3) + `-I ./third_party` in `smart/Makefile`; `make compile` now works
   on the host without the apt package.
+- 2026-07-25 (WP1): CMake 4.4.0 installed locally with `pip install --user
+  cmake` (the host has no system cmake); build with
+  `PATH=$HOME/.local/bin:$PATH cmake -B build -S .`.
+- 2026-07-25 (WP1): local run needs python >= 3.10 —
+  `minimal_satisfiable_assignment.py` uses a `match` statement, and the host
+  default is 3.9. The venv is built with `python3.11 -m venv --clear
+  otherTools/venv`. (WP5 removes this dependency entirely.)
+- 2026-07-25 (WP1): `run.py clean_smart()` globbed `smart/*.txt` and deleted
+  `smart/CMakeLists.txt`. Fixed with a keep-list. Anything else added to
+  `smart/` with a `.txt`/`.log`/`.sl` name is at risk from the same glob.
+- 2026-07-25 (WP1): `oss-cad-suite/bin/cvc5` is 1.0.1-dev and shadows the
+  1.2.0 at `/usr/local/bin/cvc5` once the suite is on PATH — a silent solver
+  downgrade. `run.py` now calls `prefer_system_cvc5()` and prints which one it
+  uses. WP4's `--check-env` must report the cvc5 it will actually invoke.
+- 2026-07-25 (WP1): `run.py --check-env` checked python modules with the
+  interpreter running run.py, not the venv's, so it always reported cocotb
+  missing. Fixed; also dropped the `z3` check (nothing imports z3) and added
+  `iverilog`.
+- 2026-07-25 (WP1): new escape hatches for A/B-ing binaries:
+  `SMART_BIN=<path> python3 run.py <bench>` copies a prebuilt `smart.out` into
+  place after the clean step, and `SMART_NO_COMPILE=1` makes `setup.py` skip
+  its `make compile`.
+- 2026-07-25 (WP3 DECISION, measured): simulation is **iverilog**, not
+  Verilator — both were acceptable to the user, so the tie was broken by
+  test: hierarchical assignment (`dut.free_a = $random`) drives `(* anyseq *)`
+  regs with no `--public-flat-rw` and no `top__DOT__` mangling; we control the
+  VCD scope tree, which retires gotcha 11; `iverilog -g2012` elaborates
+  tiny_and/s27/axis_fifo and ibex_decoder (with `-I <design dir>` for its
+  `` `include "ibex_pkg.sv" ``). Verilator stays a documented fallback. NOTE
+  the new load-bearing contract: the generated testbench must name the DUT
+  instance exactly the top module name, because `Trace::createSignal` sets
+  `Signal.moduleName = scope->name` and `Module::getAllSignals` filters on it.
