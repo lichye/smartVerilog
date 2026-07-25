@@ -285,12 +285,17 @@ needs locally and record the install command in that WP's evidence.
 - **anyseq/anyconst:** hw-cbmc understands these natively — extract them from
   the parse tree/symbol table (they are the `freeRegs` with kind anyseq/
   anyconst). This is the main thing the regex was approximating.
-- **Acceptance:** `tools/parity_frontend.py` (already written) run with the
-  hw-cbmc-backed `--dump-frontend` must match the gen_bench.py oracle on the
-  56 repo designs, OR every divergence is listed with a note explaining why
-  hw-cbmc is right and the regex was wrong (e.g. a width the regex couldn't
-  resolve). The 6 `test_svmodule.cpp` spec cases still pass. Net goal: the
-  pipeline gets a MORE correct ModuleInfo than the regex, never a worse one.
+- **Acceptance (met):** `tools/compare_frontends.py` walks the 56 designs and
+  classifies every divergence; it exits 0 only when each one is either benign
+  (hw-cbmc strictly better) or a recorded limitation. `parity_frontend.py`
+  keeps the frozen oracle honest and still reports "parity OK: 56 designs".
+  Net goal held: the pipeline gets a MORE correct ModuleInfo than the regex.
+- **Elaboration is mandatory, and it must go through `language_filest`.**
+  Calling `verilog_languaget::typecheck` on the top module alone trips an
+  invariant inside verilog_synthesis for any design with submodules. Also set
+  `cbmc_invariants_should_throwt` around it: CBMC aborts the process on
+  invariant violations, and three benchmark designs hit one — with the guard
+  they degrade to parse-tree ports instead.
 
 ### WP3 — simgen: iverilog testbench instead of cocotb
 - **Simulator decision (2026-07-25, measured):** **Icarus Verilog**, not

@@ -71,9 +71,18 @@ target_link_libraries(frontend_dump PRIVATE smart_frontend)
 add_executable(test_svmodule ${SMART_SRC}/frontend/test_svmodule.cpp)
 target_link_libraries(test_svmodule PRIVATE smart_frontend)
 
+# --- the hw-cbmc-backed frontend (WP2) --------------------------------------
+# These pull in hw-cbmc, whose first build is slow, so they are opt-in rather
+# than part of `all`. Build with: cmake --build build --target hwcbmc_dump
+add_library(smart_hwcbmc_frontend STATIC EXCLUDE_FROM_ALL
+    ${SMART_SRC}/frontend/HwcbmcFrontend.cpp)
+target_link_libraries(smart_hwcbmc_frontend PUBLIC smart_frontend hwcbmc_frontend)
+
+add_executable(hwcbmc_dump EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_dump.cpp)
+target_link_libraries(hwcbmc_dump PRIVATE smart_hwcbmc_frontend)
+
 # WP2A link spike: proves the hw-cbmc frontend links and exposes what
-# ModuleInfo needs. Building it also builds hw-cbmc, which is slow, so it is
-# opt-in rather than part of `all`.
+# ModuleInfo needs. Kept as the minimal reproducer if linking ever breaks.
 add_executable(hwcbmc_spike EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_spike.cpp)
 target_link_libraries(hwcbmc_spike PRIVATE hwcbmc_frontend)
 

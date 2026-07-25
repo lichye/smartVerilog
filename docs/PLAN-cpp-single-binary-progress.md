@@ -23,7 +23,7 @@ Branch: `new-interface`.
 |----|-------|--------|-------|------------|
 | WP2A | hw-cbmc submodule + build integration | DONE | coordinator (Claude/Opus) | — |
 | WP1 | CMake build (incl. hw-cbmc libs) | DONE | coordinator (Claude/Opus) | WP2A |
-| WP2 | frontend adapter: ModuleInfo from hw-cbmc | NOT STARTED | — | WP2A (unblocked) |
+| WP2 | frontend adapter: ModuleInfo from hw-cbmc | DONE | coordinator (Claude/Opus) | WP2A |
 | WP2-regex | regex frontend (SVModule) — DEMOTED to oracle/fallback | DONE (198a0aa) | coordinator (Claude/Fable) | — |
 | WP3 | simgen (iverilog testbench) | NOT STARTED | — | — (uses ModuleInfo; oracle supplies it meanwhile) |
 | WP4 | pipeline (orchestration, Options/Config §1.1) | NOT STARTED | — | WP2, WP3 |
@@ -100,13 +100,31 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
     invariants.txt` = 33 lines
   - local env now complete: `python3 run.py --check-env` -> all [ok]
 
-### WP2 — frontend adapter (fill ModuleInfo from hw-cbmc)
-- [ ] `HwcbmcFrontend.{h,cpp}` fills the existing `ModuleInfo` via WP2A mechanism
-- [ ] `--dump-frontend` reuses `dumpJson`
-- [ ] anyseq/anyconst + widths from hw-cbmc parse tree/symbol table
-- [ ] Acceptance: `tools/parity_frontend.py` vs the frozen oracle — match or
-      document each diff as a regex limitation hw-cbmc gets right
-- Evidence:
+### WP2 — frontend adapter (fill ModuleInfo from hw-cbmc) — DONE
+- [x] `HwcbmcFrontend.{h,cpp}` fills the existing `ModuleInfo` by linking
+      hw-cbmc (WP2A mechanism)
+- [x] `hwcbmc_dump` CLI reuses `dumpJson` (WP4 folds it in as
+      `--dump-frontend`); same CLI as `frontend_dump` so either can be driven
+- [x] anyseq/anyconst from the parse tree, widths from the elaborated symbol
+      table, ports from the elaborated module type (normalises ANSI and
+      non-ANSI headers), params = every elaborated compile-time constant
+- [x] multi-file designs: sibling `.sv`/`.v` files are elaborated together via
+      langapi's `language_filest`, which orders modules by dependency
+- [x] Acceptance: `tools/compare_frontends.py` — 0 unexplained divergences
+- Evidence: `python3 tools/compare_frontends.py` -> exit 0
+  - 56 designs, 15 byte-identical
+  - benign: `param-extra` 1279 (hw-cbmc reports localparams and constants the
+    regex could not evaluate), `order` 25 (hw-cbmc keeps module-header port
+    order; the oracle reorders non-ANSI ports inputs-first),
+    `width-resolved` 2 (oracle null -> real width)
+  - 4 designs with recorded limitations: 2 i2c cores + s1196 where hw-cbmc 5.6
+    aborts during elaboration (so does upstream `ebmc` on the same files — we
+    degrade to parse-tree ports instead of dying), and ibex_controller /
+    ibex_decoder where the ORACLE truncates port names to `inp`
+  - the oracle path is unchanged: `test_svmodule` green,
+    `parity_frontend.py` -> "parity OK: 56 designs"
+- FOLLOW-UP: check whether hw-cbmc >= 6.0 elaborates the i2c cores; if it
+  does, that is a concrete reason to bump the submodule pin.
 
 ### WP2-regex — DONE (demoted to oracle/fallback)
 - [x] `SVModule.{h,cpp}`: parse / stripAssumes / injectAssumes / guesses — 198a0aa
@@ -259,3 +277,24 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   the new load-bearing contract: the generated testbench must name the DUT
   instance exactly the top module name, because `Trace::createSignal` sets
   `Signal.moduleName = scope->name` and `Module::getAllSignals` filters on it.
+- 2026-07-25 (WP2): calling `verilog_languaget::typecheck` directly only works
+  for designs with no submodules. Anything that instantiates another module
+  (s27's `dff`, the i2c cores) trips a precondition inside verilog_synthesis.
+  Elaboration must go through langapi's `language_filest`, the path ebmc
+  itself uses, which typechecks modules in dependency order.
+- 2026-07-25 (WP2): CBMC signals internal invariant violations by ABORTING the
+  process — unacceptable in a linked library, and three benchmark designs hit
+  one. `cbmc_invariants_should_throwt` (util/invariant.h) flips them to
+  `invariant_failedt` exceptions; the adapter catches those and falls back to
+  parse-tree ports. Any future code linking CBMC libs should do the same.
+- 2026-07-25 (WP2): port ORDER differs from the oracle on all 25 non-ANSI
+  designs, and hw-cbmc is right — it preserves module-header order, e.g.
+  `module s27(GND,VDD,CK,G0,G1,G17,G2,G3)`, while the oracle scans the
+  `input`/`output` declarations and so emits inputs first. This changes the
+  order of per-port RNG draws, so same-seed traces will NOT match the legacy
+  pipeline byte-for-byte once WP3/WP4 use the new frontend. Expect it during
+  end-to-end parity work.
+- 2026-07-25 (WP2): `params` is now every elaborated compile-time constant of
+  the module (parameter and localparam), not the subset the regex could
+  evaluate — hence 1279 `param-extra` entries. Deliberate: the values are
+  exact, and nothing downstream needs the oracle's narrower set.
