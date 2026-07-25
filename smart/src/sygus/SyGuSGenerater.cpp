@@ -1,9 +1,17 @@
 #include "SyGuSGenerater.h"
 #include "Utils.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
+#include <algorithm>
 #include <cassert>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <vector>
+
+#include <cvc5/cvc5.h>
+#include <cvc5/cvc5_parser.h>
+
+namespace fs = std::filesystem;
 
 SyGuSGenerater::SyGuSGenerater()
 {
@@ -251,8 +259,65 @@ void SyGuSGenerater::debugPrint()
     }
 }
 
+void SyGuSGenerater::setSygusTimeoutMs(int ms){ sygusTimeoutMs = ms; }
+void SyGuSGenerater::setUseSubprocess(bool value){ useSubprocess = value; }
+void SyGuSGenerater::setKeepTempFiles(bool value){ keepTempFiles = value; }
+
+void SyGuSGenerater::removeTempFile(const std::string& sygusPath){
+  if(keepTempFiles || !deleteTempFile)
+    return;
+  std::error_code error;
+  fs::remove(sygusPath, error);
+  if(error)
+    printError("Warning: unable to delete "+sygusPath+"\n");
+  else
+    printDebug("Deleted file "+sygusPath,3);
+}
+
 std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
-  std::string command = "timeout 5 cvc5 --lang=sygus2 "+sygusPath;
+  const std::string result = useSubprocess ? runCVC5SygusSubprocess(sygusPath)
+                                           : runCVC5SygusInProcess(sygusPath);
+  printDebug("The Result from cvc5 is: " + result,3);
+  removeTempFile(sygusPath);
+  return result;
+}
+
+// Solve in-process through libcvc5's parser API: same problem file, same
+// answer format, but no fork/exec per block and a real time limit instead of
+// the old hardcoded `timeout 5`.
+std::string SyGuSGenerater::runCVC5SygusInProcess(const std::string& sygusPath){
+  printDebug("Running CVC5 in-process on " + sygusPath +
+             " (tlimit " + std::to_string(sygusTimeoutMs) + "ms)",1);
+  try{
+    cvc5::TermManager tm;
+    cvc5::Solver solver(tm);
+    // Without this the parser refuses synth-fun; the cvc5 binary sets it from
+    // --lang=sygus2.
+    solver.setOption("sygus", "true");
+    solver.setOption("tlimit", std::to_string(sygusTimeoutMs));
+
+    cvc5::parser::SymbolManager symbols(tm);
+    cvc5::parser::InputParser parser(&solver, &symbols);
+    parser.setFileInput(cvc5::modes::InputLanguage::SYGUS_2_1, sygusPath);
+
+    std::ostringstream out;
+    for(;;){
+      cvc5::parser::Command command = parser.nextCommand();
+      if(command.isNull())
+        break;
+      command.invoke(&solver, &symbols, out);
+    }
+    return out.str();
+  }
+  catch(const std::exception& e){
+    printDebug(std::string("cvc5 failed: ")+e.what(),1);
+    return "";
+  }
+}
+
+std::string SyGuSGenerater::runCVC5SygusSubprocess(const std::string& sygusPath){
+  const int seconds = std::max(1, (sygusTimeoutMs + 999) / 1000);
+  std::string command = "timeout "+std::to_string(seconds)+" cvc5 --lang=sygus2 "+sygusPath;
   printDebug("Running CVC5 with command: " + command,1);
   std::string result;
   char buffer[128];
@@ -276,16 +341,6 @@ std::string SyGuSGenerater::runCVC5Sygus(std::string sygusPath){
     return "";
   }
   printDebug("CVC5 Return code: " + std::to_string(exitCode),3);
-  printDebug("The Result from cvc5 is: " + result,3);
-  if(deleteTempFile){
-      std::string command = "rm -rf "+sygusPath;
-      int status = system(command.c_str());
-      if(status!=0) {
-          printError("Error: Unable to delete file "+sygusPath+"\n");
-          exit(1);
-      }
-      printDebug("Deleted file "+sygusPath,3);
-  }
   return result;
 }
 

@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <random>
 #include <set>
@@ -18,6 +19,7 @@
 #include "BlockRunner.h"
 #include "Blocks.h"
 #include "Harness.h"
+#include "Mus.h"
 #include "HwcbmcFrontend.h"
 #include "SVModule.h"
 #include "WorkDir.h"
@@ -280,6 +282,8 @@ ExitCode Pipeline::run(RunSummary& summary) {
     std::set<std::string> mined;
     int round = 0;
     int blockCounter = 0;
+    std::size_t lastMsaSize = std::numeric_limits<std::size_t>::max();
+    long long stableRounds = 0;
 
     for (;;) {
         ++round;
@@ -334,20 +338,79 @@ ExitCode Pipeline::run(RunSummary& summary) {
             break;
         }
 
-        // Next round's blocks. MSA needs the unsat-core machinery that WP5
-        // brings; until then the random strategy is what we can honestly run.
-        if (options_.getBool("msa") && !options_.getBool("random"))
-            say("note: --msa needs the MUS port (WP5); using random blocks for "
-                "this round");
+        // --- next round's blocks (port of smart.py GenerateNewBlocks) -----
+        //
+        // Between rounds, drop the invariants the others already imply: a
+        // smaller assertion set means a larger, more useful MSA.
+        if (options_.getBool("block_minimizer")) {
+            try {
+                const auto minimised = mus::minimiseAssertions(
+                    work.sygusResultFile(), work.sygusResultFile(),
+                    static_cast<int>(options_.getInt("block_minimizer_timeout")));
+                if (minimised.before != minimised.after)
+                    say("[" + timestamp() + "] minimiser: " +
+                        std::to_string(minimised.before) + " -> " +
+                        std::to_string(minimised.after) + " invariants");
+            } catch (const std::exception& e) {
+                say("note: minimiser skipped: " + std::string(e.what()));
+            }
+        }
+
+        const bool useMsa = options_.getBool("msa");
+        const bool useRandom = options_.getBool("random") || !useMsa;
+
+        std::vector<std::string> msaPool;
+        if (useMsa) {
+            try {
+                const auto found = mus::getMus(
+                    work.variablesFile(), work.sygusResultFile(),
+                    static_cast<int>(options_.getInt("block_minimizer_timeout")));
+                msaPool.assign(found.underspecified.begin(),
+                               found.underspecified.end());
+                say("[" + timestamp() + "] MSA: " + std::to_string(msaPool.size()) +
+                    " of " + std::to_string(variables.size()) +
+                    " variables still underspecified" +
+                    (found.timedOut ? " (timed out, result is not minimal)" : ""));
+            } catch (const std::exception& e) {
+                say("note: MSA failed (" + std::string(e.what()) +
+                    "), falling back to random blocks");
+            }
+        }
+
+        // Stop when the MSA has stopped shrinking for msa_stable_depth rounds:
+        // the same pool would produce the same blocks.
+        if (useMsa && options_.getBool("msa_stable_end")) {
+            if (msaPool.size() >= lastMsaSize) {
+                if (++stableRounds >= options_.getInt("msa_stable_depth")) {
+                    say("MSA stopped shrinking; stopping");
+                    break;
+                }
+            } else {
+                stableRounds = 0;
+            }
+            lastMsaSize = msaPool.size();
+        }
 
         std::error_code error;
         fs::remove_all(work.variablesDir(), error);
         fs::create_directories(work.variablesDir());
 
-        const int k = subsetSize(variables.size(), options_.getDouble("k_size"));
-        const int count = subsetCount(variables.size(),
+        const auto& pool = msaPool.empty() ? variables : msaPool;
+        const int k = subsetSize(pool.size(), options_.getDouble("k_size"));
+        const int count = subsetCount(pool.size(),
                                       options_.getDouble("block_size"), cores);
-        writeBlocks(variables, count, k, work.variablesDir(), "thread_", rng);
+
+        if (!msaPool.empty() && useRandom) {
+            // Both strategies asked for: half the blocks from the MSA pool,
+            // half from the full variable set.
+            const int msaCount = count / 2;
+            writeBlocks(msaPool, msaCount, k, work.variablesDir(), "thread_", rng);
+            writeBlocks(variables, count - msaCount,
+                        subsetSize(variables.size(), options_.getDouble("k_size")),
+                        work.variablesDir(), "thread_", rng, msaCount);
+        } else {
+            writeBlocks(pool, count, k, work.variablesDir(), "thread_", rng);
+        }
     }
 
     summary.rounds = round;

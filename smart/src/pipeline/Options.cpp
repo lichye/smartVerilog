@@ -79,6 +79,8 @@ std::vector<OptionSpec> buildTable() {
          "random negative states added per block"},
         {"sygus_timeout_ms", "sygus-timeout", 0, T::Int, 5000LL, "", "MS",
          "per-call SyGuS time limit"},
+        {"sygus_subprocess", "sygus-subprocess", 0, T::Bool, false, "", "",
+         "solve SyGuS by running the cvc5 binary instead of libcvc5"},
 
         // --- scheduling -------------------------------------------------
         {"jobs", "jobs", 'j', T::Int, defaultJobs(), "Parallel_settings.max_threads",

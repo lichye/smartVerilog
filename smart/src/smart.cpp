@@ -109,6 +109,9 @@ int runSmartBlock(int argc, char* argv[]){
 
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
+  sygus->setSygusTimeoutMs(static_cast<int>(options.getInt("sygus_timeout_ms")));
+  sygus->setUseSubprocess(options.getBool("sygus_subprocess"));
+  sygus->setKeepTempFiles(options.getBool("keep_work"));
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::EBMC);
   timer = new Timer();  
 
