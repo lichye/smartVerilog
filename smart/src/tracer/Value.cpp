@@ -219,12 +219,17 @@ std::string Value::toVerilogString(){
 }
 
 bool Value::isUndefined(){
+    // Z counts as undefined as well as X. toSyGusString() prints BOTH as the
+    // placeholder `unknown_Bool` / `unknown_bits`, so treating z as a defined
+    // value let that token reach the SyGuS file, where it is not valid syntax
+    // and costs the solver the whole problem. (Verilator's 2-state traces have
+    // neither; Icarus Verilog reports z for an undriven net.)
     if(type == SignalType::BOOLEAN){
-        return value.bitValue == BitType::X;
+        return value.bitValue == BitType::X || value.bitValue == BitType::Z;
     }
     else if(type == SignalType::BITS){
         for(auto &bit : *value.bitVector){
-            if(bit == BitType::X){
+            if(bit == BitType::X || bit == BitType::Z){
                 return true;
             }
         }
