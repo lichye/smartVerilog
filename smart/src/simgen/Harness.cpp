@@ -247,7 +247,9 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
                                  "\ncommand: " + result.command);
 
     for (int i = 0; i < options.traces; ++i) {
-        const auto vcdPath = fs::path(outputDir) / ("sim" + std::to_string(i) + ".vcd");
+        const auto vcdPath =
+            fs::path(outputDir) /
+            ("sim" + std::to_string(options.firstIndex + i) + ".vcd");
         if (vcdPath.string().size() >= kVcdPathChars)
             throw std::runtime_error(
                 "VCD path is longer than the " + std::to_string(kVcdPathChars) +

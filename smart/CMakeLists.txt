@@ -36,6 +36,7 @@ file(GLOB SMART_CORE_SOURCES
 
 add_library(smart_core STATIC
     ${SMART_CORE_SOURCES}
+    ${SMART_SRC}/smart.cpp          # runSmartBlock(): one block, one process
     ${BISON_VCDParser_OUTPUTS}
     ${FLEX_VCDScanner_OUTPUTS})
 
@@ -57,12 +58,11 @@ add_library(smart_frontend STATIC ${SMART_SRC}/frontend/SVModule.cpp)
 target_include_directories(smart_frontend PUBLIC ${SMART_SRC}/frontend)
 
 # --- executables ------------------------------------------------------------
-# The per-block worker, argc==8 contract, unchanged (WP4 turns its main() into
-# runSmartBlock()). Named smart.out so it can be dropped in place of the
-# make-built binary.
-add_executable(smart_out ${SMART_SRC}/smart.cpp)
+# smart.out: the single-block worker, kept as its own binary for debugging.
+# The block logic itself lives in smart_core as runSmartBlock().
+add_executable(smart_out ${SMART_SRC}/smart_main.cpp)
 set_target_properties(smart_out PROPERTIES OUTPUT_NAME smart.out)
-target_link_libraries(smart_out PRIVATE smart_core)
+target_link_libraries(smart_out PRIVATE smart_core smart_pipeline)
 
 # Standalone frontend dump + spec tests (WP2-regex evidence, kept green).
 add_executable(frontend_dump ${SMART_SRC}/frontend/frontend_dump.cpp)
@@ -89,6 +89,39 @@ target_link_libraries(smart_simgen PUBLIC smart_frontend)
 add_executable(simgen_run EXCLUDE_FROM_ALL ${SMART_SRC}/simgen/simgen_run.cpp)
 target_link_libraries(simgen_run PRIVATE smart_simgen smart_hwcbmc_frontend)
 
+# --- pipeline (WP4): options/config, workdir, orchestration ----------------
+# Options is separate from the rest of the pipeline because smart_core needs it
+# too (a block reads the same config), and smart_core must not depend on the
+# orchestration it is orchestrated by.
+add_library(smart_pipeline STATIC ${SMART_SRC}/pipeline/Options.cpp)
+target_include_directories(smart_pipeline PUBLIC
+    ${SMART_SRC}/pipeline
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
+target_link_libraries(smart_core PUBLIC smart_pipeline)
+
+add_executable(test_options ${SMART_SRC}/pipeline/test_options.cpp)
+target_link_libraries(test_options PRIVATE smart_pipeline)
+
+# --- emit (WP7): final EBMC gate + the file the user gets -------------------
+add_library(smart_emit STATIC ${SMART_SRC}/emit/AssertionWriter.cpp)
+target_include_directories(smart_emit PUBLIC ${SMART_SRC}/emit)
+
+add_executable(test_emit ${SMART_SRC}/emit/test_emit.cpp)
+target_link_libraries(test_emit PRIVATE smart_emit)
+
+# --- the smart binary -------------------------------------------------------
+# Pulls in hw-cbmc (via the frontend), so it is opt-in like the other
+# hw-cbmc-backed targets: cmake --build build --target smart
+add_executable(smart EXCLUDE_FROM_ALL
+    ${SMART_SRC}/main.cpp
+    ${SMART_SRC}/pipeline/Pipeline.cpp
+    ${SMART_SRC}/pipeline/BlockRunner.cpp
+    ${SMART_SRC}/pipeline/Blocks.cpp
+    ${SMART_SRC}/pipeline/WorkDir.cpp)
+target_link_libraries(smart PRIVATE
+    smart_core smart_pipeline smart_simgen smart_emit smart_hwcbmc_frontend)
+
 # WP3 acceptance instrument: what the pipeline's OWN trace loader sees in a
 # VCD. Builds without hw-cbmc, so it stays in `all`.
 add_executable(vcd_signals ${SMART_SRC}/simgen/vcd_signals.cpp)
@@ -101,3 +134,6 @@ target_link_libraries(hwcbmc_spike PRIVATE hwcbmc_frontend)
 
 enable_testing()
 add_test(NAME svmodule COMMAND test_svmodule)
+add_test(NAME options COMMAND test_options
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME emit COMMAND test_emit)

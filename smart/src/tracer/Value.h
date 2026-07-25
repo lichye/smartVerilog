@@ -13,6 +13,11 @@ class Value{
         static void setSeed(int);
 
         Value(VCDValue* value);
+        // `width` is the signal's declared width. VCD value changes may drop
+        // leading bits (IEEE 1364 §18.2.1), so a value has to be widened
+        // against the declaration or it ends up the wrong TYPE — an 8-bit
+        // signal whose trace says `b0` would otherwise become a 1-bit Bool.
+        Value(VCDValue* value, int width);
         Value();
         ~Value();
         Value* clone();

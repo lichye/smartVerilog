@@ -2,7 +2,12 @@
 #define SETUPS_H
 
 // Debugging Settings
-#define smartVerbose 1
+//
+// Verbosity is a RUNTIME setting now (`smart -v` / `-q`); it used to be the
+// compile-time constant `smartVerbose`, which meant the only way to quieten a
+// run was to rebuild. 0 keeps the tool quiet, 1 is the old default and what a
+// block writes into its own log.
+inline int smartVerbosity = 0;
 #define deleteTempFile true
 #define runRandomState true
 
@@ -13,7 +18,7 @@ inline void print(std::string message)
 
 inline void printDebug(std::string message, int level)
 {
-    if (smartVerbose >= level)
+    if (smartVerbosity >= level)
     {   
         for(int i=0;i<level;i++){
             std::cout<<"\t";

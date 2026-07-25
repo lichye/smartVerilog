@@ -17,6 +17,7 @@
 #include <util/xml.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <map>
@@ -308,15 +309,64 @@ void fillWidthsAndParams(const symbol_tablet& symbol_table,
 
 }  // namespace
 
+bool declaresModule(const std::string& path, const std::string& name)
+{
+    std::ifstream in(path);
+    if(!in)
+        return false;
+
+    const std::string keyword = "module";
+    std::string line;
+    while(std::getline(in, line))
+    {
+        for(std::size_t at = line.find(keyword); at != std::string::npos;
+            at = line.find(keyword, at + 1))
+        {
+            const bool startsWord =
+                at == 0 || !(std::isalnum((unsigned char)line[at - 1]) ||
+                             line[at - 1] == '_');
+            if(!startsWord)
+                continue;
+
+            std::size_t after = at + keyword.size();
+            if(after >= line.size() || !std::isspace((unsigned char)line[after]))
+                continue;
+            while(after < line.size() && std::isspace((unsigned char)line[after]))
+                ++after;
+
+            const std::size_t nameStart = after;
+            while(after < line.size() &&
+                  (std::isalnum((unsigned char)line[after]) || line[after] == '_'))
+                ++after;
+            if(after - nameStart == name.size() &&
+               line.compare(nameStart, after - nameStart, name) == 0)
+                return true;
+        }
+    }
+    return false;
+}
+
+namespace {
+
 // Design files to hand to the frontend: the main one, anything the caller
 // named, and — unless disabled — its sibling .sv/.v files, which is where
 // multi-file designs like the i2c cores keep their submodules.
 std::vector<std::string> designFiles(const std::string& path,
+                                     const std::string& top,
                                      const HwcbmcOptions& options)
 {
+    namespace fs = std::filesystem;
+
     std::vector<std::string> files{path};
+    // Compare by identity, not by spelling: "c17.sv" and "./c17.sv" are the
+    // same file, and listing it twice makes hw-cbmc see two modules of that
+    // name — it then elaborates neither, and every width goes unresolved.
     auto already_listed = [&files](const std::string& candidate) {
-        return std::find(files.begin(), files.end(), candidate) != files.end();
+        std::error_code error;
+        for(const auto& listed : files)
+            if(fs::equivalent(listed, candidate, error))
+                return true;
+        return false;
     };
 
     for(const auto& extra : options.extraFiles)
@@ -325,11 +375,11 @@ std::vector<std::string> designFiles(const std::string& path,
 
     if(options.autoDiscoverSiblings)
     {
-        const auto parent = std::filesystem::path(path).parent_path();
+        const auto parent = fs::path(path).parent_path();
         std::vector<std::string> siblings;
         std::error_code error;
-        for(const auto& entry : std::filesystem::directory_iterator(
-                parent.empty() ? std::filesystem::path(".") : parent, error))
+        for(const auto& entry :
+            fs::directory_iterator(parent.empty() ? fs::path(".") : parent, error))
         {
             if(!entry.is_regular_file())
                 continue;
@@ -337,8 +387,14 @@ std::vector<std::string> designFiles(const std::string& path,
             if(extension != ".sv" && extension != ".v")
                 continue;
             const auto candidate = entry.path().string();
-            if(!already_listed(candidate))
-                siblings.push_back(candidate);
+            if(already_listed(candidate))
+                continue;
+            // Never pull in a file that redeclares the top module — `smart`
+            // writes <top>_assertion.sv next to its input, and a second run in
+            // the same directory must not swallow its own previous output.
+            if(!top.empty() && declaresModule(candidate, top))
+                continue;
+            siblings.push_back(candidate);
         }
         // directory_iterator order is unspecified; keep runs reproducible.
         std::sort(siblings.begin(), siblings.end());
@@ -347,6 +403,8 @@ std::vector<std::string> designFiles(const std::string& path,
 
     return files;
 }
+
+}  // namespace
 
 ModuleInfo parseModuleFile(const std::string& path, const std::string& top,
                            HwcbmcOptions& options)
@@ -375,7 +433,7 @@ ModuleInfo parseModuleFile(const std::string& path, const std::string& top,
     // typecheck() runs.
     const verilog_module_sourcet* module = nullptr;
 
-    for(const auto& file : designFiles(path, options))
+    for(const auto& file : designFiles(path, top, options))
     {
         std::ifstream in(file);
         if(!in)

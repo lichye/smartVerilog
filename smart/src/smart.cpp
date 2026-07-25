@@ -21,14 +21,12 @@ namespace fs = std::filesystem;
 #include <unistd.h>     
 #include <sys/file.h>  
 #include <sys/types.h>
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include "Options.h"
 
 //global variables
 int latency = 0;
 std::string sim_path    = "runtime/sim_results";
 std::string smt_path    = "runtime/smt_results";
-std::string config_path = "User/config.ini";
 std::string ebmcPath = "runtime/formal/formal.sv";
 std::string ebmcReachable = "runtime/formal/reachable.sv";
 std::string moduleName = "";
@@ -57,9 +55,17 @@ bool append_with_lock_posix(const std::string&, const std::string&);
 SygusFunction* parseSygusFunction(const std::string&,SyGuSGenerater*,bool);
 State* createNegativeState();
 
-int main(int argc, char* argv[]){
+// One synthesis block, start to finish: load traces, narrow the signals to
+// this block's subset, synthesise a candidate with SyGuS, and refine it
+// against EBMC counterexamples until it verifies or the budget runs out.
+//
+// NOT REENTRANT: everything above is a global. The pipeline runs each block in
+// its own process (see BlockRunner.h for why), so this is called at most once
+// per process.
+namespace smart { namespace pipeline {
+int runSmartBlock(int argc, char* argv[]){
   if(argc!=8){
-    print("Usage: ./smart.out <currentDir> <topmodule> <result_file_dir> <core_id> <Latency> <Config_Path)\n");
+    print("Usage: smart.out <currentDir> <topmodule> <result_file> <variables_file> <core_id> <latency> <config>\n");
     return -1;
   }
   else{
@@ -72,23 +78,34 @@ int main(int argc, char* argv[]){
     configPath = argv[7];
   }
 
-  std::ifstream configFile(configPath);
-  if(!configFile.is_open()){
-    print("Error: Unable to open config file "+configPath);
+  // The same option table the pipeline uses, so a block understands both the
+  // flat schema and the legacy nested one.
+  smart::pipeline::Options options;
+  try{
+    options.mergeJsonFile(configPath);
+  }
+  catch(const std::exception& e){
+    print(std::string("Error: ")+e.what());
     return -1;
   }
-  json configJson;
-  configFile >> configJson;
-  bool RefinementSet = configJson["SMART_settings"]["Refinement"];
-  bool unboundCheckSet = configJson["SMART_settings"]["unbound_check"];
-  int boundedDepth = configJson["SMART_settings"]["bounded_depth"];
+  // A block's output goes to its own log file, so the old default verbosity
+  // is what makes that log worth reading.
+  smartVerbosity = 1 + static_cast<int>(options.getInt("verbosity"));
+
+  bool RefinementSet = options.getBool("refinement");
+  bool unboundCheckSet = options.getBool("unbound_check");
+  int boundedDepth = static_cast<int>(options.getInt("block_bound"));
+  int refinementDepth = static_cast<int>(options.getInt("refinement_depth"));
+  int negativeStateNumber = static_cast<int>(options.getInt("negative_state_number"));
+  unsigned seed = static_cast<unsigned>(options.getInt("seed"));
 
   bool isLTL = (latency > 0);
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
   smt_path = currentDir + "/runtime/smt_results/"+core_id;
   std::string sygusPath = "runtime/smt_results/sygus"+core_id+".sl";
   fs::create_directory(smt_path);
-  StateMaker::setSeed(42);
+  // Blocks of one run must not all draw the same negative states.
+  StateMaker::setSeed(seed + static_cast<unsigned>(std::stoul(core_id.empty() ? "0" : core_id)));
 
   module = new Module(moduleName);
   sygus = new SyGuSGenerater();
@@ -122,7 +139,7 @@ int main(int argc, char* argv[]){
   }
 
   //Add random negative states
-  for(int i=0;i<configJson["SMART_settings"]["Nagative_state_number"];i++){
+  for(int i=0;i<negativeStateNumber;i++){
     State* negativeState = createNegativeState();
     sygus->addConstraints(negativeState,false);
   }
@@ -146,7 +163,7 @@ int main(int argc, char* argv[]){
   int mostRun = signals->size();
 
   while(!verifiedResult&&RefinementSet){
-    if(timeOut++>mostRun||verifiedResult||timeOut>configJson["SMART_settings"]["Refinement_depth"]){
+    if(timeOut++>mostRun||verifiedResult||timeOut>refinementDepth){
       print("Time out\n");
       break;
     }
@@ -184,8 +201,9 @@ int main(int argc, char* argv[]){
   //append_with_lock_posix("log.txt","This loop's Result: "+std::to_string(verifiedResult)+"\n"+timer->printTime()+"\n");
   writeStringToFile("log.txt","This "+core_id+" 's Result: "+std::to_string(verifiedResult)+"\n"+timer->printTime()+"\n",std::ios::out|std::ios::app);
   fs::remove_all(smt_path);
-  return 0;
+  return verifiedResult ? 0 : 1;
 }
+}}  // namespace smart::pipeline
 
 std::string generateSMTResultPath(){
   auto now = std::chrono::system_clock::now();

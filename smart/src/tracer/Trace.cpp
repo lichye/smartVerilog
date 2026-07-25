@@ -164,7 +164,7 @@ void Trace::readVCDFile(VCDFile* vcdFile){
                     }
                 }
                 else{
-                    Value* value = new Value(val);
+                    Value* value = new Value(val, s.lindex - s.rindex + 1);
                     values->push_back(value);
                 }
             }
@@ -191,7 +191,7 @@ void Trace::readVCDFile(VCDFile* vcdFile){
                     }
                 }
                 else{
-                    Value* value = new Value(val);
+                    Value* value = new Value(val, s.lindex - s.rindex + 1);
                     state->addValue(s,value);
                 }
             }

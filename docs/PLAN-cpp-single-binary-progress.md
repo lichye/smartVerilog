@@ -26,10 +26,10 @@ Branch: `new-interface`.
 | WP2 | frontend adapter: ModuleInfo from hw-cbmc | DONE | coordinator (Claude/Opus) | WP2A |
 | WP2-regex | regex frontend (SVModule) — DEMOTED to oracle/fallback | DONE (198a0aa) | coordinator (Claude/Fable) | — |
 | WP3 | simgen (iverilog testbench) | DONE | coordinator (Claude/Opus) | WP2 |
-| WP4 | pipeline (orchestration, Options/Config §1.1) | NOT STARTED | — | WP2, WP3 |
+| WP4 | pipeline (orchestration, Options/Config §1.1) | DONE | coordinator (Claude/Opus) | WP2, WP3 |
 | WP5 | mus (MSA/MUS + minimizer, libcvc5) | NOT STARTED | — | WP1 |
 | WP6 | sygus via libcvc5 API | NOT STARTED | — | WP1 |
-| WP7 | emit + checker integration | NOT STARTED | — | WP4 |
+| WP7 | emit + checker integration | DONE (landed with WP4) | coordinator (Claude/Opus) | WP4 |
 | WP8 | cleanup, packaging, docs | NOT STARTED | — | all |
 
 **Architecture change 2026-07-25:** the Verilog frontend is now hw-cbmc's
@@ -167,16 +167,41 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   malformed, not the harness. If it ever matters, that is what the Verilator
   fallback is for.
 
-### WP4 — pipeline
-- [ ] `Options/Config` from single option table (§1.1), legacy adapter,
-      `--dump-config`, `effective-config.json`
-- [ ] workdir layout byte-compatible with `smart/runtime/` tree
-- [ ] `preAnalyzer.py` ported
-- [ ] `smart.cpp` main() refactored to `runSmartBlock()` library call
-- [ ] thread pool + core deadline + global timeout + MSA/Random block loop
-- [ ] progress output + per-block logs + fail-fast workdir retention
-- [ ] Acceptance: tiny_and e2e; c17 assertion-set parity vs legacy pipeline
-- Evidence:
+### WP4 — pipeline — DONE
+- [x] `Options` from a single option table (§1.1): 40 knobs, each with a flat
+      config key and (where it makes sense) a CLI flag, legacy adapter,
+      `--dump-config`, `workdir/effective-config.json`, config echoed into the
+      emitted file's header. 24 spec tests, incl. all 11 shipped configs
+- [x] workdir layout mirrors the `smart/runtime/` tree (`WorkDir`)
+- [x] `preAnalyzer.py` ported (`Blocks.cpp`) — see the deviation note below on
+      what "candidate variable" now means
+- [x] `smart.cpp` main() is now `runSmartBlock()`; `smart.out` is a thin
+      wrapper around it, and the pipeline re-execs ITSELF (`smart --block ...`)
+      so there is still one binary to ship
+- [x] worker pool + per-block deadline + global timeout + block rounds
+- [x] progress output + per-block logs + workdir retention on failure
+- [x] Acceptance: end-to-end on five designs, every emitted file re-proved by
+      an independent EBMC run
+- Evidence (all with `--jobs 16 --core-timeout 60`, verified afterwards with
+  `ebmc <top>_assertion.sv --bound 10 --top <top>`):
+
+  | design | verified assertions | time | independent EBMC |
+  |---|---|---|---|
+  | tiny_and | 3 | 0s | PASS |
+  | c17 | 36 | 0s | PASS |
+  | s27 | 29 | 0s | PASS |
+  | axis_fifo | 17 | 299s | PASS |
+  | nru_a | 13 | 58s | PASS |
+
+  - c17 vs the legacy pipeline: 36 assertions against 33, 25 in common. Not
+    the byte-identical set the plan asked for, and it cannot be: traces, port
+    order and the subset RNG all differ from the Python flow (WP2/WP3 notes).
+    Both sets are EBMC-proved, so the comparison that means something is
+    soundness plus yield, and both hold.
+  - legacy pipeline still runs: `SMART_BIN=... python3 run.py c17` -> exit 0,
+    30 verified assertions
+  - all suites green: test_svmodule, test_options, test_emit,
+    parity_frontend.py, compare_frontends.py
 
 ### WP5 — mus
 - [ ] fixtures captured from Docker runs into `smart/test/fixtures/`
@@ -192,12 +217,22 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
 - [ ] Acceptance: c17 + tiny_and assertion sets identical in both modes
 - Evidence:
 
-### WP7 — emit + checker
-- [ ] `AssertionWriter`: `<top>_assertion.sv` + assertions.txt/invariants.txt
-- [ ] checker stage on `VerilogChecker` (parallel, timeout, bound/k-induction)
-- [ ] EBMC command-builder unit test (gotcha 7)
-- [ ] Acceptance: emitted file passes ebmc; bogus assertion is filtered
+### WP7 — emit + checker — DONE (landed with WP4, which could not be
+### accepted without it)
+- [x] `AssertionWriter`: `<top>_assertion.sv` (with a header naming the exact
+      settings) + assertions.txt / invariants.txt in the workdir
+- [x] checker stage: every mined assertion re-proved against the ORIGINAL
+      design, in parallel, under `--check-timeout`, bounded or k-induction.
+      Implemented directly rather than through `VerilogChecker`, which is
+      built around a block's own narrowed view
+- [x] EBMC command-builder unit test (gotcha 7): `test_emit` asserts the
+      spaces around `-D FORMAL`, bound vs k-induction, extra files, `--top`
+- [x] Acceptance: emitted file passes ebmc; a bogus assertion is filtered
 - Evidence:
+  - `ebmc tiny_and_assertion.sv -D FORMAL --bound 10 --top tiny_and` -> exit 0
+  - the same file with `assert property (y == 1'b1)` injected -> exit 10, so
+    the gate drops it
+  - `test_emit` -> "all emit tests passed"
 
 ### WP8 — cleanup & packaging
 - [ ] remove Makefile build path, `--sygus-subprocess`, Python tool-flow files
@@ -332,3 +367,54 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   same-seed traces differ from the legacy pipeline's — as does the port order
   (WP2). Distribution and reproducibility are preserved; byte equality with
   the old traces is not achievable and is not the goal.
+- 2026-07-25 (WP4 DESIGN): blocks run as PROCESSES, not threads, and the plan
+  should be read that way. The VCD scanner is flex-generated without `%option
+  reentrant` and keeps file-scope state, `smart.cpp` keeps everything in
+  globals, and a block spends its time inside cvc5 and ebmc — a thread stuck
+  there cannot be cancelled, a process can. The `timeout 100 ./smart.out`
+  trick is still gone: the deadline is enforced in-process by BlockRunner,
+  which kills the block's whole process GROUP (the old one left cvc5 and ebmc
+  children running). There is still exactly one binary: the pipeline re-execs
+  itself as `smart --block ...`.
+- 2026-07-25 (WP4 DEVIATION): "candidate variables" are now the signals the
+  traces carry for the top module's scope, read through the pipeline's own
+  trace loader. preAnalyzer.py instead intersected two regex sweeps (one over
+  the VCD text, one over the module text) and then subtracted a hand-written
+  list of Verilog keywords. The results agree on every repo design — a signal
+  in the top scope is by construction declared in the module — and the blocks
+  discard any variable that is not a signal anyway.
+- 2026-07-25 (WP4): the number of blocks per round is floored at the machine's
+  CORE count, not at `--jobs`, matching preAnalyzer.py and the plan's formula.
+  `-j` should change how fast a run goes, not how much of the space it
+  searches. (With the floor tied to --jobs, `-j 16` on a 64-core box quietly
+  searched a quarter as much: 38 blocks instead of 86, and 20 assertions
+  instead of 36.)
+- 2026-07-25 (WP4 BUG, hw-cbmc): a design file listed twice under two
+  spellings ("c17.sv" and "./c17.sv") makes hw-cbmc see two modules of that
+  name and elaborate NEITHER, so every width silently went unresolved. The
+  file list is now deduplicated by `fs::equivalent`, not by string.
+- 2026-07-25 (WP4 BUG, self-inflicted): `smart` writes <top>_assertion.sv next
+  to its input, so a SECOND run in the same directory picked its own output up
+  as a sibling design file — same duplicate-module failure. Siblings that
+  redeclare the top module are now skipped (`declaresModule`).
+- 2026-07-25 (WP4 BUG, VCD — the expensive one): VCD value changes may drop
+  leading bits (IEEE 1364 §18.2.1), and Icarus Verilog does drop them; the
+  parser kept the literal bits, so an 8-bit signal whose trace said `b0`
+  became a 1-BIT value and was emitted into SyGuS as `false` instead of
+  `(_ bv0 8)`. cvc5 then failed to parse the problem and the whole block died.
+  Verilator writes full-width values, which is why this never showed up
+  before. Values are now left-extended to the declared width (with the leading
+  bit when it is x/z). Impact: nru_a went from 0 to 13 assertions, axis_fifo
+  from 3 to 17.
+- 2026-07-25 (WP4): `StateMaker::setSeed(42)` was hardcoded (gotcha 5) AND
+  identical in every block, so every block explored the same random negative
+  states. It is now `--seed` + the block's id. This does change legacy runs
+  slightly: `run.py c17` gives 30 assertions where it used to give 33 — within
+  the noise of a randomised search, and the blocks now cover more.
+- 2026-07-25 (WP4 GAP): `--msa` still needs the unsat-core port (WP5). The
+  pipeline says so and runs random blocks for that round rather than silently
+  doing something else. Everything else in the block loop is implemented.
+- 2026-07-25 (WP4): `smartVerbose` is no longer a compile-time constant
+  (gotcha: the only way to quieten a run used to be a rebuild). It is the
+  runtime `smartVerbosity`, driven by `-v` / `-q`; a block sets it to 1 so its
+  own log stays worth reading.

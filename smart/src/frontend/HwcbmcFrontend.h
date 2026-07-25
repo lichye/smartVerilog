@@ -56,6 +56,11 @@ ModuleInfo parseModuleFile(const std::string& path, const std::string& top,
 // Convenience overload for callers that do not need the diagnostics.
 ModuleInfo parseModuleFile(const std::string& path, const std::string& top);
 
+// Does `path` declare a module called `name`? A cheap textual scan, used to
+// keep a file that redeclares the top module — such as this tool's own
+// previous output — out of a design's file list.
+bool declaresModule(const std::string& path, const std::string& name);
+
 }  // namespace frontend
 }  // namespace smart
 

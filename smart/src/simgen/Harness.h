@@ -32,6 +32,7 @@ struct HarnessOptions {
     int cycles = 10;          // trace depth (--cycles)
     int traces = 3;           // number of VCDs (--traces)
     unsigned seed = 42;       // trace i uses seed + i (--seed)
+    int firstIndex = 0;       // VCDs are named sim<firstIndex + i>.vcd
 
     // Overrides keyed by signal name (config `inputs` section).
     std::map<std::string, SignalSpec> inputs;

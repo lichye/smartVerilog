@@ -16,7 +16,9 @@ Value::Value(){
     value.bitValue = BitType::X;
 }
 
-Value::Value(VCDValue* vcdValue){
+Value::Value(VCDValue* vcdValue) : Value(vcdValue, 0) {}
+
+Value::Value(VCDValue* vcdValue, int declaredWidth){
     
     if(vcdValue -> get_type() == VCDValueType::VCD_SCALAR){
         type = SignalType::BOOLEAN;
@@ -64,6 +66,20 @@ Value::Value(VCDValue* vcdValue){
                     std::cout<<"Unknown bit value"<<std::endl;
                     exit(1);
             }
+        }
+
+        // Left-extend to the declared width (IEEE 1364 §18.2.1): with zeros,
+        // or with the leading bit when that is x or z.
+        if(declaredWidth > 1 && value.bitVector -> size() < (size_t) declaredWidth){
+            BitType pad = BitType::ZERO;
+            if(!value.bitVector -> empty()){
+                BitType leading = value.bitVector -> front();
+                if(leading == BitType::X || leading == BitType::Z)
+                    pad = leading;
+            }
+            value.bitVector -> insert(value.bitVector -> begin(),
+                                      declaredWidth - value.bitVector -> size(),
+                                      pad);
         }
     }
     

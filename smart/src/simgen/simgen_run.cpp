@@ -82,7 +82,9 @@ int main(int argc, char** argv) {
             if (!entry.is_regular_file()) continue;
             const auto extension = entry.path().extension().string();
             if (extension != ".sv" && extension != ".v") continue;
-            if (entry.path() == fs::path(design)) continue;
+            std::error_code same;
+            if (fs::equivalent(entry.path(), fs::path(design), same))
+                continue;
             designFiles.push_back(entry.path().string());
         }
         std::sort(designFiles.begin() + 1, designFiles.end());
