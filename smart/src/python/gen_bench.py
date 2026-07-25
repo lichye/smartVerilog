@@ -120,8 +120,8 @@ def _header_and_body(module_text):
 
 DIR_RE = re.compile(
     r"\b(input|output|inout)\b"
-    r"(?:\s+(?:wire|reg|logic|bit|var))*"
-    r"(?:\s+signed|\s+unsigned)?"
+    r"(?:\s+(?:wire|reg|logic|bit|var)\b)*"  # \b: don't eat the "reg" prefix
+    r"(?:\s+signed\b|\s+unsigned\b)?"        # of names like regfile_we_o
     r"\s*((?:\[[^\]]+\]\s*)*)"
     r"\s*(\w+(?:\s*,\s*(?!input\b|output\b|inout\b)\w+)*)")
 
@@ -150,7 +150,7 @@ def _parse_port_decls(text, params):
 
 FREE_REG_RE = re.compile(
     r"\(\*\s*(anyseq|anyconst)\s*\*\)\s*"
-    r"(?:reg|logic|wire|bit)\s*"
+    r"(?:reg|logic|wire|bit)\b\s*"
     r"(?:signed\s+|unsigned\s+)?"
     r"((?:\[[^\]]+\]\s*)?)"
     r"(\w+)")
