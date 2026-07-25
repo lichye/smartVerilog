@@ -22,7 +22,7 @@ Branch: `new-interface`.
 | WP | Scope | Status | Agent | Depends on |
 |----|-------|--------|-------|------------|
 | WP1 | CMake build | NOT STARTED | — | — |
-| WP2 | frontend (SV module model) | NOT STARTED | — | — |
+| WP2 | frontend (SV module model) | DONE (198a0aa) | coordinator session (Claude/Fable) | — |
 | WP3 | simgen (Verilator harness) | NOT STARTED | — | — |
 | WP4 | pipeline (orchestration, Options/Config §1.1) | NOT STARTED | — | WP2, WP3 |
 | WP5 | mus (MSA/MUS + minimizer, libcvc5) | NOT STARTED | — | WP1 |
@@ -49,12 +49,18 @@ Branch: `new-interface`.
 - Evidence:
 
 ### WP2 — frontend
-- [ ] `SVModule.{h,cpp}`: parse / stripAssumes / injectAssumes / guesses
-- [ ] `--dump-frontend` debug flag on the new binary target
-- [ ] `tools/parity_frontend.py` written
-- [ ] Acceptance: JSON parity vs `gen_bench.py` on all 54+ designs, zero diff
-- [ ] ctest port of the 6 `test_gen_bench.py` cases
-- Evidence:
+- [x] `SVModule.{h,cpp}`: parse / stripAssumes / injectAssumes / guesses — 198a0aa
+- [x] debug CLI: standalone `frontend_dump` (JSON + --strip) — 198a0aa;
+      WP4 must fold it into the smart binary as `--dump-frontend`
+- [x] `tools/parity_frontend.py` written — 198a0aa
+- [x] Acceptance: JSON parity vs `gen_bench.py`, 56 designs zero diff,
+      plus 3 assume-strip byte-parity checks — 198a0aa
+- [x] C++ port of the 6 `test_gen_bench.py` cases (`test_svmodule.cpp`;
+      ctest wiring pending WP1's CMake) — 198a0aa
+- Evidence: `python3 tools/parity_frontend.py` -> "parity OK: 56 designs
+  (JSON), 3 assume-strip checks"; both test suites all-pass. Build line:
+  `g++ -std=c++17 -O1 smart/src/frontend/SVModule.cpp
+  smart/src/frontend/{frontend_dump,test_svmodule}.cpp`
 
 ### WP3 — simgen
 - [ ] `Harness.{h,cpp}`: sim_main.cpp generation (stimulus semantics per plan)
@@ -111,3 +117,12 @@ Branch: `new-interface`.
 (append-only; newest last)
 
 - 2026-07-25: plan + progress tracker created. Nothing in flight yet.
+- 2026-07-25 (WP2): libstdc++ std::regex SIGSEGVs (stack overflow from
+  backtracking) on large ISCAS netlists (c2670: hundreds of 1-bit ports).
+  Frontend scanning is hand-rolled; rule for all later WPs: **no std::regex
+  over whole files/modules**, only over short strings.
+- 2026-07-25 (WP2): found a spec bug via the parity harness — gen_bench.py
+  DIR_RE/FREE_REG_RE type keywords lacked `\b`, so `output logic
+  regfile_we_o` parsed as name `file_we_o`. Fixed in gen_bench.py first
+  (lockstep rule), C++ matches. Any WP3 agent regenerating sim.py files
+  from an older gen_bench.py should rebase past 198a0aa.
