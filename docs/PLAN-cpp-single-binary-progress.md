@@ -298,9 +298,32 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   those files belong to the frozen artifact.
 - Evidence: `ctest` 4/4; `parity_frontend.py` and `compare_frontends.py`
   green; `run.py tiny_and` and `run.py c17 --config Config/block_msa.json`
-  both run end-to-end through the binary; `tools/release.sh` produces a
-  13MB tarball whose binary needs only libstdc++/libm/libc. The full
-  smoke matrix is filled in by the next commit.
+  both run end-to-end through the binary; `tools/release.sh` produces a 13MB
+  tarball whose binary needs only libstdc++/libm/libc, and which was extracted
+  into a clean directory with ONLY its own `bin/` plus iverilog on PATH and
+  mined tiny_and's 3 assertions there — no build tree, no cvc5 install, no
+  Python.
+
+  `tools/smoke.sh 16` (every output re-proved by a separate `ebmc` run the
+  tool did not perform):
+
+  | design | plain | msa | time (plain/msa) | ebmc |
+  |---|---|---|---|---|
+  | tiny_and | 3 | 3 | 1s / 0s | PASS |
+  | c17 | 50 | 38 | 1s / 1s | PASS |
+  | s27 | 36 | 28 | 1s / 2s | PASS |
+  | arb2 | 16 | 10 | 1s / 1s | PASS |
+  | axis_fifo | 17 | 17 | 484s / 446s | PASS |
+  | nru_a | 16 | 12 | 484s / 721s | PASS |
+
+  12/12 runs clean. Worth reading carefully: `--msa` ALONE yields fewer
+  assertions than plain mode on four of the six designs. That is inherited
+  behaviour, not a regression — blockified mode skips the wide `Init_*` blocks
+  of round one (preAnalyzer.py only wrote those when not blockified), so it
+  starts from a narrower round and then converges on the MSA pool. Mixing the
+  strategies is what actually wins: s27 with `--msa --random` finds 83, against
+  36 plain and 28 with `--msa` alone. The plan's "plain vs --msa" framing
+  invites the wrong comparison.
 
 ## Deviations & discoveries log
 
