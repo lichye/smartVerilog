@@ -117,6 +117,8 @@ int main(int argc, char* argv[]) {
         if (summary.workDirKept)
             std::cout << "workdir kept at " << summary.workDir << "\n";
     } else if (!summary.workDir.empty() && summary.workDirKept) {
+        // The only place this is printed: the stages report what went wrong,
+        // not where the evidence is.
         std::cerr << "smart: workdir kept at " << summary.workDir << "\n";
     }
     return static_cast<int>(code);

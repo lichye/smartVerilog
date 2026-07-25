@@ -12,6 +12,7 @@
 
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -60,10 +61,20 @@ struct SimResult {
     std::string command;                // last command run, for diagnostics
 };
 
+// Thrown when a tool the harness needs is not on PATH — distinct from a
+// simulation that ran and failed, because the two want different answers from
+// the user (install something vs. look at your design).
+struct MissingToolError : std::runtime_error {
+    explicit MissingToolError(const std::string& tool)
+        : std::runtime_error(tool + " is not on PATH"), tool(tool) {}
+    std::string tool;
+};
+
 // Write the testbench next to `designFiles`, compile with iverilog, and run
 // `options.traces` simulations into `<outputDir>/sim<i>.vcd`.
 // `workDir` holds the generated tb.sv and the compiled simulation.
-// Throws std::runtime_error with the tool output on failure.
+// Throws MissingToolError when a tool is absent, std::runtime_error with the
+// tool output when one runs and fails.
 SimResult runSimulations(const frontend::ModuleInfo& info,
                          const std::vector<std::string>& designFiles,
                          const std::string& workDir,

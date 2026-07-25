@@ -224,11 +224,21 @@ ExitCode Pipeline::run(RunSummary& summary) {
             workdirDesign.push_back(work.verilogDir() + "/" +
                                     fs::path(file).filename().string());
 
-        simgen::runSimulations(info, workdirDesign, work.simSrcDir(),
+        // The workdir root, not sim_src: runSimulations makes its own
+        // sim_src/ underneath for the assume-stripped copies.
+        simgen::runSimulations(info, workdirDesign, work.root(),
                                work.simResultsDir(), harness);
+    } catch (const simgen::MissingToolError& e) {
+        std::cerr << "smart: " << e.what() << "\n"
+                  << "smart: simulation needs iverilog and vvp. Either put "
+                     "them on PATH,\n"
+                     "       e.g. from otherTools/oss-cad-suite/bin, or run "
+                     "./install.sh.\n"
+                     "       `smart --check-env` reports what is missing.\n";
+        summary.workDirKept = true;
+        return ExitCode::EnvironmentError;
     } catch (const std::exception& e) {
-        std::cerr << "smart: simulation failed: " << e.what() << "\n"
-                  << "smart: workdir kept at " << work.root() << "\n";
+        std::cerr << "smart: simulation failed: " << e.what() << "\n";
         summary.workDirKept = true;
         return ExitCode::Failure;
     }

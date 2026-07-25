@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -95,6 +96,19 @@ std::string run(const std::string& command, int& exitCode) {
 }
 
 std::string quote(const std::string& s) { return "'" + s + "'"; }
+
+bool onPath(const std::string& tool) {
+    if (tool.find('/') != std::string::npos) return fs::exists(tool);
+    const char* path = std::getenv("PATH");
+    if (path == nullptr) return false;
+    std::istringstream entries(path);
+    std::string dir;
+    while (std::getline(entries, dir, ':')) {
+        std::error_code error;
+        if (!dir.empty() && fs::exists(fs::path(dir) / tool, error)) return true;
+    }
+    return false;
+}
 
 }  // namespace
 
@@ -193,6 +207,11 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
                          const HarnessOptions& options) {
     if (designFiles.empty())
         throw std::runtime_error("no design files to simulate");
+
+    // Check before writing anything: "iverilog: command not found" buried in a
+    // compiler log is a worse answer than saying which tool is missing.
+    for (const auto& tool : {options.iverilog, options.vvp})
+        if (!onPath(tool)) throw MissingToolError(tool);
 
     fs::create_directories(workDir);
     fs::create_directories(outputDir);
