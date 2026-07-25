@@ -40,15 +40,15 @@ need curl "curl (cvc5 and CBMC download dependencies)"
 need cmake "cmake >= 3.16 — 'python3 -m pip install --user cmake' works"
 need python3 "python3 (cvc5's build scripts)"
 
-# cvc5's build creates a virtual environment for its own tooling, and on
-# Debian/Ubuntu `python3` alone does not provide that — the failure surfaces
-# deep inside cvc5's cmake as "Could not create Python virtual environment".
+# cvc5's code generators need these two modules. We install them for the user
+# and build cvc5 with --no-pyvenv, so the python3-venv package (a separate
+# install on Debian/Ubuntu) is NOT required — see tools/build-cvc5.sh.
 if command -v python3 >/dev/null 2>&1; then
-    if python3 -m venv --help >/dev/null 2>&1; then
-        echo "[ok]      python3-venv"
+    if python3 -m pip --version >/dev/null 2>&1; then
+        echo "[ok]      python3-pip"
     else
-        echo "[MISSING] python3-venv — cvc5 cannot build without it"
-        echo "          Debian/Ubuntu: apt-get install python3-venv"
+        echo "[MISSING] python3-pip — needed to fetch cvc5's build-time modules"
+        echo "          Debian/Ubuntu: apt-get install python3-pip"
         missing=1
     fi
 fi

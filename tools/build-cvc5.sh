@@ -26,6 +26,9 @@ if [ ! -d "$src" ]; then
     git clone --depth 1 --branch "cvc5-$version" https://github.com/cvc5/cvc5.git "$src"
 fi
 
+# cvc5's build runs Python code generators that need these. Installing them
+# for the user lets us pass --no-python-venv below, which is the difference
+# between needing the python3-venv package and not.
 python3 -m pip install --user --quiet pyparsing tomli || true
 
 # libpoly, one of cvc5's downloaded dependencies, still declares
@@ -33,8 +36,11 @@ python3 -m pip install --user --quiet pyparsing tomli || true
 export CMAKE_POLICY_VERSION_MINIMUM=3.5
 
 cd "$src"
+# --no-pyvenv: cvc5 otherwise builds a virtual environment for its own
+# code generators, which drags in the python3-venv package (a separate install
+# on Debian/Ubuntu) purely as a build-time dependency of a dependency.
 ./configure.sh production --auto-download --static --no-static-binary \
-    --prefix="$prefix"
+    --no-pyvenv --prefix="$prefix"
 make -C build -j"$jobs" install
 
 # The static build links these in; the install does not copy them.
