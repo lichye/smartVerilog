@@ -59,6 +59,34 @@ Exit codes: 0 = success (assertions emitted, possibly zero — print count),
 3 = pipeline failure (simulation/synthesis/check crashed). Never exit 0 on
 failure (old run.py bug class).
 
+### 1.1 Configuration model: config file AND command line, fully equivalent
+
+Experiments must be drivable both ways — this is a hard requirement:
+
+- **Every experiment knob has both a config key and a CLI flag.** The flag
+  table above IS the schema: each option maps 1:1 to a key in the new flat
+  JSON config (`cycles`, `traces`, `seed`, `bound`, `jobs`, `core_timeout`,
+  `blockified`, `msa`, `random`, `k_size`, `block_size`, `msa_stable_depth`,
+  `refinement_depth`, `sygus_timeout_ms`, `check_timeout`, ... — WP4 keeps
+  the definitive list in one table in `Options.h` so config and CLI can't
+  drift apart; generate both parsers from that single table).
+- **Precedence:** CLI flag > `--config` file > built-in default. Repeatable
+  runs of a paper experiment use only a config file
+  (`smart c17.sv --config Config/block_msa.json`); quick interactive tweaks
+  use flags on top of it (`--jobs 4` overriding the config's 16).
+- **Legacy configs keep working:** the adapter in WP4 maps the existing
+  nested `Config/*.json` schema (Workflow/Blockified_settings/SMART_settings/
+  Checker_settings, incl. misspelled keys) onto the flat schema, so all 11
+  shipped configs and the artifact scripts remain valid experiment
+  definitions. Keys that only concern the retired Python layer
+  (`Evaluation`, `Evaluation_settings`) are accepted and ignored with a
+  notice (mutation evaluation is external Python now).
+- **Reproducibility aid:** `--dump-config` prints the fully resolved
+  effective configuration as new-schema JSON (after file+flags merge) and
+  exits; the same JSON is always written to `workdir/effective-config.json`
+  and echoed into the result header of `<top>_assertion.sv` as a comment
+  block, so any published result names its exact experiment settings.
+
 Multi-file designs: extra `.sv` dependency files may sit next to the input;
 they are compiled into the simulation and formal runs but only the top module
 is mined. `smart a.sv b.sv --top a` should work (first file or --top decides).
@@ -186,7 +214,9 @@ last. Run everything inside the Docker image (`Docker/Dockerfile` /
 - **Deliverable:** `smart/src/pipeline/Pipeline.{h,cpp}`, `Options.{h,cpp}`
   (CLI parsing — use a small vendored arg library or hand-rolled; no boost),
   `Config.{h,cpp}` (new flat JSON + legacy schema adapter incl. misspelled
-  keys), `WorkDir.{h,cpp}`.
+  keys), `WorkDir.{h,cpp}`. Options/Config implement §1.1: one option table
+  drives both parsers, precedence CLI > config > defaults, `--dump-config`,
+  `workdir/effective-config.json`, config echo in the output header.
 - Stages: frontend -> workdir setup (mirror setup.py's tree) -> simgen ->
   preAnalysis (port `preAnalyzer.py`: initial variable subsets into
   `runtime/variables/`) -> synthesis loop -> checker -> emit.
