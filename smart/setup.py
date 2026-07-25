@@ -6,11 +6,24 @@ import shutil
 import time
 import json
 
-def copy_sv_files(original_path, target_path):
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "src", "python"))
+from gen_bench import strip_assumes
+
+def copy_sv_files(original_path, target_path, strip=False):
     for root, dirs, files in os.walk(original_path):
         for file in files:
             if file.endswith(".sv") or file.endswith(".svh") or file.endswith(".vh"):
-                shutil.copy(os.path.join(root, file), target_path)
+                src = os.path.join(root, file)
+                if strip:
+                    # simulation copies must not contain formal-only assume
+                    # statements: stimulus explores freely, assumes only
+                    # constrain the formal side
+                    with open(src) as f:
+                        content = f.read()
+                    with open(os.path.join(target_path, file), "w") as f:
+                        f.write(strip_assumes(content))
+                else:
+                    shutil.copy(src, target_path)
             elif file.endswith(".v"):
                 print("Please convert the verilog files to system verilog")
                 exit(1)
@@ -196,7 +209,7 @@ if __name__ == "__main__":
     print("Finish Initial Setup")
     
     #before the simulation copy all the files from cocotb to runtime/formal
-    copy_sv_files(mverilog_path, cocotb_path)
+    copy_sv_files(mverilog_path, cocotb_path, strip=True)
     copy_sv_files(mverilog_path, formal_path)
 
     #Start the simulation
