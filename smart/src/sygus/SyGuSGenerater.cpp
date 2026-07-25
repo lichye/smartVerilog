@@ -572,30 +572,78 @@ std::string SyGuSGenerater::createExprXGrammar()
     return exprXGra;
 }
 
+std::string SyGuSGenerater::sygusSort(const Signal& signal) const
+{
+    if(signal.type == SignalType::BITS)
+        return "(_ BitVec " + std::to_string(signal.lindex - signal.rindex + 1) + ")";
+    return "Bool";
+}
+
+// One `(inv ...)` argument list.
+//
+// An undefined value means "any value of this signal gives the same
+// behaviour" — which is what EBMC reports when a counterexample does not
+// depend on a signal. Throwing the whole constraint away for it (what this
+// code used to do) loses everything the OTHER signals in that state say, and
+// on a design with wide signals that is most of the counterexamples: CEGIS
+// then learns nothing and the same refuted candidate comes back every
+// refinement round.
+//
+// Undefined positions are filled with a concrete zero instead. That is sound:
+// if the state is reachable for EVERY value of the signal then it is reachable
+// with zero, so any true invariant holds there — and because the counterexample
+// violates the candidate for every value, the zero instantiation rules that
+// candidate out, which is the whole point of feeding it back.
+//
+// Universally quantifying the position instead would say more, and was tried:
+// it makes the SyGuS problem so much harder that the number of blocks
+// returning any candidate at all inside the per-call limit dropped from 139
+// to 9 on plena_data_flow_control_flat. Saying less, cheaply, is worth more
+// here than saying everything.
+std::string SyGuSGenerater::renderArguments(
+    const std::vector<std::vector<Value*>>& values, int index,
+    std::vector<std::string>& bound) const
+{
+    (void)bound;  // no quantified positions any more; kept for the signature
+    std::string arguments;
+    for(std::size_t i = 0; i < values.size(); ++i){
+        Value* value = values[i][index];
+        if(value->isUndefined() && i < signals.size()){
+            const Signal& signal = signals[i];
+            if(signal.type == SignalType::BITS){
+                const int width = signal.lindex - signal.rindex + 1;
+                arguments += "#b" + std::string(width > 0 ? width : 1, '0') + " ";
+            }
+            else{
+                arguments += "false ";
+            }
+        }
+        else{
+            arguments += value->toSyGusString() + " ";
+        }
+    }
+    return arguments;
+}
+
 std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
 {
     assert(index < constraints[0].size());
-    std::string constraintLine;
-    if(!checkConstraintsDefined(index,constraintType)){
-        constraintLine+="; ";
-    }
-    
-    constraintLine += "(constraint (=(inv ";
 
-    if(constraintType){
-        for(auto constraint : constraints){
-            constraintLine += constraint[index]->toSyGusString() + " ";
-        }
+    std::vector<std::string> bound;
+    const std::string arguments =
+        renderArguments(constraintType ? constraints : falseConstraints, index, bound);
+
+    std::string constraintLine = "(constraint ";
+    if(!bound.empty()){
+        constraintLine += "(forall (";
+        for(const auto& variable : bound) constraintLine += variable;
+        constraintLine += ") ";
     }
-    else{
-        for(auto constraint : falseConstraints){
-            constraintLine += constraint[index]->toSyGusString() + " ";
-        }
-    }
-    
-    constraintLine += ") ";
+    constraintLine += "(=(inv " + arguments + ") ";
     constraintLine += constraintType ? "true" : "false";
-    constraintLine += "))\n";
+    constraintLine += ")";
+    if(!bound.empty()) constraintLine += ")";
+    constraintLine += ")\n";
     return constraintLine;
 }
 

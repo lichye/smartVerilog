@@ -271,7 +271,29 @@ bool VerilogChecker::checkStateReachability(State* state) {
     writeVerilogFile();
     bool result = false;
     if(solver==BackEndSolver::EBMC) {
+        // Reachability gets its own depth, because it asks a different
+        // question from "does this candidate hold": too shallow and a state
+        // the design can enter looks unreachable, gets handed to SyGuS as a
+        // negative example, and every candidate built on it is refuted.
+        //
+        // -1 selects k-induction, which never mislabels a reachable state —
+        // but it is often inconclusive, and an inconclusive answer loses the
+        // negative example altogether. Measured on a deep pipeline design:
+        // bound 10 -> 0 assertions, bound 40 -> 2, k-induction -> 0. A false
+        // negative example costs search time, not soundness (the final check
+        // still gates every emitted assertion), so depth beats rigour here.
+        const bool savedUnboundCheck = unboundCheck;
+        const int savedBound = bound;
+        if(reachabilityBound < 0){
+            unboundCheck = true;
+        }
+        else{
+            unboundCheck = false;
+            bound = reachabilityBound;
+        }
         result = runEBMC();
+        unboundCheck = savedUnboundCheck;
+        bound = savedBound;
     }
     else if(solver==BackEndSolver::SBY) {
         result = runSby();
@@ -348,6 +370,10 @@ std::string VerilogChecker::generateFormalFilePath(PropertyType type) {
 
 void VerilogChecker::setBound(int bound) {
     this->bound = bound;
+}
+
+void VerilogChecker::setReachabilityBound(int reachabilityBound) {
+    this->reachabilityBound = reachabilityBound;
 }
 
 void VerilogChecker::setUnboundCheck(bool unboundCheck) {

@@ -58,6 +58,14 @@ std::vector<OptionSpec> buildTable() {
          "EBMC bound for the final check"},
         {"block_bound", "", 0, T::Int, 10LL, "SMART_settings.bounded_depth", "N",
          "EBMC bound used inside synthesis blocks"},
+        // Deciding whether a random state is REACHABLE is a different question
+        // from checking a candidate, and wants a different depth: too shallow
+        // and unreachable-looking states that the design can actually enter get
+        // fed to SyGuS as negative examples, so every candidate it produces is
+        // refuted. -1 means k-induction (sound, but often inconclusive — and an
+        // inconclusive answer costs the negative example entirely).
+        {"reachability_bound", "reachability-bound", 0, T::Int, 40LL, "", "N",
+         "EBMC bound for the reachability check; -1 uses k-induction"},
         {"unbounded", "unbounded", 0, T::Bool, false, "", "",
          "use --k-induction instead of a bound"},
         {"check_unbounded", "", 0, T::Bool, false,

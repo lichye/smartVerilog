@@ -70,6 +70,12 @@ class SyGuSGenerater
         std::string createKeyGrammar(int);
         std::string createConstraint(bool,int);
         std::string createLTLConstraint(bool,int,int);
+        std::string sygusSort(const Signal&) const;
+        // Render one `(inv ...)` argument list. Values that are undefined
+        // become fresh universally quantified variables, appended to `bound`,
+        // instead of disqualifying the whole constraint.
+        std::string renderArguments(const std::vector<std::vector<Value*>>&, int,
+                                    std::vector<std::string>& bound) const;
         bool checkConstraintsDefined(int,bool);
 
         

@@ -119,6 +119,8 @@ int runSmartBlock(int argc, char* argv[]){
   checker->setTopModule(moduleName);
   checker->setTimer(timer);
   checker->setBound(boundedDepth);
+  checker->setReachabilityBound(
+      static_cast<int>(options.getInt("reachability_bound")));
   checker->setUnboundCheck(unboundCheckSet);
   
   //Read from trace & Generate Signals

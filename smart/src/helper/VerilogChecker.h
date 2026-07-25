@@ -52,6 +52,8 @@ class VerilogChecker {
         bool checkStateReachability(State*);
         bool checkExprSafety(SygusFunction*,std::string);
         void setBound(int);
+        // Bound for checkStateReachability only; -1 selects k-induction.
+        void setReachabilityBound(int);
         void setUnboundCheck(bool);
         void setTopModule(std::string);
         void setModuleTime(std::string);
@@ -63,6 +65,7 @@ class VerilogChecker {
         Timer* timer;
         bool unboundCheck;
         int bound;
+        int reachabilityBound = 40;
         //BackEndSolver
         BackEndSolver solver;
         
