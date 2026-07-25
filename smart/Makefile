@@ -18,6 +18,7 @@ INCLUDES := \
 	-I ./src/sygus \
 	-I $(BUILD_DIR) \
 	-I $(SRC_DIR) \
+	-I ./third_party \
 
 CXXFLAGS        += $(INCLUDES) -std=c++17 -g
 LDFLAGS         = -L./lib

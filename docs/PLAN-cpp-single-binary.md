@@ -28,9 +28,10 @@ mines candidate SVA via SyGuS (cvc5), verifies them with EBMC, and emits
   built as part of our build, and its Verilog frontend produces the module
   model we consume. Rationale: EBMC is already our verification backend, so
   using the same toolchain for parsing gives one dependency, consistent
-  semantics (it natively understands `assume` / `(* anyseq *)` /
-  `(* anyconst *)`), and — critically — **upstream maintains the frontend
-  for us**. See WP2A/WP2.
+  semantics, and — critically — **upstream maintains the frontend for us**.
+  See WP2A/WP2. (Correction from the WP2A spike: hw-cbmc understands `assume`
+  natively, but `(* anyseq *)` / `(* anyconst *)` needed a one-line upstream
+  grammar fix, carried as a patch — see WP2A "Recorded decisions".)
 - Verilator and EBMC remain external tools; Verilator via subprocess for
   simulation. EBMC is now also built from the submodule (single source of
   truth for the CBMC toolchain) but still invoked as a subprocess for
@@ -39,6 +40,15 @@ mines candidate SVA via SyGuS (cvc5), verifies them with EBMC, and emits
   `cvc5.pythonic`, so this unifies the solver story; no z3 in the binary).
 - Build system: **CMake**.
 - cocotb / venv / all Python leaves the runtime path of the tool.
+- **Build and test on the host, not in Docker (2026-07-25).** Every WP's
+  acceptance must be reproducible with a plain local build. Third-party
+  dependencies installed on the host (verilator, libcvc5, ...) are entirely
+  fine — the goal is a directly testable local environment, not a
+  zero-dependency one. Two of the old container-only deps are already gone:
+  EBMC now comes from the submodule and nlohmann-json is vendored under
+  `smart/third_party/`. Docker/ and artifact/ stay in the repo for the frozen
+  artifact, but no WP targets them and no acceptance criterion may require
+  them.
 - The regex frontend committed in WP2 (`smart/src/frontend/SVModule.*`,
   `gen_bench.py`) is DEMOTED to (a) the interface contract — the `ModuleInfo`
   fields the hw-cbmc adapter must fill — and (b) a cross-check oracle for the
@@ -158,9 +168,9 @@ The Python files below are the executable spec. Port behavior, not code.
 Each WP states: deliverable, references, steps, acceptance. WPs are sized for
 one agent each. **Dependency order:** WP2A (submodule + build) is now on the
 critical path — WP1 and WP2 both need it. **Parallelizable groups:** {WP1,
-WP2A} first; then {WP2, WP3, WP5, WP6}; WP4 after WP2+WP3; WP7+WP8 last. Run
-everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
-— the host lacks verilator/ebmc/nlohmann-json and cannot build hw-cbmc.
+WP2A} first; then {WP2, WP3, WP5, WP6}; WP4 after WP2+WP3; WP7+WP8 last. Build
+and run everything **on the host**; install whatever third-party packages a WP
+needs locally and record the install command in that WP's evidence.
 
 ### WP1 — CMake build (no behavior change)
 - **Deliverable:** `smart/CMakeLists.txt` building today's `smart.out` and
@@ -168,39 +178,37 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
 - **Reference:** `smart/Makefile` (flex `-P VCDParser`, bison `--defines`,
   include dirs, c++17; see lines 1-70).
 - Steps: FindFLEX/FindBISON with the same prefix/output names into
-  `${CMAKE_BINARY_DIR}/generated`; `find_package(cvc5)` (Docker image has
-  cvc5 1.2.0 — the static zip does NOT ship the C++ lib, so the Dockerfile
-  must gain a `cvc5 -dev` install or build-from-source stage; coordinate with
-  WP6); nlohmann-json via find_package or vendored single header under
-  `smart/third_party/`.
+  `${CMAKE_BINARY_DIR}/generated`; `find_package(cvc5)` (the host has the
+  cvc5 1.2.0 *binary* only — the static zip does NOT ship the C++ lib, so a
+  local libcvc5 install or build-from-source is needed; coordinate with WP6);
+  nlohmann-json is DONE — vendored at `smart/third_party/nlohmann/json.hpp`.
 - Keep the old Makefile working until WP8 removes it (setup.py calls
   `make compile`).
-- Also add/build the `hw-cbmc` submodule targets (coordinate with WP2A):
-  an ExternalProject or custom target that runs the submodule's `cd src;
-  make` (or its CMake, if the pinned revision has one) and exposes the
-  produced static libs + the `ebmc` binary path to the rest of the build.
-- **Acceptance:** in Docker, `cmake -B build && cmake --build build` produces
-  a `smart.out` that passes an existing benchmark run (`python run.py c17`)
-  when copied in place of the make-built one; and the hw-cbmc submodule
-  builds and its `ebmc` runs `--version`.
+- Also add/build the `hw-cbmc` submodule targets: a custom target that runs
+  `third_party/build-hw-cbmc.sh` (WP2A) and exposes the static libs, the
+  include dirs, the `LOCAL_IREP_IDS` define and the `ebmc` path listed in
+  WP2A's recorded decisions.
+- **Acceptance:** on the host, `cmake -B build && cmake --build build`
+  produces a `smart.out` that passes an existing benchmark run
+  (`python run.py c17`) when copied in place of the make-built one; and the
+  hw-cbmc submodule builds and its `ebmc` runs `--version`.
 
 ### WP2A — hw-cbmc submodule + build integration (critical path)
 - **Deliverable:** `third_party/hw-cbmc` git submodule pinned to a specific
   tag/commit (pick the release matching EBMC 5.6, our current backend, unless
   a newer tag is deliberately chosen — record the choice); `.gitmodules`;
-  Docker/CMake steps that fetch nested submodules (`git submodule update
+  build steps that fetch nested submodules (`git submodule update
   --init --recursive` — hw-cbmc itself vendors cbmc as a submodule) and build
   it.
 - **Build facts (verified from upstream):** BSD-3-Clause; build is
   `git submodule update --init --recursive` then `cd src && make` (compiles
   the bundled cbmc automatically); needs flex + bison + a C++ toolchain;
   produces the `ebmc` binary under `src/ebmc/` and static libraries for the
-  Verilog frontend + CBMC util. Building is slow (compiles much of CBMC) —
-  cache it as a Docker layer.
-- Steps: add the submodule; teach `Docker/Dockerfile` + `artifact/Dockerfile`
-  to init+build it (replacing the current `apt`/`.deb` EBMC install so the
-  binary and the linkable libs come from ONE source); export to the smart
-  build: the include dirs (`third_party/hw-cbmc/src`,
+  Verilog frontend + CBMC util. Building is slow (compiles much of CBMC) — it
+  is a one-off, not a per-run step.
+- Steps: add the submodule; provide a build script that inits and builds it
+  (so the `ebmc` binary and the linkable libs come from ONE source instead of
+  an apt/.deb install); export to the smart build: the include dirs (`third_party/hw-cbmc/src`,
   `third_party/hw-cbmc/lib/cbmc/src`), the static libs needed to link the
   Verilog frontend (at minimum `libverilog.a` + `libbigint.a`/`libutil.a` +
   `libsolvers.a`/`liblangapi.a` — determine the exact set by trial-link), and
@@ -215,12 +223,47 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
   - **Subprocess fallback:** run `ebmc --show-parse` / `--show-varmap` on the
     design and parse the dump. Lighter to wire, but the text format is not a
     stability contract. Use only if the link spike is too costly.
-- **Acceptance:** in Docker, from a clean checkout,
+- **Acceptance:** on the host, from a clean checkout,
   `git submodule update --init --recursive` + the build produces a working
   `ebmc` AND either (link path) a trivial C++ program that links libverilog
   and prints a parsed module's port count, or (subprocess path) a documented
   `ebmc --show-parse`/`--show-varmap` invocation whose output contains the
   ports/params/attributes WP2 needs. Document which path was chosen and why.
+
+#### Recorded decisions (WP2A outcome, 2026-07-25)
+
+- **Pin: `ebmc-5.6`** (`9b402aa7`), matching the EBMC the current results were
+  produced with, per the default in this plan. `third_party/hw-cbmc`, nested
+  `lib/cbmc` at `3c915ebe`.
+- **Mechanism: LINK, not subprocess.** The spike
+  (`smart/src/frontend/hwcbmc_spike.cpp`) links cleanly and reads the parse
+  tree directly. Recorded link set (order matters, inside
+  `-Wl,--start-group ... --end-group`):
+  `src/verilog/verilog.a`, `src/temporal-logic/temporal-logic.a`,
+  `src/trans-word-level/trans-word-level.a`,
+  `lib/cbmc/src/{langapi,solvers,util,big-int,json}/*.a`;
+  includes `-I third_party/hw-cbmc/src -I third_party/hw-cbmc/lib/cbmc/src`;
+  and — mandatory — `-D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'`, without which
+  our irep ids disagree with the libraries'.
+- **Where each ModuleInfo field comes from:**
+  - ports (order, direction, name), params, `hasAssume`, and the
+    anyseq/anyconst attributes: the **parse tree**
+    (`verilog_languaget::parse()` + `get_parse_tree()`), which also runs the
+    preprocessor, so `` `define ``/`` `include `` designs work.
+  - **widths: the elaborated symbol table**, not the parse tree. The parse
+    tree carries unevaluated ranges (`[W-1:0]` stays an expression); after
+    `typecheck` the port symbols are `unsignedbv` with the resolved `width`,
+    plus `input`/`output` flags and `#name`. This is strictly better than the
+    regex oracle and resolves plan gotcha 13.
+- **Upstream bug found and patched.** hw-cbmc's grammar discards
+  single-attribute instances, so `(* anyseq *) reg x;` parsed to an *empty*
+  attribute list — the one thing WP2 most needs from hw-cbmc was invisible.
+  Present in `ebmc-5.6`, `ebmc-6.0` and `main`. Fixed by a one-line patch in
+  `third_party/patches/`, applied by `third_party/apply-patches.sh` (called
+  from `third_party/build-hw-cbmc.sh`). **Send this upstream**; drop the patch
+  when it merges. Details: `third_party/patches/README.md`.
+- **Build:** `third_party/build-hw-cbmc.sh [jobs]` — applies patches, does
+  CBMC's `minisat2-download`, then `make -C src`. ~10 min on 32 cores.
 
 ### WP2 — frontend adapter: fill ModuleInfo from hw-cbmc
 - **Deliverable:** `smart/src/frontend/HwcbmcFrontend.{h,cpp}` that produces
@@ -276,8 +319,8 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
   how scopes/signal names are matched, and either configure the trace call
   (`tfp->dump` under the right scope) or teach the trace loader to skip a
   `TOP` scope. Validate against a cocotb-produced VCD from the current
-  pipeline (run `python run.py tiny_and` in Docker to get one).
-- **Acceptance:** in Docker, for `tiny_and`, `s27` (non-ANSI, unclocked),
+  pipeline (run `python run.py tiny_and` to get one).
+- **Acceptance:** for `tiny_and`, `s27` (non-ANSI, unclocked),
   `axis_fifo` (clocked+reset, parameterized widths), and `nru_a`
   (anyseq/anyconst/assume): harness builds, produces N VCDs, and
   `Module::addTracesfromDir` loads them with the same signal set as the
@@ -308,8 +351,8 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
   current runtime/logs). `-v` streams block logs to stderr.
 - On failure: leave workdir, print its path and the failing stage. On
   success: delete workdir unless `--keep-work`.
-- **Acceptance:** `smart Benchmark/user/tiny_and/tiny_and.sv` end-to-end in
-  Docker produces >=1 verified assertion in `tiny_and_assertion.sv`;
+- **Acceptance:** `smart Benchmark/user/tiny_and/tiny_and.sv` end-to-end
+  produces >=1 verified assertion in `tiny_and_assertion.sv`;
   `smart Benchmark/fmcad2025/c17/c17.sv` produces an assertion set equal (as
   a set of normalized strings) to the legacy `python run.py c17` run's
   `invariants.txt` with the same seed/cycles/bound settings.
@@ -326,8 +369,8 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
   `SmtFunctionParser`/`SygusExpr` in `src/parser/` — check before writing a
   new parser.
 - **Acceptance:** golden tests — run the Python `get_mus`/`run_minimisation`
-  on 3 captured `runtime/SygusResult.sl` fixtures from real runs (generate in
-  Docker, commit under `smart/test/fixtures/`), assert the C++ returns the
+  on 3 captured `runtime/SygusResult.sl` fixtures from real runs (commit
+  under `smart/test/fixtures/`), assert the C++ returns the
   same MUS variable sets / minimized cores.
 
 ### WP6 — sygus: libcvc5 instead of subprocess
@@ -368,9 +411,10 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
   `invariants.txt`, which WP7 still writes).
 - `smart --check-env`; static-link what's possible (cvc5, stdc++); strip
   binary; `make release` equivalent producing a tarball.
-- Update `ReadMe.md`, `ARTIFACT.md`, `Docker/Dockerfile` +
-  `artifact/Dockerfile` (install cvc5 dev lib, drop venv/cocotb from the
-  tool path — keep Python only for the artifact/experiment layer).
+- Update `ReadMe.md` and `install.sh` (local build + the third-party
+  packages the tool needs; drop venv/cocotb from the tool path — keep Python
+  only for the experiment layer). `Docker/` and `artifact/` are left alone:
+  they belong to the frozen artifact.
 - Final regression: `artifact/run_smoke.sh` equivalent driving the new
   binary on {tiny_and, c17, s27, arb2, axis_fifo, nru_a} × {plain, --msa}.
 
@@ -393,8 +437,12 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
    reproduce the exact flex `-P` prefix or the symbols won't link.
 9. `smart.cpp:32` has a stale default `config_path = "User/config.ini"` —
    delete when refactoring main() into `runSmartBlock`.
-10. Host machines may lack everything except cvc5 — ALL build/test happens
-    in the Docker image. `nlohmann/json.hpp` is not on the host.
+10. SUPERSEDED (2026-07-25): build/test happens on the HOST. `nlohmann/json.hpp`
+    is now vendored at `smart/third_party/nlohmann/json.hpp` (v3.11.3) and
+    `smart/Makefile` has `-I ./third_party`; EBMC comes from the submodule.
+    Still to install locally when their WP starts: verilator (WP3), libcvc5
+    C++ dev (WP5/WP6 — only the cvc5 *binary* is present at
+    `/usr/local/bin/cvc5`, 1.2.0).
 11. VCD from Verilator-direct may wrap signals in a `TOP` scope (vs cocotb) —
     see WP3 caution; this is the most likely silent-breakage point of the
     whole migration.
@@ -407,15 +455,18 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
     equivalents in the binary (`--check-env` is in WP4/WP8 scope);
     `--check-env` must also report the hw-cbmc-built EBMC version.
 15. hw-cbmc vendors cbmc as a NESTED submodule — always
-    `git submodule update --init --recursive`, and the Docker build must too.
-    A plain `--init` silently yields an unbuildable hw-cbmc.
+    `git submodule update --init --recursive`. A plain `--init` silently
+    yields an unbuildable hw-cbmc. CBMC additionally *downloads* its SAT
+    backend: `make -C lib/cbmc/src minisat2-download` (done by
+    `third_party/build-hw-cbmc.sh`); without it the build dies in
+    `sat/satcheck_minisat2.cpp`.
 16. hw-cbmc's static libs are NOT a curated public API. If the WP2A link
     spike drags, fall back to `ebmc --show-parse`/`--show-varmap` subprocess
     rather than fighting CBMC's link graph — the ModuleInfo contract is the
     same either way.
-17. Building hw-cbmc compiles much of CBMC and is slow; it MUST be a cached
-    Docker layer, not rebuilt per run. Pin the submodule commit so the cache
-    is stable.
+17. Building hw-cbmc compiles much of CBMC and is slow (~10 min on 32 cores);
+    it is a one-off setup step, never part of a run. The submodule commit is
+    pinned so incremental rebuilds stay cheap.
 18. std::regex on libstdc++ stack-overflows on large ISCAS netlists (WP2
     discovery); the regex oracle avoids it by hand-scanning. Any new C++ that
     must scan whole files: do NOT use std::regex over the full text.
@@ -432,7 +483,7 @@ everything inside the Docker image (`Docker/Dockerfile` / `artifact/Dockerfile`)
   right. The regex oracle is frozen (do not extend it).
 - **End-to-end parity:** same-seed assertion-set comparison vs the legacy
   Python pipeline on {tiny_and, c17, s27, arb2} before removing anything.
-- **Fixtures:** capture `.sl`/VCD fixtures from Docker runs into
+- **Fixtures:** capture `.sl`/VCD fixtures from real runs into
   `smart/test/fixtures/` early (WP5/WP3 depend on them).
 - Every WP lands as a separate PR/commit on `new-interface` with its
   acceptance evidence (command + output) in the commit message.

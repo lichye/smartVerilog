@@ -21,9 +21,9 @@ Branch: `new-interface`.
 
 | WP | Scope | Status | Agent | Depends on |
 |----|-------|--------|-------|------------|
-| WP2A | hw-cbmc submodule + build integration | NOT STARTED (critical path) | — | — |
-| WP1 | CMake build (incl. hw-cbmc libs) | NOT STARTED | — | WP2A |
-| WP2 | frontend adapter: ModuleInfo from hw-cbmc | NOT STARTED | — | WP2A |
+| WP2A | hw-cbmc submodule + build integration | DONE | coordinator (Claude/Opus) | — |
+| WP1 | CMake build (incl. hw-cbmc libs) | NOT STARTED | — | WP2A (unblocked) |
+| WP2 | frontend adapter: ModuleInfo from hw-cbmc | NOT STARTED | — | WP2A (unblocked) |
 | WP2-regex | regex frontend (SVModule) — DEMOTED to oracle/fallback | DONE (198a0aa) | coordinator (Claude/Fable) | — |
 | WP3 | simgen (Verilator harness) | NOT STARTED | — | — (uses ModuleInfo; oracle supplies it meanwhile) |
 | WP4 | pipeline (orchestration, Options/Config §1.1) | NOT STARTED | — | WP2, WP3 |
@@ -43,20 +43,39 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
 - [x] P0 bug fixes + usability pass — `6495c97` (master, merged into branch)
 - [x] `gen_bench.py` behavioral spec + tests, 54/54 benchmarks — `d6a1ef7`
 - [x] Plan — `e2fbc07`, config model §1.1 — `95f34aa`
-- Environment note: host has NO verilator/ebmc/cocotb/nlohmann-json —
-  build and test in the Docker image only (see plan §4 WP1 and gotcha 10).
+- Environment note (REVISED 2026-07-25, user decision): **build and test on
+  the host; Docker is out of scope.** External third-party packages installed
+  locally are fine — the goal is a directly testable local environment.
+  Already resolved: ebmc (built from the submodule), nlohmann-json (vendored
+  at `smart/third_party/nlohmann/json.hpp`, `smart/Makefile -I ./third_party`;
+  `make compile` builds `smart.out` on the host again). Still to install when
+  their WP starts: verilator (WP3), libcvc5 C++ dev (WP5/WP6).
 
 ## WP checklists
 
-### WP2A — hw-cbmc submodule + build (critical path)
-- [ ] `third_party/hw-cbmc` submodule pinned (record commit/tag; match EBMC 5.6)
-- [ ] `.gitmodules`; nested cbmc submodule fetched (`--init --recursive`)
-- [ ] Docker/Dockerfile + artifact/Dockerfile build hw-cbmc (cached layer),
-      replacing the apt/.deb ebmc install
-- [ ] link-vs-subprocess spike done; mechanism + required libs recorded
-- [ ] Acceptance: clean checkout builds ebmc; frontend consumable (link demo
-      or documented --show-parse/--show-varmap invocation)
+### WP2A — hw-cbmc submodule + build (critical path) — DONE
+- [x] `third_party/hw-cbmc` pinned to `ebmc-5.6` (`9b402aa7`), matching the
+      EBMC the current results were produced with
+- [x] `.gitmodules`; nested cbmc fetched (`--init --recursive`) at `3c915ebe`
+- [x] host build script `third_party/build-hw-cbmc.sh` (patches +
+      `minisat2-download` + `make -C src`); Dockerfiles deliberately NOT
+      touched — Docker is out of scope now
+- [x] link-vs-subprocess spike done: **LINK**. Libs/includes/define recorded
+      in plan §4 WP2A "Recorded decisions"
+- [x] upstream grammar bug found + patched (`third_party/patches/`,
+      `apply-patches.sh`): single `(* attr *)` instances were dropped
+- [x] Acceptance: `ebmc --version` -> 5.6; `hwcbmc_spike` links libverilog and
+      prints ports/params/freeRegs/hasAssume
 - Evidence:
+  - `third_party/build-hw-cbmc.sh` -> `5.6`
+  - `g++ -std=c++17 -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>' -I third_party/hw-cbmc/src
+    -I third_party/hw-cbmc/lib/cbmc/src smart/src/frontend/hwcbmc_spike.cpp
+    -Wl,--start-group <7 .a files> -Wl,--end-group`
+  - `hwcbmc_spike CaseStudy/sim/nru/formal.sv` -> `module formal`, 1 port,
+    9 `anyseq` + 1 `anyconst` free regs, `hasAssume 0` (correct: the only
+    assume in that file is commented out)
+  - `ebmc --show-symbol-table` on a `#(parameter W=8)` module -> ports as
+    `unsignedbv` with resolved `width` (8, 4) — the WP2 width source
 
 ### WP1 — CMake
 - [ ] `smart/CMakeLists.txt`: flex (`-P VCDParser` prefix!) + bison codegen
@@ -165,3 +184,30 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   symbol_table (so linking is a spike; ebmc --show-parse/--show-varmap is the
   subprocess fallback). Verilator has --json-only (no --xml-only) but drops
   yosys attributes, so hw-cbmc is the better anyseq/anyconst source.
+- 2026-07-25 (WP2A): pinned `ebmc-5.6` over newer tags — it is the EBMC the
+  existing results were produced with, and it demonstrably parses the whole
+  benchmark set (the current pipeline verifies against it).
+- 2026-07-25 (WP2A): **the plan's claim that hw-cbmc natively understands
+  `(* anyseq *)` / `(* anyconst *)` was WRONG.** hw-cbmc's grammar has
+  `attr_spec_list: attr_spec { init($$); }` — the base case allocates an empty
+  list and throws `$1` away, so a *single*-attribute instance parses to an
+  empty attribute list and `add_attributes()` then drops it entirely; with
+  `(* a, b *)` only the trailing attributes survive. Present in ebmc-5.6,
+  ebmc-6.0 and main (1a4ffdb). Fixed with a one-line patch under
+  `third_party/patches/` applied at build time. **TODO: send upstream** and
+  drop the patch once merged.
+- 2026-07-25 (WP2A): widths are NOT usable from the parse tree (ranges stay
+  unevaluated, `[W-1:0]`); they come from the elaborated symbol table after
+  typecheck, where ports are `unsignedbv` with a resolved `width`. WP2 must
+  run parse (attributes, port order, assumes) AND typecheck (widths).
+- 2026-07-25 (WP2A): CBMC downloads its SAT backend — `make -C lib/cbmc/src
+  minisat2-download` is required before `make -C src`, else the build fails in
+  `sat/satcheck_minisat2.cpp`. `build-hw-cbmc.sh` handles it.
+- 2026-07-25 (DIRECTION CHANGE, user): **Docker is dropped.** Everything is
+  built and tested locally; installing third-party packages on the host is
+  fine. Docker/ and artifact/ are left untouched for the frozen artifact. The
+  plan's §0, §4 preamble, WP1/WP3/WP4/WP5/WP8 acceptance texts and gotchas
+  10/15/17 were updated accordingly.
+- 2026-07-25: nlohmann-json vendored at `smart/third_party/nlohmann/json.hpp`
+  (v3.11.3) + `-I ./third_party` in `smart/Makefile`; `make compile` now works
+  on the host without the apt package.

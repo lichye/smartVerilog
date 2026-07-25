@@ -1,0 +1,13 @@
+diff --git a/src/verilog/parser.y b/src/verilog/parser.y
+index bd55c56d..e9d6268e 100644
+--- a/src/verilog/parser.y
++++ b/src/verilog/parser.y
+@@ -4454,7 +4454,7 @@ attribute_instance: TOK_PARENASTERIC attr_spec_list TOK_ASTERICPAREN
+ 
+ attr_spec_list:
+ 	  attr_spec
+-	  	{ init($$); }
++	  	{ init($$); mts($$, $1); }
+ 	| attr_spec_list ',' attr_spec
+ 		{ $$=$1; mts($$, $3); }
+         ;
