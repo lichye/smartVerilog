@@ -12,7 +12,7 @@ cd "$here"
 
 jobs="${1:-16}"
 work="${SMOKE_DIR:-$here/smoke-out}"
-smart="$here/build/bin/smart"
+smart="$here/build/smart"
 ebmc="$here/third_party/hw-cbmc/src/ebmc/ebmc"
 
 [ -x "$smart" ] || { echo "build the tool first: cmake --build build --target smart"; exit 2; }

@@ -17,13 +17,13 @@ version="${1:-$(git describe --tags --always --dirty 2>/dev/null || echo dev)}"
 name="smart-$version-linux-x86_64"
 stage="$here/dist/$name"
 
-[ -x build/bin/smart ] || { echo "build first: cmake --build build --target smart"; exit 2; }
+[ -x build/smart ] || { echo "build first: cmake --build build --target smart"; exit 2; }
 [ -x third_party/hw-cbmc/src/ebmc/ebmc ] || { echo "hw-cbmc is not built"; exit 2; }
 
 rm -rf "$stage"
 mkdir -p "$stage/bin"
 
-install -m 0755 build/bin/smart "$stage/bin/smart"
+install -m 0755 build/smart "$stage/bin/smart"
 install -m 0755 third_party/hw-cbmc/src/ebmc/ebmc "$stage/bin/ebmc"
 strip --strip-unneeded "$stage/bin/smart" "$stage/bin/ebmc" 2>/dev/null || true
 

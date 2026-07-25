@@ -158,6 +158,9 @@ add_executable(smart
 target_link_libraries(smart PRIVATE
     smart_core smart_pipeline smart_simgen smart_emit smart_mus
     smart_hwcbmc_frontend)
+# The product sits at the top of the build tree, not among the dev tools.
+set_target_properties(smart PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # WP3 acceptance instrument: what the pipeline's OWN trace loader sees in a
 # VCD. Builds without hw-cbmc, so it stays in `all`.

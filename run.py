@@ -30,7 +30,7 @@ def smart_binary():
     env = os.environ.get("SMART_BIN")
     if env:
         return Path(env)
-    for candidate in [ROOT / "build/bin/smart", ROOT / "smart/smart"]:
+    for candidate in [ROOT / "build/smart", ROOT / "build/bin/smart"]:
         if candidate.exists():
             return candidate
     print("error: the smart binary is not built. Run:", file=sys.stderr)

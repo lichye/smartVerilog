@@ -83,6 +83,6 @@ cmake --build build --target smart -j"$jobs"
 
 echo
 echo "== verify =="
-./build/bin/smart --check-env
+./build/smart --check-env
 echo
-echo "Done. Try:  ./build/bin/smart Benchmark/user/tiny_and/tiny_and.sv"
+echo "Done. Try:  ./build/smart Benchmark/user/tiny_and/tiny_and.sv"

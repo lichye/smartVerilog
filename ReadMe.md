@@ -38,7 +38,7 @@ cd smartVerilog
 
 `install.sh` builds hw-cbmc (EBMC and the Verilog frontend SMART links
 against), fetches Icarus Verilog via oss-cad-suite, builds libcvc5, and then
-builds `build/bin/smart`. Expect the better part of an hour the first time,
+builds `build/smart`. Expect the better part of an hour the first time,
 almost all of it in CBMC and cvc5; afterwards, rebuilding SMART takes seconds.
 
 Host requirements: a C++17 compiler, `make`, `flex`, `bison`, `git`, `curl`
@@ -46,7 +46,7 @@ and CMake ≥ 3.16 (`python3 -m pip install --user cmake` is enough).
 
 ```bash
 ./install.sh --check       # report what is missing without building
-./build/bin/smart --check-env
+./build/smart --check-env
 ```
 
 ### 2.1 Benchmarks
