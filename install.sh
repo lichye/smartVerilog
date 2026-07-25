@@ -1,51 +1,88 @@
-#!/bin/bash
-# Basic setup
-# ubuntu-20.04.6-desktop-amd64.iso with git
-# sudo apt-get install git
-# git clone https://github.com/lichye/smartVerilog.git
-# cd smartVerilog
+#!/usr/bin/env bash
+# One-off local setup for SMART. No container, no root: everything lands under
+# otherTools/ and third_party/, both of which are gitignored.
+#
+#   ./install.sh          # fetch + build everything, then verify
+#   ./install.sh --check  # just report what is missing
+#
+# What gets installed:
+#   third_party/hw-cbmc   EBMC (verification) + the Verilog frontend we link
+#   otherTools/oss-cad-suite  iverilog + vvp (simulation)
+#   otherTools/cvc5       libcvc5 (SyGuS + MSA/MUS), headers and static libs
+set -euo pipefail
 
-#install basic libary
-yes | sudo apt-get update
-yes | sudo apt-get install cmake gcc g++ bison flex unzip wget make
-yes | sudo apt-get install python3 python-is-python3
-yes | sudo apt-get install pip
-yes | sudo apt-get install python3-venv
-yes | sudo apt install nlohmann-json3-dev
-yes | sudo pip3 install pytest
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$here"
 
-python3 -m venv otherTools/venv
-source otherTools/venv/bin/activate
-yes | pip install "cocotb==1.8.0"
-yes | pip install more_itertools
-yes | pip install matplotlib
-yes | pip install igraph
-yes | pip install z3-solver
-yes | pip install pysmt
-yes | pip install utils
-yes | pip install cvc5
+OSS_CAD_SUITE_DATE="${OSS_CAD_SUITE_DATE:-2023-05-20}"
+jobs="$(nproc)"
 
-mkdir -p smart/user
+check_only=0
+[ "${1:-}" = "--check" ] && check_only=1
 
-# Install other tools
+missing=0
+need() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "[MISSING] $1 — $2"
+        missing=1
+    else
+        echo "[ok]      $1"
+    fi
+}
+
+echo "== host toolchain =="
+need g++ "a C++17 compiler"
+need make "GNU make"
+need flex "flex"
+need bison "bison"
+need git "git"
+need curl "curl (cvc5 and CBMC download dependencies)"
+need cmake "cmake >= 3.16 — 'python3 -m pip install --user cmake' works"
+
+if [ "$missing" = 1 ] && [ "$check_only" = 0 ]; then
+    echo
+    echo "Install the missing tools above first; everything else is local."
+    exit 2
+fi
+
+if [ "$check_only" = 1 ]; then
+    for d in third_party/hw-cbmc/src/ebmc/ebmc otherTools/oss-cad-suite/bin/iverilog \
+             otherTools/cvc5/include/cvc5/cvc5.h; do
+        [ -e "$d" ] && echo "[ok]      $d" || { echo "[MISSING] $d"; missing=1; }
+    done
+    exit $missing
+fi
+
+echo
+echo "== hw-cbmc (EBMC + Verilog frontend) =="
+git submodule update --init --recursive
+./third_party/build-hw-cbmc.sh "$jobs"
+
+echo
+echo "== iverilog (simulation) =="
 mkdir -p otherTools
-cd otherTools
+if [ ! -x otherTools/oss-cad-suite/bin/iverilog ]; then
+    stamp="$(printf '%s' "$OSS_CAD_SUITE_DATE" | tr -d '-')"
+    tarball="oss-cad-suite-linux-x64-${stamp}.tgz"
+    (cd otherTools && \
+     curl -L -o "$tarball" \
+       "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/${OSS_CAD_SUITE_DATE}/${tarball}" && \
+     tar -xzf "$tarball")
+else
+    echo "already present"
+fi
 
-#install yosys/verilator via oss-cad-suite
-wget -nc https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2023-05-20/oss-cad-suite-linux-x64-20230520.tgz
-tar -xvzf oss-cad-suite-linux-x64-20230520.tgz
-source oss-cad-suite/environment
+echo
+echo "== libcvc5 (SyGuS + MSA/MUS) =="
+./tools/build-cvc5.sh "$jobs"
 
-#install ebmc
-wget https://github.com/diffblue/hw-cbmc/releases/download/ebmc-5.6/ebmc_5.6_amd64.deb
-sudo dpkg -i ebmc_5.6_amd64.deb
+echo
+echo "== build smart =="
+cmake -B build -S .
+cmake --build build --target smart -j"$jobs"
 
-# Install cvc5 (static release binary)
-wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static.zip
-unzip cvc5-Linux-x86_64-static.zip
-chmod +x cvc5-Linux-x86_64-static/bin/cvc5
-sudo mv cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin/
-cd ..
-
-# Verify the environment
-python run.py --check-env
+echo
+echo "== verify =="
+./build/bin/smart --check-env
+echo
+echo "Done. Try:  ./build/bin/smart Benchmark/user/tiny_and/tiny_and.sv"

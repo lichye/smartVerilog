@@ -1,9 +1,16 @@
 # SMART
 
-SMART is an automated specification mining tool for Verilog designs.  
-It synthesizes **SystemVerilog Assertions (SVA)** — including **LTL (Linear Temporal Logic) properties** — from simulation traces using oracle-guided synthesis.
+SMART is an automated specification mining tool for Verilog designs.
+It synthesizes **SystemVerilog Assertions (SVA)** — including **LTL (Linear
+Temporal Logic) properties** — from simulation traces using oracle-guided
+synthesis.
 
-The goal of SMART is to reduce the manual effort required to write correct and meaningful formal specifications for hardware verification.
+The goal of SMART is to reduce the manual effort required to write correct and
+meaningful formal specifications for hardware verification.
+
+```bash
+smart cat.sv          # -> cat_assertion.sv, the design plus proved assertions
+```
 
 ---
 
@@ -13,142 +20,155 @@ The goal of SMART is to reduce the manual effort required to write correct and m
 - **Support for LTL (Linear Temporal Logic) properties**
 - Works with both **structural** and **behavioral** Verilog
 - No hand-written assertion templates required
-- All generated assertions are formally verified
+- Every emitted assertion is formally proved against the original design
 - Effective at detecting hardware mutations
 
 ---
 
 ## 2. Installation
 
-### 2.1 Native Ubuntu (limited support)
+SMART is one compiled binary. Everything it needs is built into the checkout;
+nothing is installed system-wide and no container is required.
 
 ```bash
-git clone https://github.com/lichye/smartVerilog.git
+git clone --recursive https://github.com/lichye/smartVerilog.git
 cd smartVerilog
-bash install.sh
+./install.sh
 ```
 
-### 2.2 Docker (Recommended)
+`install.sh` builds hw-cbmc (EBMC and the Verilog frontend SMART links
+against), fetches Icarus Verilog via oss-cad-suite, builds libcvc5, and then
+builds `build/bin/smart`. Expect the better part of an hour the first time,
+almost all of it in CBMC and cvc5; afterwards, rebuilding SMART takes seconds.
+
+Host requirements: a C++17 compiler, `make`, `flex`, `bison`, `git`, `curl`
+and CMake ≥ 3.16 (`python3 -m pip install --user cmake` is enough).
 
 ```bash
-docker pull magna2024/smart
+./install.sh --check       # report what is missing without building
+./build/bin/smart --check-env
 ```
 
-### 2.3 Artifact Release
+### 2.1 Benchmarks
 
-For a reproducible artifact package, use the self-contained image flow documented in [ARTIFACT.md](ARTIFACT.md).  
-It includes a release-oriented Dockerfile, quick-start commands, and image export guidance.
+The mutation benchmarks are a separate repository:
 
-### 2.4 Benchmark 
-To make sure the evalute benchmark is stable, we can use the pre-generated benchmark.
 ```bash
-cd smartVerilog/
 git clone https://github.com/lichye/MutationBenchmark.git
 ```
 
+---
+
 ## 3. Usage
 
-Run SMART on a benchmark:
+### 3.1 On your own design
+
 ```bash
-python run.py c17
+smart my_design.sv                      # everything automatic
+smart my_design.sv --top my_top         # if the module is not the file stem
+smart my_design.sv --cycles 40 -j 8     # deeper traces, 8 workers
+smart my_design.sv --msa                # iterate: mine, re-block, mine again
 ```
-Results will be generated in:
-```
-/smartVerilog/Results/smart_c17/
-```
-If a result directory with the same name already exists, it is moved aside to
-`Results/smart_c17.prev` before the new run. Per-core synthesis logs are kept
-in `Results/smart_c17/logs/` for debugging.
 
-Other useful commands:
+The design may contain immediate `assume(...)` statements and
+`(* anyseq *)` / `(* anyconst *)` free registers; SMART understands both.
+Dependency modules in sibling `.sv` files are picked up automatically.
+
+The output, `<top>_assertion.sv`, is the original file with the proved
+assertions inserted before `endmodule`, and a header recording the exact
+settings that produced them. Every assertion in it has been proved by EBMC
+against the unmodified design, so it can be re-checked independently:
+
 ```bash
-python run.py --help              # full CLI reference
-python run.py --list-benchmarks   # show all available benchmarks
-python run.py --list-configs      # show all available configs
-python run.py --check-env         # verify verilator/ebmc/cvc5/cocotb are installed
+ebmc my_design_assertion.sv --bound 10 --top my_design
 ```
 
-### 3.1 Running a new hardware design
+Exit codes: `0` success (possibly with zero assertions), `1` bad input,
+`2` missing tool, `3` pipeline failure.
 
-To run SMART/MAPminer on a design that is not one of the included paper
-benchmarks, add a benchmark directory under `Benchmark/`:
+### 3.2 Configuration
+
+Every option has both a command-line flag and a config-file key of the same
+name, and they are generated from one table — so anything you can set one way
+you can set the other. Precedence is flag > `--config` file > default.
+
+```bash
+smart c17.sv --config Config/block_msa.json      # a paper experiment
+smart c17.sv --config Config/block_msa.json -j 4 # ... with one knob changed
+smart c17.sv --dump-config                       # what a run would actually use
+smart --help                                     # every flag, with its key
+```
+
+The legacy nested `Config/*.json` schema still works, misspelled keys and all;
+`--dump-config` prints the resolved settings in the current flat schema.
+
+### 3.3 Running the paper benchmarks
+
+`run.py` is the experiment layer: it locates a benchmark, runs `smart`, and
+files the results under `Results/<config>_<benchmark>/`.
+
+```bash
+python3 run.py c17
+python3 run.py c17 --config Config/block_msa.json
+python3 run.py --list-benchmarks
+python3 run.py --list-configs
+python3 run.py --check-env
+```
+
+A benchmark directory needs only the RTL, named after the directory:
 
 ```text
 Benchmark/user/my_design/
-  my_design.sv      # SystemVerilog design under test
-  sim.py            # cocotb simulation that drives the design
-  Makefile          # optional cleanup/build helper
+  my_design.sv      # top-level design; the directory name must match
   *.sv              # optional dependency modules/packages
 ```
 
-The directory must contain the top-level RTL file and a cocotb `sim.py` that
-drives representative traces. In `sim.py`, set `hdl_toplevel` to the top module
-name and include any local RTL dependency files.
+(Older benchmark directories also contain a cocotb `sim.py`. It is no longer
+used — SMART generates its own Verilog testbench — and can be ignored.)
 
-For a source checkout with the Python/toolchain dependencies installed:
+---
 
-```bash
-python run.py my_design Config/block_msa.json
-```
+## 4. How a run works
 
-For a quick smoke test of the input format, this repository includes:
+1. **Frontend** — hw-cbmc parses and elaborates the design; SMART reads the
+   ports, widths, parameters, free registers and assumes from it.
+2. **Simulation** — a Verilog testbench is generated and run under Icarus
+   Verilog, producing VCD traces. Assumes are stripped for simulation only.
+3. **Pre-analysis** — the signals in the traces become the candidate variable
+   pool, which is split into per-block subsets.
+4. **Synthesis** — each block is a SyGuS problem solved with cvc5 and refined
+   against EBMC counterexamples. Blocks run in parallel, each with its own
+   deadline.
+5. **Blocking** (`--msa` / `--random`) — after a round, the invariants found
+   so far are minimised and the variables they still leave underspecified
+   become the next round's pool.
+6. **Check** — every mined assertion is re-proved against the *original*
+   design. Only survivors are emitted.
+7. **Emit** — `<top>_assertion.sv`.
 
-```text
-Benchmark/user/tiny_and/
-  tiny_and.sv
-  sim.py
-```
-
-Run it with:
-
-```bash
-python run.py tiny_and Config/smart.json
-```
-
-The recommended artifact path is to use the Docker image or rebuild it from the
-artifact Dockerfile. The Docker environment includes cocotb, Verilator, EBMC,
-CVC5, and the other dependencies needed by the pipeline. Native source-checkout
-runs require those dependencies to be installed locally.
-
-For a benchmark named `my_design`, the pipeline is:
-
-1. `run.py` finds `Benchmark/**/my_design/`.
-2. The benchmark files are copied into `smart/user/`.
-3. `sim.py` is run through cocotb/Verilator to collect traces.
-4. SMART/MAPminer synthesizes candidate SVA from those traces.
-5. The checker formally verifies generated assertions on the original design.
-6. If mutation data is available, the evaluator computes mutation-detection
-   metrics.
-7. Results are written to `Results/<config>_my_design/`.
-
-Mutation benchmarks are optional for bring-up. If no matching directory exists
-under `MutationBenchmark/`, SMART/MAPminer still generates and verifies
-assertions, but mutation-detection metrics are unavailable for that design.
-
-## 4. Configuration
-
-SMART can be configured via:
-
-- run.py
-
-- smart.json
-
-You can control synthesis limits, verification timeouts, trace handling, and assertion generation options (including LTL-related settings).
+---
 
 ## 5. Output
 
-SMART produces verified SystemVerilog Assertions (SVA), including:
+- `<top>_assertion.sv` — the design with the proved assertions
+- `Results/<config>_<design>/invariants.txt` — the proved assertions, one per line
+- `Results/<config>_<design>/assertions.txt` — everything mined, before the final check
+- `Results/<config>_<design>/effective-config.json` — the exact settings used
 
-- State invariants
+Keep the working directory with `--keep-work` to inspect traces, per-block
+logs and the SyGuS problems; it is also kept automatically when a run fails.
 
-- Bit-vector relational properties
+---
 
-- LTL temporal properties
+## 6. Development
 
-Only assertions that pass formal verification are kept. The running result will be in the directory:
 ```bash
-Results/smart_c17/result_c17.txt
-Results/smart_c17/assertions.txt
+cmake -B build -S .
+cmake --build build --target smart -j$(nproc)
+ctest --test-dir build            # unit tests
+tools/smoke.sh                    # end-to-end matrix, each output re-proved
+python3 tools/parity_frontend.py  # frozen frontend oracle
+python3 tools/compare_frontends.py
 ```
 
 ## Citation

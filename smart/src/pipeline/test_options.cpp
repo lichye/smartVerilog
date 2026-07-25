@@ -171,6 +171,26 @@ void testLegacyConfig() {
     std::remove(path.c_str());
 }
 
+void testStrategyDoesNotImplyIteration() {
+    // Config/smart.json sets Blockified_settings.MSA true while leaving
+    // Workflow.Blockified false. Reading MSA as "iterate" would silently turn
+    // every shipped single-round experiment into a multi-round one.
+    const auto path = writeTemp("strategy.json", R"({
+        "Workflow": { "Blockified": false },
+        "Blockified_settings": { "MSA": true }
+    })");
+
+    Options fromFile;
+    fromFile.mergeJsonFile(path);
+    check(fromFile.getBool("msa"), "the config still selects the MSA strategy");
+    check(!fromFile.getBool("blockified"),
+          "but a config key does NOT turn iteration on");
+
+    auto fromFlag = parse({"design.sv", "--msa"});
+    check(fromFlag.getBool("blockified"), "--msa on the command line does");
+    std::remove(path.c_str());
+}
+
 void testPrecedence() {
     const auto path = writeTemp("prec.json", R"({"cycles": 40, "jobs": 16})");
 
@@ -237,6 +257,7 @@ int main() {
     testCommandLine();
     testFlatConfig();
     testLegacyConfig();
+    testStrategyDoesNotImplyIteration();
     testPrecedence();
     testShippedConfigs();
     testRoundTrip();

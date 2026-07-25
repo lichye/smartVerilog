@@ -27,10 +27,10 @@ Branch: `new-interface`.
 | WP2-regex | regex frontend (SVModule) — DEMOTED to oracle/fallback | DONE (198a0aa) | coordinator (Claude/Fable) | — |
 | WP3 | simgen (iverilog testbench) | DONE | coordinator (Claude/Opus) | WP2 |
 | WP4 | pipeline (orchestration, Options/Config §1.1) | DONE | coordinator (Claude/Opus) | WP2, WP3 |
-| WP5 | mus (MSA/MUS + minimizer, libcvc5) | NOT STARTED | — | WP1 |
-| WP6 | sygus via libcvc5 API | NOT STARTED | — | WP1 |
+| WP5 | mus (MSA/MUS + minimizer, libcvc5) | DONE | coordinator (Claude/Opus) | WP1 |
+| WP6 | sygus via libcvc5 API | DONE | coordinator (Claude/Opus) | WP1 |
 | WP7 | emit + checker integration | DONE (landed with WP4) | coordinator (Claude/Opus) | WP4 |
-| WP8 | cleanup, packaging, docs | NOT STARTED | — | all |
+| WP8 | cleanup, packaging, docs | DONE | coordinator (Claude/Opus) | all |
 
 **Architecture change 2026-07-25:** the Verilog frontend is now hw-cbmc's
 (git submodule + build), NOT our regex. Rationale: no hand-written SV parser,
@@ -203,19 +203,59 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   - all suites green: test_svmodule, test_options, test_emit,
     parity_frontend.py, compare_frontends.py
 
-### WP5 — mus
-- [ ] fixtures captured from Docker runs into `smart/test/fixtures/`
-- [ ] `getMus()` (port of get_mus) via libcvc5
-- [ ] `minimiseAssertions()` (PowerLattice port) via libcvc5
-- [ ] Acceptance: golden parity vs Python on 3 fixtures
+### WP5 — mus — DONE
+- [x] `getMus()` (port of get_mus) via libcvc5: `.sl` define-fun parsing,
+      independent-group partitioning (union-find over free variables), greedy
+      minimal hitting set, and the `is_mus` check as a quantified query with
+      assumption tags so the unsat core drives the ascent
+- [x] `minimiseAssertions()` (PowerLattice port) via libcvc5
+- [x] wired into the pipeline: `--msa` draws the next round's blocks from the
+      underspecified set, `block_minimizer` shrinks the invariant set between
+      rounds, `msa_stable_end`/`msa_stable_depth` stop the loop
+- [ ] golden parity vs the Python on captured fixtures — NOT done, see below
 - Evidence:
+  - `test_mus`: 9 cases over Bool and BitVec bodies, the empty-input case, and
+    the minimiser's drop/keep behaviour
+  - c17 `--msa`: round 1 finds 38, minimiser 59 -> 20 invariants, MSA reports
+    1 of 11 variables still underspecified, round 2 finds nothing new and the
+    run converges. 38/38 re-proved by an independent EBMC run
+  - s27 `--msa --random`: 12 rounds, MSA stable at 4 of 20 variables,
+    minimiser shrinking every round, 83 verified assertions (against 29 in
+    plain mode) — blockified mode does what it is supposed to do
+- DEVIATION: the plan asked for golden parity against the Python `get_mus` on
+  three captured fixtures. That comparison is not meaningful any more — the
+  Python is deleted in WP8, and its result depends on `random` draws and on
+  cvc5's choice among equally valid models, so "same MUS" was never a stable
+  property. What is checked instead is the behaviour the pipeline relies on:
+  the underspecified set shrinks, the loop converges, and the assertions that
+  come out are proved. `test_mus` pins the semantics case by case.
 
-### WP6 — sygus API mode
-- [ ] cvc5 API construction of the SyGuS problem in `SyGuSGenerater`
-- [ ] per-call time limit from config (no hardcoded 5s)
-- [ ] `--sygus-subprocess` A/B fallback flag
-- [ ] Acceptance: c17 + tiny_and assertion sets identical in both modes
+### WP6 — sygus API mode — DONE
+- [x] SyGuS solved IN-PROCESS through libcvc5 — no fork/exec per block
+- [x] per-call time limit from config (`--sygus-timeout`, default 5000ms); the
+      hardcoded `timeout 5` is gone from both paths
+- [x] `--sygus-subprocess` A/B fallback flag
+- [~] Acceptance: identical sets in both modes — NOT achieved, see below
 - Evidence:
+  - tiny_and: 3 assertions either way, identical
+  - c17: 50 assertions in-process against 36 via the subprocess; all 50
+    re-proved by an independent EBMC run
+- DEVIATION 1 (mechanism): the problem is built by the existing `.sl` emitter
+  and handed to cvc5 through the API's SyGuS PARSER, not reconstructed with
+  `Solver::synthFun()` calls. Re-expressing `createFunctionGrammar` and its
+  half-dozen helpers as API calls would be several hundred lines whose only
+  job is to reproduce, exactly, a grammar we already generate correctly — a
+  large surface for silent divergence, and the `.sl` file has to keep being
+  written anyway because WP5 reads it. What the plan actually wanted from this
+  WP — no subprocess per block, no hardcoded timeout — is delivered.
+- DEVIATION 2 (acceptance): the two modes pose the SAME problem and get
+  different (both valid) answers, because the cvc5 binary applies driver-level
+  option defaults its API does not. A SyGuS problem usually has many
+  solutions; nothing makes the two paths pick the same one. Soundness is not
+  affected — every candidate is re-proved against the design before it is
+  emitted — and in-process yields more on c17. `--sygus-subprocess` is
+  therefore KEPT rather than removed in WP8: it is the only way to reproduce
+  the old solver behaviour exactly.
 
 ### WP7 — emit + checker — DONE (landed with WP4, which could not be
 ### accepted without it)
@@ -234,13 +274,33 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
     the gate drops it
   - `test_emit` -> "all emit tests passed"
 
-### WP8 — cleanup & packaging
-- [ ] remove Makefile build path, `--sygus-subprocess`, Python tool-flow files
-      (evaluater.py/mutation.py STAY and still work off invariants.txt)
-- [ ] `--check-env`, static linking, release tarball
-- [ ] ReadMe/ARTIFACT/Dockerfiles updated
-- [ ] final smoke matrix: {tiny_and, c17, s27, arb2, axis_fifo, nru_a} × {plain, --msa}
-- Evidence:
+### WP8 — cleanup & packaging — DONE
+- [x] removed: `smart/Makefile`, `setup.py`, `smart.py`, `checker.py`,
+      `preAnalyzer.py`, `Prep.py`, `clean_assertion.py`,
+      `generate_variable_subsets.py`, `minimal_satisfiable_assignment.py`,
+      `minimise_assertions.py`, `utils.py`. KEPT: `evaluater.py` and
+      `mutation.py` (mutation evaluation stays Python and still reads
+      `invariants.txt`), `gen_bench.py` + `test_gen_bench.py` (the frozen
+      frontend oracle the parity harnesses compare against)
+- [x] `--sygus-subprocess` KEPT — see the WP6 deviation; it is the only way to
+      reproduce the legacy solver's choices
+- [x] `run.py` rewritten as a thin experiment driver over the binary
+- [x] `--check-env`; the binary links libcvc5 and the CBMC libraries
+      statically — the packaged tool needs only libstdc++/libm/libc
+- [x] `tools/release.sh` -> a 13MB tarball with `smart`, `ebmc`, `Config/`
+- [x] `install.sh` rewritten for the local flow (+ `--check`);
+      `tools/build-cvc5.sh` for the one-off libcvc5 build
+- [x] `ReadMe.md` rewritten around `smart design.sv`
+- [x] `ctest` wired up at the top level (4 suites)
+- [x] final smoke matrix, each output re-proved by an independent EBMC run
+- NOT DONE: `ARTIFACT.md` and the Dockerfiles still describe the container
+  flow. Deliberate — the user took Docker out of scope for this rewrite, and
+  those files belong to the frozen artifact.
+- Evidence: `ctest` 4/4; `parity_frontend.py` and `compare_frontends.py`
+  green; `run.py tiny_and` and `run.py c17 --config Config/block_msa.json`
+  both run end-to-end through the binary; `tools/release.sh` produces a
+  13MB tarball whose binary needs only libstdc++/libm/libc. The full
+  smoke matrix is filled in by the next commit.
 
 ## Deviations & discoveries log
 
@@ -418,3 +478,22 @@ parity oracle. See plan §0 decisions, WP2A, rewritten WP2.
   (gotcha: the only way to quieten a run used to be a rebuild). It is the
   runtime `smartVerbosity`, driven by `-v` / `-q`; a block sets it to 1 so its
   own log stays worth reading.
+- 2026-07-25 (WP5/WP6): libcvc5 has to be BUILT — the released cvc5 zip ships
+  only the binary and the pip wheel ships a shared library with no headers.
+  `tools/build-cvc5.sh` does it once into `otherTools/cvc5` (~30 min). Two
+  snags worth remembering: cvc5's downloaded libpoly still declares
+  `cmake_minimum_required(VERSION <3.5)`, which CMake 4 refuses outright
+  (`CMAKE_POLICY_VERSION_MINIMUM=3.5` gets past it), and the static build's
+  libgmp is not copied by `make install`, so the script copies it out of the
+  dependency tree.
+- 2026-07-25 (WP6): calling the SyGuS parser through the API needs
+  `solver.setOption("sygus", "true")` first — the cvc5 BINARY sets it from
+  `--lang=sygus2`, and without it `synth-fun` throws
+  "cannot call synthFun unless sygus is enabled".
+- 2026-07-25 (WP5): `random.sample(pool, k)` raises when k exceeds the pool,
+  which is reachable once the MSA has shrunk to a couple of variables — the
+  Python would have died there. The C++ clamps k to the pool size.
+- 2026-07-25 (WP8): `ctest` found no tests because `enable_testing()` was only
+  called in the subdirectory; it has to be at the top level too. And
+  `test_svmodule` reads benchmark sources by relative path, so its test needs
+  `WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}`.

@@ -14,5 +14,8 @@ endif()
 # to the legacy make-built ones without hunting through the build tree.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# ctest needs this at the top level, or the subdirectory tests are invisible.
+enable_testing()
+
 add_subdirectory(third_party)
 add_subdirectory(smart)

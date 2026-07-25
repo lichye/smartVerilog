@@ -1,5 +1,12 @@
 # Artifact Guide
 
+> **This document describes the FROZEN paper artifact**, which runs the
+> original Python-orchestrated pipeline inside a Docker image. It is kept as
+> published and is not updated to follow the tool.
+>
+> For the current tool — one binary, built and run locally, no container —
+> see [ReadMe.md](ReadMe.md).
+
 This document describes the reproducible artifact package for SMART/MAPminer,
 located in [`artifact/`](artifact/). The artifact runs every experiment inside
 a self-contained Docker image so no host toolchain is required beyond

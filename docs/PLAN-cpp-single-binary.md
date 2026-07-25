@@ -39,6 +39,8 @@ mines candidate SVA via SyGuS (cvc5), verifies them with EBMC, and emits
   verification (no EBMC C++ API to link).
 - cvc5 is used via **libcvc5 C++ API** (the Python side already uses
   `cvc5.pythonic`, so this unifies the solver story; no z3 in the binary).
+  It has to be BUILT — the released zip ships only the binary and the pip
+  wheel ships a library without headers. `tools/build-cvc5.sh`, one-off.
 - Build system: **CMake**.
 - cocotb / venv / all Python leaves the runtime path of the tool.
 - **Build and test on the host, not in Docker (2026-07-25).** Every WP's
@@ -532,3 +534,39 @@ needs locally and record the install command in that WP's evidence.
 Note: WP2A is the new critical-path item. WP3 does not block on it (it takes
 a `ModuleInfo`, which the regex oracle can supply during development); WP2's
 adapter and WP1's link step both need WP2A's chosen mechanism + libs.
+
+
+## 8. Outcome (2026-07-25)
+
+Every work package is landed. `smart design.sv` runs the whole flow in one
+binary: hw-cbmc frontend, iverilog simulation, cvc5 synthesis, EBMC checking,
+emission. The Python orchestration layer is deleted; `evaluater.py` /
+`mutation.py` (mutation evaluation) and `gen_bench.py` (the frozen frontend
+oracle) are what remain, exactly as the plan intended.
+
+The four things that turned out differently from the plan, all recorded in the
+progress doc with their reasoning:
+
+1. **Blocks are processes, not threads.** The VCD scanner is not reentrant and
+   the block code is built on globals; more to the point, a block that hangs
+   is hanging inside cvc5 or EBMC, where a thread cannot be cancelled. The
+   `timeout 100 ./smart.out` trick is still gone — the deadline is ours now,
+   and it kills the process group rather than just the leader.
+2. **Assertion-set parity with the legacy pipeline is not achievable**, and
+   asking for it was a mistake in the plan: traces, port order, subset draws
+   and solver choices all differ. What is checkable, and checked, is that
+   every emitted assertion is proved against the unmodified design by an
+   EBMC run the tool did not perform.
+3. **SyGuS goes through the API's parser, not `synthFun()` calls**, keeping
+   the existing grammar generator instead of re-expressing it; the goals of
+   that WP (no subprocess, no hardcoded 5s) hold either way.
+4. **`--sygus-subprocess` is kept**, not removed: the two modes legitimately
+   pick different valid solutions, so it is the only way to reproduce the old
+   solver's behaviour.
+
+Three real defects surfaced on the way, none of them in the new code:
+hw-cbmc drops single `(* attr *)` instances (patched, to send upstream); the
+VCD parser segfaulted on Icarus Verilog's empty `$dumpall` and mis-sized every
+value whose leading bits were omitted (IEEE 1364 §18.2.1 — Verilator writes
+full width, which is why it had never shown); and cvc5's own libpoly does not
+configure under CMake 4.

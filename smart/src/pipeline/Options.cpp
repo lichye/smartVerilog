@@ -486,10 +486,17 @@ void Options::parseCommandLine(int argc, char** argv) {
     }
     if (!pendingBools.empty()) set("verbosity", verbosity);
 
-    // --msa / --random pick a block strategy, which only means anything in
-    // blockified mode; asking for one is asking for the other.
-    if ((getBool("msa") && wasSetExplicitly("msa")) ||
-        (getBool("random") && wasSetExplicitly("random")))
+    // --msa / --random on the COMMAND LINE pick a block strategy, and asking
+    // for one is asking to iterate. This must not apply to the config keys:
+    // the shipped configs set Blockified_settings.MSA while leaving
+    // Workflow.Blockified false, and there the strategy only says which
+    // blocks to draw IF the workflow iterates at all.
+    const auto cameFromCommandLine = [&](const std::string& key) {
+        return std::any_of(pendingFlags.begin(), pendingFlags.end(),
+                           [&](const auto& entry) { return entry.first->key == key; });
+    };
+    if ((getBool("msa") && cameFromCommandLine("msa")) ||
+        (getBool("random") && cameFromCommandLine("random")))
         set("blockified", true);
 
     // --unbounded is the user-facing spelling of the two legacy switches.

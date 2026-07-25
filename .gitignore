@@ -24,3 +24,7 @@ artifact/
 .dockerignore
 __pycache__/
 
+dist/
+smoke-out/
+build/
+smart/smart.out
