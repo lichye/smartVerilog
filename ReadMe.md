@@ -56,6 +56,17 @@ Results will be generated in:
 ```
 /smartVerilog/Results/smart_c17/
 ```
+If a result directory with the same name already exists, it is moved aside to
+`Results/smart_c17.prev` before the new run. Per-core synthesis logs are kept
+in `Results/smart_c17/logs/` for debugging.
+
+Other useful commands:
+```bash
+python run.py --help              # full CLI reference
+python run.py --list-benchmarks   # show all available benchmarks
+python run.py --list-configs      # show all available configs
+python run.py --check-env         # verify verilator/ebmc/cvc5/cocotb are installed
+```
 
 ### 3.1 Running a new hardware design
 
@@ -143,5 +154,5 @@ Results/smart_c17/assertions.txt
 ## Citation
 If you use our work, please cite this paper.
 ```
-Leiqi Ye, Yixuan Li, Guy Frankel, Jianyi Cheng, Elizabeth Polgreen. Unlocking Hardware Verification with Oracle Guided Synthesis. The 25rd Conference on Formal Methods in Computer-Aided Design (FMCAD)
+Leiqi Ye, Yixuan Li, Guy Frankel, Jianyi Cheng, Elizabeth Polgreen. Unlocking Hardware Verification with Oracle Guided Synthesis. The 25th Conference on Formal Methods in Computer-Aided Design (FMCAD)
 ```

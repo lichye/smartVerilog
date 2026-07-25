@@ -48,9 +48,9 @@ def write_assertion_file(input_file, output_file, assertions):
         # print(f"Assertions sucess {output_file}")
 
     except FileNotFoundError:
-        print(f"Erorr: File '{input_file}' not found.")
+        print(f"Error: File '{input_file}' not found.")
     except IOError as e:
-        print(f"Erorr: {e}")
+        print(f"Error: {e}")
 
 
 def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
@@ -73,7 +73,10 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
         return_result = []
 
         try:
-            ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound","10","--top",top_module]
+            if(bound != -1):
+                ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--bound",str(bound),"--top",top_module]
+            else:
+                ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--k-induction","--top",top_module]
             ebmc_result = subprocess.run(ebmc_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
             if(ebmc_result.returncode != 0):
                 if(ebmc_result.returncode == 124):
@@ -237,7 +240,7 @@ if __name__ == "__main__":
     bound = -1
     print("Smart Evaluater")
     if(len(sys.argv) < 2):
-        print("Usage: python3 evaluater.py top_module")
+        print("Usage: python3 evaluater.py top_module [bound]")
         exit(1)
     elif(len(sys.argv) == 2):
         top_module = sys.argv[1]
@@ -253,7 +256,6 @@ if __name__ == "__main__":
         exit(1)
 
     property_dir = "invariants.txt"
-    bound = 10
     ebmc_path = "ebmc"
     working_dir = os.getcwd()
     directory = working_dir+"/benchmarks"

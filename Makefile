@@ -8,7 +8,7 @@ RESULTS_DIR := $(PROJECT_ROOT)/Results
 CONFIG_DIR := $(PROJECT_ROOT)/Config
 CONFIG ?= Config/smart.json
 
-.PHONY: docker-builder pull shell shell-root run md clean clean-results
+.PHONY: docker-builder pull shell shell-root run clean clean-results
 
 docker-builder:
 	@$(ENGINE) build \
@@ -46,14 +46,6 @@ run:
 		-v $(CONFIG_DIR):/workspace/smartVerilog/Config:ro,Z \
 		$(IMAGE) python run.py $(BENCH) $(CONFIG)
 
-md:
-	@mkdir -p $(RESULTS_DIR)
-	@$(ENGINE) run --rm -it \
-		-w /workspace/smartVerilog \
-		-v $(RESULTS_DIR):/workspace/smartVerilog/Results:Z \
-		-v $(CONFIG_DIR):/workspace/smartVerilog/Config:ro,Z \
-		$(IMAGE) python md.py $(BENCH) $(CONFIG)
-
 clean:
 	@rm -rf smart/*.txt
 	@rm -rf smart/*.sby
@@ -63,13 +55,6 @@ clean:
 	@rm -rf smart/result/*
 	@rm -rf smart/src/python/__pycache__
 	@$(MAKE) -C smart all_clean
-	@rm -f md.dat
-	@rm -f assertions.dat
-	@rm -f assertions_found.dat
-	@rm -f runtime.dat
-	@rm -f md_rate_flat.csv
-	@rm -f table_block_msa.tex
-	@rm -f table_block_msa_mini.tex
 
 clean-results:
 	@rm -rf $(RESULTS_DIR)

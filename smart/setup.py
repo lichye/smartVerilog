@@ -177,10 +177,12 @@ if __name__ == "__main__":
         print("Should give the main module name")
         exit(1)
     
+    if not os.path.exists(Config):
+        print(f"Config file not found: {Config}")
+        exit(1)
     with open(Config) as f:
         config_data = json.load(f)
-        Number_Trace = config_data["PreAnalysis_settings"]["Number_Trace"]
-        sim_loop = Number_Trace
+        sim_loop = config_data.get("PreAnalysis_settings", {}).get("Number_Trace", 3)
 
     files = os.listdir(dir_path)
     if len(files) == 0:

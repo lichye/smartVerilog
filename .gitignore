@@ -21,4 +21,4 @@ Results/
 CaseStudy/
 artifact/
 .codex
-.dockerignore
+.dockerignore__pycache__/

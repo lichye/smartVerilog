@@ -17,15 +17,16 @@ from minimal_satisfiable_assignment import get_mus
 from minimise_assertions import run_minimisation
 
 def smart(current_path, top_module,result_file,init_variables,core_id,latency):
-    # print("calling : ./smart.out",current_path, top_module, result_file, init_variables,core_id)
-    cmd = ["timeout","100","./smart.out",current_path,top_module,result_file,init_variables,core_id,latency,Config]
-    # print("Run cmd: ", str(cmd))
-    # result = subprocess.run(cmd, capture_output=True, text=True, cwd=current_path)
-    result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    # print(" ".join(cmd))
+    cmd = ["timeout",str(Core_timeout),"./smart.out",current_path,top_module,result_file,init_variables,core_id,latency,Config]
+    log_dir = os.path.join(current_path, "runtime", "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, f"core_{core_id}_latency_{latency}.log")
+    with open(log_file, "a") as log:
+        log.write("$ " + " ".join(cmd) + "\n")
+        log.flush()
+        result = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT)
+        log.write(f"[exit code: {result.returncode}]\n\n")
     writeLog("smartCore.txt", " ".join(cmd)+"\n\n")
-    # writeLog("smartCore.txt", " ".str(result)+ "\n")
-    # print("Result: ", result)
     return result.returncode
 
 def preAnalysis(work_dir,file_path,top_module,output_file,Config):
@@ -252,6 +253,7 @@ if __name__ == "__main__":
         config = json.load(f)
         Workflow = config.get("Workflow")
         SMART_Time_out = Workflow.get("SMART_Time_out",43200)
+        Core_timeout = Workflow.get("Core_timeout",100)
         Blockified_settings = config.get("Blockified_settings")
         Threadhold = Blockified_settings.get("Threadhold")
         Parallel_settings = config.get("Parallel_settings")

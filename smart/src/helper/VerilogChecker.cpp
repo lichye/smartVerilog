@@ -216,7 +216,7 @@ void VerilogChecker::cleanProperties() {
 bool VerilogChecker::runEBMC(){
     std::string command = "";
     command += "ebmc "+formalFilePath;
-    command += "-D FORMAL ";
+    command += " -D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
     for(auto &path : relatedFilePaths) {

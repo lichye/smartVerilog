@@ -40,9 +40,9 @@ def write_assertion_file(input_file, output_file, assertion):
         # print(f"Assertions sucess {output_file}")
 
     except FileNotFoundError:
-        print(f"Erorr: File '{input_file}' not found.")
+        print(f"Error: File '{input_file}' not found.")
     except IOError as e:
-        print(f"Erorr: {e}")
+        print(f"Error: {e}")
 
 def read_file(file):
     with open(file, "r") as file:
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     bound = -1
     print("Start checker.py")
     if(len(sys.argv) < 2):
-        print("Usage: python3 evaluater.py top_module")
+        print("Usage: python3 checker.py top_module [bound]")
         exit(1)
     elif(len(sys.argv)==2):
         top_module = sys.argv[1]
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         bound = sys.argv[2]
         print("Use bounded model checking with bound "+str(bound))
     else:
-        print("Usage: python3 evaluater.py top_module [bound]")
+        print("Usage: python3 checker.py top_module [bound]")
         exit(1)
 
     

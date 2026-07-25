@@ -25,15 +25,13 @@ yes | pip install pysmt
 yes | pip install utils
 yes | pip install cvc5
 
-cd smart
-mkdir user/
-cd ..
+mkdir -p smart/user
 
 # Install other tools
-mkdir otherTools
+mkdir -p otherTools
 cd otherTools
 
-#install yosys
+#install yosys/verilator via oss-cad-suite
 wget -nc https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2023-05-20/oss-cad-suite-linux-x64-20230520.tgz
 tar -xvzf oss-cad-suite-linux-x64-20230520.tgz
 source oss-cad-suite/environment
@@ -42,31 +40,12 @@ source oss-cad-suite/environment
 wget https://github.com/diffblue/hw-cbmc/releases/download/ebmc-5.6/ebmc_5.6_amd64.deb
 sudo dpkg -i ebmc_5.6_amd64.deb
 
-# Install cvc5
-# git clone https://github.com/cvc5/cvc5.git
-# cd cvc5
-# git checkout cvc5-1.2.0
-
-# sudo ./configure.sh --auto-download
-# cd build         
-# yes | sudo make            
-# yes | sudo make check      
-# yes | sudo make install
-# cd ..
-# cd ..
-# cd ..
-
-
+# Install cvc5 (static release binary)
 wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static.zip
 unzip cvc5-Linux-x86_64-static.zip
-cd cvc5-Linux-x86_64-static
-cd bin
-chmod +x cvc5
-sudo mv cvc5 /usr/local/bin/
-cd ..
+chmod +x cvc5-Linux-x86_64-static/bin/cvc5
+sudo mv cvc5-Linux-x86_64-static/bin/cvc5 /usr/local/bin/
 cd ..
 
-cd smart
-mkdir user/
-
-# wget https://github.com/cvc5/cvc5/releases/download/cvc5-1.2.0/cvc5-Linux-x86_64-static-gpl.zip
+# Verify the environment
+python run.py --check-env

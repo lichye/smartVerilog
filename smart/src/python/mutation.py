@@ -321,9 +321,9 @@ def write_assertion_file(input_file, output_file, assertions):
         # print(f"Assertions sucess {output_file}")
 
     except FileNotFoundError:
-        print(f"Erorr: File '{input_file}' not found.")
+        print(f"Error: File '{input_file}' not found.")
     except IOError as e:
-        print(f"Erorr: {e}")
+        print(f"Error: {e}")
 
 def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
     time_start = time.time()
