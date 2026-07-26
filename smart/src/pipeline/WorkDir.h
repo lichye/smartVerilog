@@ -39,6 +39,9 @@ public:
     std::string effectiveConfigFile() const;
     std::string assertionsFile() const;
     std::string invariantsFile() const;
+    // One JSON object per line: every stage and every block, with timings and
+    // outcomes. Written as the run goes, so it survives a crash or a kill.
+    std::string runLogFile() const;
 
     // Remove the tree. Only ever called on success and without --keep-work.
     void remove() const;

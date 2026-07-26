@@ -39,6 +39,9 @@ struct BlockResult {
     int exitCode = 0;
     double seconds = 0.0;
     std::string assertion;  // set when status == Verified
+    int pid = 0;            // for correlating with the block's own log
+    bool killed = false;    // deadline expired and we killed the group
+    bool survivedKill = false;  // ... and something was still alive after
 };
 
 struct BlockRunnerOptions {

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <mutex>
 #include <random>
 #include <set>
 #include <sstream>
@@ -31,6 +32,57 @@ namespace {
 namespace fs = std::filesystem;
 
 std::string shellQuote(const std::string& text) { return "'" + text + "'"; }
+
+std::string jsonEscape(const std::string& text) {
+    std::string escaped;
+    for (char c : text) {
+        switch (c) {
+            case '"': escaped += "\\\""; break;
+            case '\\': escaped += "\\\\"; break;
+            case '\n': escaped += "\\n"; break;
+            case '\t': escaped += "\\t"; break;
+            default:
+                if (static_cast<unsigned char>(c) >= 0x20) escaped += c;
+        }
+    }
+    return escaped;
+}
+
+// Append one JSON object to the run log. Line-buffered and flushed per record
+// on purpose: the log has to survive the run being killed, which is precisely
+// when it is worth reading.
+class RunLog {
+public:
+    explicit RunLog(std::string path) : path_(std::move(path)) {}
+
+    void record(const std::string& fields) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::ofstream out(path_, std::ios::app);
+        if (!out) return;
+        out << "{\"t\":" << std::fixed << std::setprecision(3) << elapsed()
+            << "," << fields << "}\n";
+    }
+
+private:
+    double elapsed() const {
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                             start_)
+            .count();
+    }
+    std::string path_;
+    std::mutex mutex_;
+    std::chrono::steady_clock::time_point start_ = std::chrono::steady_clock::now();
+};
+
+const char* statusName(BlockStatus status) {
+    switch (status) {
+        case BlockStatus::Verified: return "verified";
+        case BlockStatus::NoAssertion: return "no-assertion";
+        case BlockStatus::TimedOut: return "timed-out";
+        case BlockStatus::Failed: return "failed";
+    }
+    return "unknown";
+}
 
 std::string readFile(const std::string& path) {
     std::ifstream in(path);
@@ -197,11 +249,22 @@ ExitCode Pipeline::run(RunSummary& summary) {
             writeFile(work.formalDir() + "/" + name, source);
         }
         writeFile(work.effectiveConfigFile(), options_.toJson());
+        // Start fresh: a stale log from a previous run in the same workdir
+        // would be worse than none.
+        std::error_code error;
+        fs::remove(work.runLogFile(), error);
     } catch (const std::exception& e) {
         std::cerr << "smart: cannot prepare " << work.root() << ": " << e.what()
                   << "\n";
         return ExitCode::Failure;
     }
+
+    RunLog runLog(work.runLogFile());
+    runLog.record("\"stage\":\"start\",\"top\":\"" + jsonEscape(top) +
+                  "\",\"design\":\"" + jsonEscape(mainFile) +
+                  "\",\"jobs\":" + std::to_string(options_.getInt("jobs")) +
+                  ",\"core_timeout\":" +
+                  std::to_string(options_.getInt("core_timeout")));
 
     for (const auto& warning : options_.warnings()) say("note: " + warning);
 
@@ -228,6 +291,9 @@ ExitCode Pipeline::run(RunSummary& summary) {
         // sim_src/ underneath for the assume-stripped copies.
         simgen::runSimulations(info, workdirDesign, work.root(),
                                work.simResultsDir(), harness);
+        runLog.record("\"stage\":\"simulate\",\"traces\":" +
+                      std::to_string(harness.traces) + ",\"cycles\":" +
+                      std::to_string(harness.cycles));
     } catch (const simgen::MissingToolError& e) {
         std::cerr << "smart: " << e.what() << "\n"
                   << "smart: simulation needs iverilog and vvp. Either put "
@@ -275,6 +341,10 @@ ExitCode Pipeline::run(RunSummary& summary) {
     say("[" + timestamp() + "] " + std::to_string(variables.size()) +
         " candidate variables, k=" + std::to_string(plan.k) + ", " +
         std::to_string(plan.threadBlocks + plan.initBlocks) + " blocks");
+    runLog.record("\"stage\":\"pre-analysis\",\"variables\":" +
+                  std::to_string(variables.size()) + ",\"k\":" +
+                  std::to_string(plan.k) + ",\"blocks\":" +
+                  std::to_string(plan.threadBlocks + plan.initBlocks));
 
     // ---- synthesis rounds ----------------------------------------------
     BlockRunnerOptions runner;
@@ -351,16 +421,49 @@ ExitCode Pipeline::run(RunSummary& summary) {
                 if (result.status == BlockStatus::Verified &&
                     mined.insert(result.assertion).second)
                     ++foundThisRound;
+
+                std::ostringstream record;
+                record << "\"block\":\"" << jsonEscape(result.job.coreId)
+                       << "\",\"round\":" << round
+                       << ",\"latency\":" << result.job.latency
+                       << ",\"pid\":" << result.pid
+                       << ",\"status\":\"" << statusName(result.status)
+                       << "\",\"exit\":" << result.exitCode
+                       << ",\"seconds\":" << std::fixed << std::setprecision(2)
+                       << result.seconds;
+                if (result.killed) record << ",\"killed\":true";
+                // The one that matters when a benchmark goes wrong: we killed
+                // the group and something in it was still there afterwards.
+                if (result.survivedKill) record << ",\"survived_kill\":true";
+                if (!result.assertion.empty())
+                    record << ",\"assertion\":\"" << jsonEscape(result.assertion)
+                           << "\"";
+                runLog.record(record.str());
                 if (!quiet && (done % 10 == 0 || done == total))
                     std::cout << "[" << timestamp() << "]   " << done << "/" << total
                               << " blocks, " << mined.size() << " assertions"
                               << std::endl;
             });
-        (void)results;
 
         say("[" + timestamp() + "] round " + std::to_string(round) + " found " +
             std::to_string(foundThisRound) + " new assertions (" +
             std::to_string(mined.size()) + " total)");
+
+        {
+            std::size_t timedOut = 0, failed = 0, verified = 0;
+            for (const auto& result : results) {
+                if (result.status == BlockStatus::TimedOut) ++timedOut;
+                else if (result.status == BlockStatus::Failed) ++failed;
+                else if (result.status == BlockStatus::Verified) ++verified;
+            }
+            runLog.record("\"stage\":\"round\",\"round\":" + std::to_string(round) +
+                          ",\"blocks\":" + std::to_string(jobsThisRound.size()) +
+                          ",\"verified\":" + std::to_string(verified) +
+                          ",\"timed_out\":" + std::to_string(timedOut) +
+                          ",\"failed\":" + std::to_string(failed) +
+                          ",\"new\":" + std::to_string(foundThisRound) +
+                          ",\"total\":" + std::to_string(mined.size()));
+        }
 
         if (!options_.getBool("blockified")) break;
         if (static_cast<long long>(foundThisRound) <= options_.getInt("threshold"))
@@ -483,9 +586,21 @@ ExitCode Pipeline::run(RunSummary& summary) {
         const auto checked = emit::checkAssertions(
             work.verilogDir() + "/" + fs::path(mainFile).filename().string(),
             assertions, check);
-        for (const auto& result : checked)
-            if (result.status == emit::CheckStatus::Verified)
-                verified.push_back(result.assertion);
+        std::size_t refuted = 0, timedOutChecks = 0, errors = 0;
+        for (const auto& result : checked) {
+            switch (result.status) {
+                case emit::CheckStatus::Verified: verified.push_back(result.assertion); break;
+                case emit::CheckStatus::Refuted: ++refuted; break;
+                case emit::CheckStatus::TimedOut: ++timedOutChecks; break;
+                case emit::CheckStatus::Error: ++errors; break;
+            }
+        }
+        runLog.record("\"stage\":\"check\",\"checked\":" +
+                      std::to_string(checked.size()) + ",\"verified\":" +
+                      std::to_string(verified.size()) + ",\"refuted\":" +
+                      std::to_string(refuted) + ",\"timed_out\":" +
+                      std::to_string(timedOutChecks) + ",\"errors\":" +
+                      std::to_string(errors));
     } else {
         verified = assertions;
     }
@@ -517,6 +632,11 @@ ExitCode Pipeline::run(RunSummary& summary) {
     summary.seconds =
         std::chrono::duration<double>(std::chrono::steady_clock::now() - runStart)
             .count();
+    runLog.record("\"stage\":\"done\",\"mined\":" +
+                  std::to_string(summary.minedAssertions) + ",\"verified\":" +
+                  std::to_string(summary.verifiedAssertions) + ",\"rounds\":" +
+                  std::to_string(summary.rounds) + ",\"output\":\"" +
+                  jsonEscape(output) + "\"");
 
     if (options_.getBool("keep_work")) {
         summary.workDirKept = true;

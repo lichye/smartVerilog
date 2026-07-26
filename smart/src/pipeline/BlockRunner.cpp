@@ -14,6 +14,7 @@
 
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -68,6 +69,18 @@ BlockResult runOne(const BlockJob& job, const BlockRunnerOptions& options,
     if (pid == 0) {
         // --- child ---
         setpgid(0, 0);
+
+        // Die with the parent. Without this, killing `smart` (a `timeout` on
+        // the whole run, a Ctrl-C, a crash) leaves its blocks running: they
+        // are re-parented to init and keep burning CPU with nobody waiting on
+        // them. That is not hypothetical — a block was found alive 4h45m after
+        // its 60s deadline, orphaned when the run around it was killed at its
+        // own 1800s cap.
+        prctl(PR_SET_PDEATHSIG, SIGKILL);
+        // The parent may already be gone; PDEATHSIG only fires on a future
+        // death, so check once here to close the race.
+        if (getppid() == 1) _exit(127);
+
         if (chdir(options.workDir.c_str()) != 0) _exit(127);
 
         const int logFd =
@@ -113,6 +126,19 @@ BlockResult runOne(const BlockJob& job, const BlockRunnerOptions& options,
             kill(-pid, SIGKILL);
             waitpid(pid, &status, 0);
             timedOut = true;
+
+            // Did the group actually die? Checking immediately cries wolf:
+            // the block's own children (cvc5, ebmc) are re-parented to init
+            // when it dies and linger as zombies until init reaps them, and a
+            // zombie still answers kill(-pgid, 0). Give them a moment, then
+            // ask — a group still present after that is a genuine escape, and
+            // an escaped block silently burns a core for as long as the run
+            // lasts.
+            for (int attempt = 0; attempt < 20; ++attempt) {
+                if (kill(-pid, 0) != 0) break;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                result.survivedKill = (attempt == 19);
+            }
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -122,6 +148,8 @@ BlockResult runOne(const BlockJob& job, const BlockRunnerOptions& options,
                          std::chrono::steady_clock::now() - start)
                          .count();
     result.exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    result.pid = static_cast<int>(pid);
+    result.killed = timedOut;
 
     if (timedOut) {
         result.status = BlockStatus::TimedOut;

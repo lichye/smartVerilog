@@ -90,7 +90,7 @@ in a clean `ubuntu:22.04`:
 
 ## 2. Open defects
 
-### 2.1 A block escaped its deadline by four hours
+### ~~2.1 A block escaped its deadline by four hours~~ — FIXED
 **Symptom.** During the subset benchmark (`--core-timeout 60`), a block
 process was found alive after 4h45m:
 ```
@@ -102,10 +102,23 @@ group. It demonstrably did not here. The orphan also burned CPU for the rest
 of the benchmark, so **every timing in §4 is contaminated**, and any block that
 should have been killed but was not may have contributed assertions it should
 not have.
-**Not yet diagnosed.** Candidates: the `setpgid` race between parent and child
-(both call it, and the parent's call fails if the child already exec'd), a
-`waitpid` path that returns before the kill, or the re-exec losing the group.
-**Status.** OPEN. Fix before trusting any benchmark numbers.
+**Cause.** Not the deadline at all — the deadline works. The subset script ran
+each experiment under `timeout 1800`, which killed the PARENT `smart` when a
+slow config hit the cap. Its blocks were re-parented to init and nothing was
+left to kill them. `block_msa_rand` on c499/c880/c1355 hit that cap, which is
+exactly where the orphan came from.
+**Fix.** Blocks set `PR_SET_PDEATHSIG` so the kernel kills them when their
+parent dies, plus a `getppid() == 1` check to close the race where the parent
+is already gone.
+**Evidence.** 8 blocks running, parent killed, 0 alive four seconds later.
+Separately, with `--core-timeout 1` on axis_fifo: 188 blocks, 188 killed, 0
+genuine escapes.
+**Caveat found while measuring.** The first version of the escape check cried
+wolf on all 188 — a killed block's own children (cvc5, ebmc) linger as zombies
+until init reaps them, and a zombie still answers `kill(-pgid, 0)`. The check
+now waits before concluding.
+**Status.** FIXED. The timings in §4.1 are still contaminated and that run
+should be repeated.
 
 ### 2.2 s382 and s444 fail in every config
 **Symptom.** ERR in all four configs of the subset run; a direct run has been
@@ -208,6 +221,26 @@ run — **not yet done**, deliberately, because §2.1 contaminates the inputs.
   running the pre-rewrite pipeline for comparison.
 
 ---
+
+## 5a. Run log
+
+Every run writes `workdir/run-log.jsonl`, one JSON object per line, flushed as
+it goes so it survives the run being killed:
+
+```
+{"t":0.000,"stage":"start","top":"c17","jobs":8,"core_timeout":100}
+{"t":0.035,"stage":"simulate","traces":3,"cycles":10}
+{"t":0.037,"stage":"pre-analysis","variables":11,"k":4,"blocks":86}
+{"t":0.9,"block":"42","round":1,"pid":1234,"status":"verified","exit":0,"seconds":0.31,"assertion":"..."}
+{"t":1.044,"stage":"round","round":1,"blocks":86,"verified":81,"timed_out":0,"failed":0,"new":50,"total":50}
+{"t":1.186,"stage":"check","checked":50,"verified":50,"refuted":0,"timed_out":0,"errors":0}
+{"t":1.187,"stage":"done","mined":50,"verified":50,"rounds":1}
+```
+
+Per-block records carry `killed` when the deadline expired and `survived_kill`
+when the process group was still there afterwards — the field that would have
+caught §2.1 the day it happened instead of a week later. The `check` record
+separates refuted from timed-out from errored, which the summary line cannot.
 
 ## 6. Next
 

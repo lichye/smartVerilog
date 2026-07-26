@@ -30,6 +30,7 @@ std::string WorkDir::effectiveConfigFile() const {
 }
 std::string WorkDir::assertionsFile() const { return root_ + "/assertions.txt"; }
 std::string WorkDir::invariantsFile() const { return root_ + "/invariants.txt"; }
+std::string WorkDir::runLogFile() const { return root_ + "/run-log.jsonl"; }
 
 void WorkDir::create() const {
     for (const auto& dir : {runtime(), verilogDir(), formalDir(), simResultsDir(),
