@@ -276,9 +276,23 @@ ExitCode Pipeline::run(RunSummary& summary) {
     harness.clock = options_.getString("clock");
     harness.reset = parseResetOption(options_.getString("reset"));
     harness.firstIndex = 1;  // sim1.vcd .. simN.vcd, as the legacy tree had
+    harness.simulationTimeoutSeconds =
+        static_cast<int>(options_.getInt("simulation_timeout"));
+
+    const auto simulatorName = options_.getString("simulator");
+    if (simulatorName == "iverilog" || simulatorName == "icarus") {
+        harness.simulator = simgen::Simulator::Icarus;
+    } else if (simulatorName == "verilator" || simulatorName.empty()) {
+        harness.simulator = simgen::Simulator::Verilator;
+    } else {
+        std::cerr << "smart: unknown simulator '" << simulatorName
+                  << "' (known: verilator, iverilog)\n";
+        return ExitCode::UserError;
+    }
 
     say("[" + timestamp() + "] simulating " + std::to_string(harness.traces) +
-        " traces x " + std::to_string(harness.cycles) + " cycles");
+        " traces x " + std::to_string(harness.cycles) + " cycles with " +
+        simulatorName);
     try {
         // Simulate the design as it sits in the workdir, so the traces match
         // the sources the blocks reason about.
@@ -291,16 +305,17 @@ ExitCode Pipeline::run(RunSummary& summary) {
         // sim_src/ underneath for the assume-stripped copies.
         simgen::runSimulations(info, workdirDesign, work.root(),
                                work.simResultsDir(), harness);
-        runLog.record("\"stage\":\"simulate\",\"traces\":" +
+        runLog.record("\"stage\":\"simulate\",\"simulator\":\"" +
+                      jsonEscape(simulatorName) + "\",\"traces\":" +
                       std::to_string(harness.traces) + ",\"cycles\":" +
                       std::to_string(harness.cycles));
     } catch (const simgen::MissingToolError& e) {
         std::cerr << "smart: " << e.what() << "\n"
-                  << "smart: simulation needs iverilog and vvp. Either put "
-                     "them on PATH,\n"
+                  << "smart: the simulator is not on PATH. Either add it,\n"
                      "       e.g. from otherTools/oss-cad-suite/bin, or run "
-                     "./install.sh.\n"
-                     "       `smart --check-env` reports what is missing.\n";
+                     "./install.sh;\n"
+                     "       `smart --check-env` reports what is missing, and\n"
+                     "       `--simulator iverilog` selects the other backend.\n";
         summary.workDirKept = true;
         return ExitCode::EnvironmentError;
     } catch (const std::exception& e) {

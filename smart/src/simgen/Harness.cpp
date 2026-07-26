@@ -1,12 +1,18 @@
 #include "Harness.h"
 
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
+
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 namespace smart {
 namespace simgen {
@@ -93,6 +99,55 @@ std::string run(const std::string& command, int& exitCode) {
     const int status = pclose(pipe);
     exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
     return output;
+}
+
+// Run a command under a deadline, killing its whole process group if it
+// overruns. A simulation that never terminates is not hypothetical: gate-level
+// netlists driven with a random clock can enter a zero-delay loop and spin at
+// one timestamp forever.
+std::string runWithDeadline(const std::string& command, int seconds,
+                            int& exitCode, bool& timedOut) {
+    timedOut = false;
+    if (seconds <= 0) return run(command, exitCode);
+
+    const std::string tmp =
+        fs::temp_directory_path().string() + "/smart-sim-" +
+        std::to_string(::getpid()) + "-" + std::to_string(::rand());
+
+    const pid_t pid = fork();
+    if (pid < 0) { exitCode = -1; return "fork failed"; }
+    if (pid == 0) {
+        setpgid(0, 0);
+        freopen(tmp.c_str(), "w", stdout);
+        dup2(STDOUT_FILENO, STDERR_FILENO);
+        execl("/bin/sh", "sh", "-c", command.c_str(), nullptr);
+        _exit(127);
+    }
+    setpgid(pid, pid);
+
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
+    int status = 0;
+    for (;;) {
+        const pid_t waited = waitpid(pid, &status, WNOHANG);
+        if (waited == pid) break;
+        if (waited < 0) { exitCode = -1; break; }
+        if (std::chrono::steady_clock::now() >= deadline) {
+            kill(-pid, SIGKILL);
+            waitpid(pid, &status, 0);
+            timedOut = true;
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    exitCode = timedOut ? -1 : (WIFEXITED(status) ? WEXITSTATUS(status) : -1);
+
+    std::ifstream in(tmp);
+    std::ostringstream text;
+    if (in) text << in.rdbuf();
+    std::error_code error;
+    fs::remove(tmp, error);
+    return text.str();
 }
 
 std::string quote(const std::string& s) { return "'" + s + "'"; }
@@ -210,18 +265,17 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
 
     // Check before writing anything: "iverilog: command not found" buried in a
     // compiler log is a worse answer than saying which tool is missing.
-    for (const auto& tool : {options.iverilog, options.vvp})
-        if (!onPath(tool)) throw MissingToolError(tool);
+    if (options.simulator == Simulator::Verilator) {
+        if (!onPath(options.verilator)) throw MissingToolError(options.verilator);
+    } else {
+        for (const auto& tool : {options.iverilog, options.vvp})
+            if (!onPath(tool)) throw MissingToolError(tool);
+    }
 
     fs::create_directories(workDir);
     fs::create_directories(outputDir);
 
     const auto tbPath = fs::path(workDir) / "tb.sv";
-    {
-        std::ofstream out(tbPath);
-        if (!out) throw std::runtime_error("cannot write " + tbPath.string());
-        out << renderTestbench(info, options);
-    }
 
     // Simulation runs on assume-STRIPPED copies: an `assume(...)` that the
     // random stimulus violates would fire as a runtime assertion under
@@ -245,24 +299,62 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
         strippedFiles.push_back(stripped.string());
     }
 
-    const auto simPath = fs::path(workDir) / "sim.vvp";
-
-    std::ostringstream compile;
-    compile << options.iverilog << " -g2012 -o " << quote(simPath.string());
-    // Both the stripped copies (for `include "sibling.sv"` between them) and
-    // the original directory, for includes we did not copy such as .vh files.
-    compile << " -I " << quote(simSrcDir.string());
-    compile << " -I " << quote(fs::path(designFiles.front()).parent_path().string());
-    for (const auto& file : strippedFiles) compile << " " << quote(file);
-    compile << " " << quote(tbPath.string());
+    const bool useVerilator = options.simulator == Simulator::Verilator;
+    const auto simPath = fs::path(workDir) /
+                         (useVerilator ? "obj_dir/sim_" + info.top : "sim.vvp");
 
     SimResult result;
-    result.command = compile.str();
-
     int exitCode = 0;
+
+    std::ostringstream compile;
+    if (useVerilator) {
+        // The C++ testbench replaces tb.sv; keep both names distinct so a
+        // workdir from the other simulator is never mistaken for this one.
+        const auto harnessPath = fs::path(workDir) / "sim_main.cpp";
+        {
+            std::ofstream out(harnessPath);
+            if (!out) throw std::runtime_error("cannot write " + harnessPath.string());
+            out << renderVerilatorHarness(info, options);
+        }
+
+        compile << options.verilator << " --cc --exe --build --trace"
+                // We mine from the user's design; we do not lint it. Verilator
+                // treats warnings as fatal by default, and real designs carry
+                // things like an out-of-range part-select in a branch their
+                // parameters make unreachable (axis_fifo). Warnings still land
+                // in the log, they just do not stop the run.
+                << " -Wno-fatal"
+                << " -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC -Wno-UNOPTFLAT"
+                << " -Wno-CASEOVERLAP -Wno-MULTIDRIVEN -Wno-BLKANDNBLK"
+                // Internal free registers are only reachable when they are
+                // public; the old cocotb flow passed this unconditionally.
+                << " --public-flat-rw"
+                << " --Mdir " << quote((fs::path(workDir) / "obj_dir").string())
+                << " --top-module " << info.top
+                << " -o " << quote("sim_" + info.top);
+        compile << " -I" << quote(simSrcDir.string());
+        for (const auto& file : strippedFiles) compile << " " << quote(file);
+        compile << " " << quote(harnessPath.string());
+    } else {
+        std::ofstream out(tbPath);
+        if (!out) throw std::runtime_error("cannot write " + tbPath.string());
+        out << renderTestbench(info, options);
+
+        compile << options.iverilog << " -g2012 -o " << quote(simPath.string());
+        // Both the stripped copies (for `include "sibling.sv"` between them)
+        // and the original directory, for includes we did not copy.
+        compile << " -I " << quote(simSrcDir.string());
+        compile << " -I "
+                << quote(fs::path(designFiles.front()).parent_path().string());
+        for (const auto& file : strippedFiles) compile << " " << quote(file);
+        compile << " " << quote(tbPath.string());
+    }
+
+    result.command = compile.str();
     const auto compileOutput = run(result.command, exitCode);
     if (exitCode != 0)
-        throw std::runtime_error("iverilog failed:\n" + compileOutput +
+        throw std::runtime_error(std::string(useVerilator ? "verilator" : "iverilog") +
+                                 " failed:\n" + compileOutput +
                                  "\ncommand: " + result.command);
 
     for (int i = 0; i < options.traces; ++i) {
@@ -275,14 +367,25 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
                 " characters the testbench reserves for it: " + vcdPath.string());
 
         std::ostringstream simulate;
-        simulate << options.vvp << " " << quote(simPath.string())
-                 << " +seed=" << (options.seed + i)
+        if (useVerilator)
+            simulate << quote(simPath.string());
+        else
+            simulate << options.vvp << " " << quote(simPath.string());
+        simulate << " +seed=" << (options.seed + i)
                  << " +vcd=" << quote(vcdPath.string());
         result.command = simulate.str();
 
-        const auto simOutput = run(result.command, exitCode);
+        bool timedOut = false;
+        const auto simOutput = runWithDeadline(
+            result.command, options.simulationTimeoutSeconds, exitCode, timedOut);
+        if (timedOut)
+            throw std::runtime_error(
+                "simulation did not finish within " +
+                std::to_string(options.simulationTimeoutSeconds) +
+                "s — the design may have been driven into a zero-delay loop.\n"
+                "command: " + result.command);
         if (exitCode != 0)
-            throw std::runtime_error("vvp failed:\n" + simOutput +
+            throw std::runtime_error("simulation failed:\n" + simOutput +
                                      "\ncommand: " + result.command);
         if (!fs::exists(vcdPath))
             throw std::runtime_error("simulation produced no VCD at " +

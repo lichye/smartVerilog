@@ -52,6 +52,15 @@ std::vector<OptionSpec> buildTable() {
          "N", "number of simulation traces"},
         {"seed", "seed", 0, T::Int, 42LL, "", "N",
          "base RNG seed; trace i uses seed+i"},
+        // Verilator is the default because the published results were produced
+        // with it, and because being cycle-based and 2-state keeps x/z out of
+        // the traces and stops a randomly-clocked gate netlist spinning in a
+        // zero-delay loop (s382, s444). A commercial simulator would slot in
+        // here as another value.
+        {"simulator", "simulator", 0, T::String, std::string("verilator"), "",
+         "NAME", "trace generator: verilator | iverilog"},
+        {"simulation_timeout", "simulation-timeout", 0, T::Int, 300LL, "", "SECS",
+         "per-trace simulation limit; 0 disables"},
 
         // --- verification ----------------------------------------------
         {"bound", "bound", 0, T::Int, 10LL, "Checker_settings.bounded_depth", "N",

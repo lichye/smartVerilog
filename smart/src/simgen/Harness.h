@@ -29,7 +29,21 @@ struct SignalSpec {
     std::optional<long long> maxValue;
 };
 
+// Which simulator generates the traces.
+//
+// Verilator is the default and what the published results were produced with.
+// It is cycle-based and 2-state, which matters more than it sounds: Icarus
+// Verilog's event-driven 4-state semantics put x and z into the traces (where
+// they then disqualify constraints), and let a design with zero-delay feedback
+// spin forever at a single timestamp — s382 and s444, gate-level netlists
+// whose CK is driven randomly, hang under Icarus and do not under Verilator.
+//
+// Icarus stays available: it needs no C++ compile per design and drives
+// internal free registers by plain hierarchical assignment.
+enum class Simulator { Verilator, Icarus };
+
 struct HarnessOptions {
+    Simulator simulator = Simulator::Verilator;
     int cycles = 10;          // trace depth (--cycles)
     int traces = 3;           // number of VCDs (--traces)
     unsigned seed = 42;       // trace i uses seed + i (--seed)
@@ -45,6 +59,12 @@ struct HarnessOptions {
     // Tools; resolved on PATH when left empty.
     std::string iverilog = "iverilog";
     std::string vvp = "vvp";
+    std::string verilator = "verilator";
+
+    // A simulation that does not terminate must not hang the run: stimulus
+    // that drives a design into a zero-delay loop otherwise spins at 100% CPU
+    // forever. 0 disables the limit.
+    int simulationTimeoutSeconds = 300;
 };
 
 // Render the testbench source. Pure function of (info, options) — no I/O —
@@ -55,6 +75,12 @@ struct HarnessOptions {
 // `scope->name == <top>` (Trace::createSignal / Module::getAllSignals).
 std::string renderTestbench(const frontend::ModuleInfo& info,
                             const HarnessOptions& options);
+
+// The Verilator equivalent: a C++ testbench driving the model directly.
+// Internal `(* anyseq *)` registers are reached through the flattened public
+// names Verilator generates under --public-flat-rw (`rootp->top__DOT__name`).
+std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
+                                   const HarnessOptions& options);
 
 struct SimResult {
     std::vector<std::string> vcdPaths;  // one per trace, in seed order

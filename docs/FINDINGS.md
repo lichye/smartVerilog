@@ -120,11 +120,22 @@ now waits before concluding.
 **Status.** FIXED. The timings in §4.1 are still contaminated and that run
 should be repeated.
 
-### 2.2 s382 and s444 fail in every config
-**Symptom.** ERR in all four configs of the subset run; a direct run has been
-going >12 minutes with no output, so it hangs rather than errors.
-**Status.** OPEN, under diagnosis. Note these are ISCAS-89 designs the
-artifact ran successfully, so this is a regression, not a design limit.
+### ~~2.2 s382 and s444 fail in every config~~ — FIXED
+**Symptom.** ERR in all four configs; a direct run hangs indefinitely with
+`vvp` at 99.8% CPU and the VCD stuck at 8192 bytes.
+**Mechanism.** Their clock is `CK` (ISCAS-89 naming), which `guessClock` does
+not know, so it is driven as an ordinary random input. These are gate-level
+netlists whose flip-flops are feedback loops of primitives; a randomly-toggled
+CK can drive them into a state where Icarus Verilog, being event-driven,
+oscillates forever at a single timestamp. Seed 42 completed, seed 43 hung —
+it depends on the values drawn.
+**Note.** The artifact's own sim.py also drove CK randomly ("Test a design
+without clock signals"). Verilator, being cycle-based and 2-state, settles
+instead of oscillating, which is why this never happened before the rewrite.
+**Fix.** Two, independently: the simulator is Verilator again (s382 now mines
+213 assertions), and every simulation runs under `--simulation-timeout`
+(default 300s) so a non-terminating design fails with a readable message
+instead of hanging the run.
 
 ### 2.3 `--msa` alone yields less than plain mode
 Measured on the smoke matrix: 4 of 6 designs do worse with `--msa` than
@@ -132,6 +143,27 @@ without. Mechanism understood — blockified mode skips the wide `Init_*` blocks
 of round one, exactly as preAnalyzer.py did — so it starts from a narrower
 round. Mixing helps: s27 gives 83 with `--msa --random`, 36 plain, 28 with
 `--msa`. Not a defect; a default worth revisiting deliberately.
+
+---
+
+### 2.4 Icarus Verilog was the wrong default (reverted)
+WP3 chose Icarus over Verilator for three real advantages: free registers
+driven by plain hierarchical assignment, full control of the VCD scope tree,
+and no C++ compile per design. What that traded away turned out to cost more:
+
+| | Icarus | Verilator |
+|---|---|---|
+| semantics | event-driven, 4-state | cycle-based, 2-state |
+| x/z in traces | yes, before first assignment | none |
+| zero-delay feedback | spins forever (s382, s444) | settles |
+| what the paper used | — | this |
+
+The x/z leakage alone produced three of the defects in §1 (1.3, 1.5, 1.6).
+Verilator is the default again; `--simulator iverilog` keeps the other
+backend, which is still the cheaper one when it works.
+
+Measured after the switch: s27 31 -> 75, s382 hang -> 213, nru_a 13 -> 17,
+c17 50 -> 49, axis_fifo 17 -> 18.
 
 ---
 
