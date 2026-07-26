@@ -218,6 +218,22 @@ that passed a block's own check was rejected by the final gate.
 
 **Timings in that log are not trustworthy** — see §2.1.
 
+### 4.1a What the c880 comparison does and does not show
+artifact: 71 assertions, 116 of 383 mutants detected, 30.3%.
+ours: 236 assertions, 236 of the same 383, 61.6%.
+
+The design files are byte-identical to the artifact's own copies, and the
+mutant count matches. More assertions detecting more mutants is the expected
+relationship, not a suspicious one; what would be suspicious is twice the
+assertions at the same detection rate.
+
+Two things still unaccounted for. The artifact ran 1142 block invocations to
+our 563 and got a third of the assertions, so this is not a "we had more
+cores" story — the yield per block differs, and the likely cause is §1.6
+(counterexamples that are not fully concrete used to be discarded whole).
+And the artifact's own mutant set was not preserved, only its count, so
+30.3% is a reference point rather than a strictly controlled comparison.
+
 ### 4.2 Against the paper artifact
 `artifact/PrecomputedRawData/` has all 88 subset experiments with verified
 counts AND mutation-detection rates. Extracted to compare (77 comparable):
@@ -253,6 +269,38 @@ run — **not yet done**, deliberately, because §2.1 contaminates the inputs.
   running the pre-rewrite pipeline for comparison.
 
 ---
+
+### 2.5 The evaluator reports 100% detection when ebmc is missing
+`run_fm_on_verilog_file` treats any non-zero exit from ebmc as "the assertion
+failed on this mutant", i.e. detected. A missing ebmc exits 127, so EVERY
+mutant is counted as detected and the mutation-detection rate comes out at a
+clean 100.0% for every design.
+
+That is exactly what happened on the first evaluator run here, and it is a
+plausible-looking number: 100% MD reads as a triumph rather than a bug. The
+real figure for smart/c880 is 61.6% (236 of 383), confirmed two ways — the
+evaluator with ebmc present, and an independent script that injects the
+assertions and counts ebmc exit codes directly.
+
+Worth fixing in the evaluator (distinguish a refutation from a failure to
+run), and worth remembering as a class: **a metric that cannot fail loudly
+will fail quietly, in the flattering direction.**
+
+### 2.6 Mutation rates are only comparable against a FIXED mutant set
+`mutation.py` chooses its operators randomly, so two runs on the same design
+produce the same NUMBER of mutants with different content — measured on c880:
+383 both times, 294 of the 383 different (`nand -> xnor` in one,
+`nand -> xor` in the other). `setupMutants()` generates them whenever
+`benchmarks/` is empty, which makes an unattended evaluator run silently
+self-referential.
+
+The mutants must come from https://github.com/lichye/MutationBenchmark.git,
+which covers all 22 subset designs. The old run.py copied them in; the
+rewritten one dropped that and has to get it back.
+
+For what it is worth here, the two sets turned out to be equally hard —
+c880 scored 236/383 either way, to the digit — so this did not distort the
+c880 comparison. That is luck, not a reason to skip it.
 
 ## 5a. Run log
 
