@@ -74,6 +74,53 @@ zero. Sound — a state reachable for every value of a signal is reachable with
 zero — and it rules the refuted candidate out, since the violation holds for
 every value. Blocks reaching a candidate went 62 -> 113.
 
+### 1.8 The end-of-run minimiser was declared but never ran
+
+`Config/block_msa_mini.json` differs from `block_msa.json` in exactly one key:
+
+```
+"Workflow": { "Minimizer": false -> true }
+```
+
+The pipeline only ever read `block_minimizer` (the between-rounds one). Nothing
+read `minimizer` / `end_minimizer`, so `block_msa_mini` was a byte-for-byte
+re-run of `block_msa`. Any `mini` row produced before 2026-07-26 is that, not a
+minimised result.
+
+The cause was a units mismatch left over from WP5: `mus::minimiseAssertions`
+works on the `.sl` definitions, while the emitted artefact is a list of Verilog
+assertion strings. Joining them needs the mapping each block writes to
+`runtime/CompareResult.txt`:
+
+```
+(N6 || N11):
+(
+(define-fun inv ((N1 Bool) ...) Bool (or N6 N11))
+)
+```
+
+`Pipeline.cpp` now minimises `SygusResult.sl`, matches the surviving
+`define-fun` bodies back through that file, and filters the emitted set. An
+assertion whose definition cannot be located is **kept** — silently dropping
+something the mapping failed to explain would weaken the output without saying
+so.
+
+Measured, s27 (`block_msa_mini`): 49 -> 28 assertions, host and container alike.
+
+### 1.9 The run log did not cover the minimiser or the MSA
+
+Both stages only called `say()`, so their cost was invisible in
+`run-log.jsonl` — the gap between two `round` records absorbed the minimiser,
+the MSA, the block writing and the next round's synthesis, with no way to
+separate them. They now emit their own records:
+
+```
+{"t":5.346,"stage":"minimiser","round":1,"before":62,"after":49,"secs":0.010833}
+{"t":5.366,"stage":"msa","round":1,"pool":87,"variables":139,"timed_out":false,"secs":0.020019}
+```
+
+This is what made §3.6 answerable with numbers instead of an opinion.
+
 ### 1.7 Build and packaging defects (clean-container findings)
 Each of these was invisible on the development host and surfaced immediately
 in a clean `ubuntu:22.04`:
@@ -203,6 +250,86 @@ edge of what this method extracts.
 
 ---
 
+### 3.6 Minimising before the MSA to speed the MSA up
+
+Already the order: `block_minimizer` runs immediately before `mus::getMus()`
+inside the round loop. The question was whether tuning the pair buys speed.
+It does not — but the reason is different at each scale, and an earlier version
+of this section got it wrong by generalising from s298 alone.
+
+s298 (139 variables), per round: the minimiser removes 20-27% of the
+invariants (62->49, 112->82, 138->121, 176->138) and the MSA pool it feeds
+shrinks 87 -> 8. Both stages together cost under 0.25s per round. Nothing to
+save because nothing is being spent.
+
+c880 (443 variables, 46 rounds, 680 assertions, 855s) says otherwise about the
+cost, and the same thing about the conclusion:
+
+| | time | share of run |
+|---|---|---|
+| MSA total | 94.8s | **11.1%** |
+| minimiser total | 40.7s | 4.8% |
+
+MSA is not noise here — it is a ninth of the run, and it grows (0.04s at
+round 1, 4.22s at round 46). But the minimiser cannot help: on c880 it removes
+**0.3-0.5%** (206->206, 621->620), because the assertion set is already
+irredundant. It costs 40.7s to save well under a second.
+
+So: small designs, the minimiser works but the MSA is free; large designs, the
+MSA costs real time but the minimiser has nothing left to remove. Neither end
+pays. The between-rounds minimiser is off by default as a result (§4.3).
+
+Where the MSA time actually goes, and why it is no longer a bottleneck, is
+§3.7 — that turned out to be the whole story of the speedup.
+
+### 3.7 The MSA was never solver-bound — it was term-construction-bound
+
+The pre-refactor MSA (`smart/src/python/minimal_satisfiable_assignment.py` at
+d7ca79c) used `from cvc5.pythonic import *` — in-process bindings, not a
+subprocess. Same algorithm as ours, same `FORALL` formulation, same
+`produce-unsat-cores` / `minimal-unsat-cores` options. Ours is if anything
+heavier: a fresh `cvc5::Solver` per `isMus` call where the Python used
+push/pop on a shared one.
+
+Head-to-head on one input — `block_msa_mini_c1355`'s final `variables.txt`
+(587 variables) and `SygusResult.sl` (1251 assertions), 300s timeout, same
+machine:
+
+| | time | underspecified | timed out |
+|---|---|---|---|
+| C++ (`build/bin/mus_bench`) | **12.82s** | **108** | no |
+| Python (d7ca79c) | **310.90s** | 143 | **yes** |
+
+24x, and the Python run returned a *worse* result because it hit the timeout.
+
+Splitting `is_mus` into its construction loop and its `solver.check()`:
+
+```
+py_msa  total 310.6s   build 249.3s (80%)   solve 21.7s (7%)
+        104 is_mus calls, 127,402 quantified constraints built
+```
+
+**The solver needs 21.7 seconds.** The other 289 go into Python building
+127k `Implies(t, ForAll(cand, a))` terms node by node through the Z3
+compatibility layer. The C++ does the entire job in less time than the Python
+spends solving alone.
+
+Three candidate explanations, decided:
+
+| hypothesis | verdict | evidence |
+|---|---|---|
+| cvc5 version | **ruled out** | the Python side ran cvc5 **1.3.4**, newer than the 1.2.0 we link |
+| algorithm | **ruled out** | identical `is_mus`/`ascend_to_boundary`, identical formulation |
+| construction overhead | **confirmed** | 80% of the time is in the build loop, 7% in the solver |
+
+This compounds: `ascend_to_boundary` returns the current, *non-minimal* `msa`
+when it runs out of time, so a timed-out round hands the next round a larger
+pool, which is slower still. That feedback is why MUS reached 70-88% of the
+artifact's runtime on the larger designs (§4.2), with the MUS set size barely
+moving between rounds (c3540 842->847, s38584 11077->11065).
+
+Reproduce with `build/bin/mus_bench <variables.txt> <SygusResult.sl> [timeout]`.
+
 ## 4. Benchmark data
 
 ### 4.1 Subset run (container, 2026-07-26)
@@ -251,6 +378,96 @@ matters is MD rate at equal or better coverage, and that needs the evaluator
 run — **not yet done**, deliberately, because §2.1 contaminates the inputs.
 
 ---
+
+### 4.3 The 88-experiment subset run, and the defaults it decided
+
+4 configs x 22 designs, fixed MutationBenchmark mutants, `-j16`, all in one
+container on this machine. `block_msa_rand` failed to mine c880 and c1355
+(MINE-FAIL at the 2400s cap), so the ranking below is over the 20 designs
+where all four finished:
+
+| config | MD mean | MD median | assertions median | total time |
+|---|---|---|---|---|
+| `block_msa` | 82.06% | 82.39% | 298 | 1956s |
+| `block_msa_mini` | 82.02% | **82.39%** | **252** | 1986s |
+| `block_msa_rand` | 82.14% | 81.24% | 1968 | 5336s |
+
+Over all 22: `smart` 67.3% / 312s, `block_msa` 81.9% / 4569s,
+`block_msa_mini` 81.8% / 4610s.
+
+`block_msa_rand` is dominated: its MD mean is 0.08 points higher (noise), its
+median 1.15 points LOWER, it emits 6.6x the assertions, takes 2.7x the time,
+and fails outright on the two hardest designs. Not a default, not a fallback.
+
+`mini` ties `msa` on median MD with 15% fewer assertions.
+
+Defaults changed on this evidence:
+
+```
+blockified = true      msa = true
+minimizer  = true      end_minimizer = true      block_minimizer = false
+```
+
+`--no-blockified` gives the one-shot mode back (the parser always supported
+`--no-<flag>`; only the help text was missing it).
+
+`block_minimizer = false` rests on a direct c880 A/B rather than the table
+above, because every shipped config sets that key to true:
+
+| per-round minimiser | rounds | assertions | MD | minimiser cost |
+|---|---|---|---|---|
+| on | 48 | 680 | 92.69% | 40.7s |
+| **off** | 52 | **733** | **93.73%** | 0 |
+
+More assertions, +1.04 points of MD, and 40.7s back. **Not yet measured across
+all 22 designs** — the 88-run used `Block_minimizer: true`. One data point.
+
+### 4.4 Against the artifact, controlled
+
+Same machine, same 16 threads (`Config/block_msa*.json` all set
+`max_threads: 16`), mutant counts identical to the artifact on all 22 designs:
+
+| config | speedup median | total | ΔMD mean | better/worse |
+|---|---|---|---|---|
+| `block_msa` | **9.2x** | 24982s -> 4569s (5.5x) | +3.0pp | 17/22 better, 1 worse |
+| `block_msa_mini` | 7.8x | 16813s -> 4610s (3.6x) | +2.4pp | 14/22 better, 3 worse |
+
+`Config/smart.json` sets `max_threads: 1` while our harness passed `--jobs 16`,
+so the `smart` row is NOT a like-for-like comparison and is excluded.
+
+Where the time went, `block_msa_mini`, 22 designs:
+
+| | artifact | ours |
+|---|---|---|
+| total | 16813s | 4610s |
+| of which MSA/MUS | **11962s (71%)** | **1034s (22%)** |
+| residual speedup, MSA excluded | | **1.4x** |
+
+**The speedup is the MSA and almost nothing else** — see §3.7 for why. The rest
+of the pipeline was already C++ and had no comparable overhead to remove.
+
+Open: s953 is the one clear regression (98.6% -> 86.2%). c1355/c880/c499 are
+the three designs where our non-MSA work is *slower* than the artifact's
+(residual 0.5-0.9x); we also emit far more assertions there (c880 680 vs 455),
+which is the obvious suspect but is unverified.
+
+### 4.5 The end-of-run minimiser is sound, measured 20 ways
+
+`block_msa` and `block_msa_mini` are the same run up to the final filter (seed
+42, same rounds, same mined set), so MD must come out bit-identical: the
+minimiser only drops an assertion the kept set implies, and any state
+violating that assertion violates something kept. A difference would mean an
+unsound minimiser or an inconsistent EBMC.
+
+20 of 22 designs had identical trajectories, and all 20 gave **ΔMD = +0.00**,
+with assertion reductions from 4.3% (c499) to 50.0% (c17), median ~19%.
+
+The other 2 (s1488, s838) diverged before the minimiser ran — different round
+counts and mined sets — so the precondition fails and they are inconclusive,
+not counterexamples. The pipeline is not bit-reproducible under parallelism;
+that is understood and accepted.
+
+Oracle script: `check_oracle.py` (kept with the run harness).
 
 ## 5. Environment facts worth not rediscovering
 
@@ -322,11 +539,77 @@ when the process group was still there afterwards — the field that would have
 caught §2.1 the day it happened instead of a week later. The `check` record
 separates refuted from timed-out from errored, which the summary line cannot.
 
+### 5b. Version, and reading a run log safely
+
+The version lives in one place, `smart/src/Version.h`, and reaches everything
+that could outlive the checkout: `smart --version`, `--check-env`, the
+generated `<top>_assertion.sv` header, and the `start` record of every run log.
+
+```
+{"run":3588951,"t":0.000,"stage":"start","version":"1.0.0","top":"s27",...}
+```
+
+Two fields exist because of mistakes worth not repeating:
+
+- **`run`** is the writer's pid. `RunLog::record` reopens the file in append
+  mode per record, so a run whose workdir is deleted underneath it will
+  RECREATE the file and keep writing. Two runs' records then interleave in one
+  log with two independent `t` timelines and nothing to tell them apart.
+  Observed. **Group by `run` before reading any timing out of a log.**
+- **`mode`** on the `check` record says how the assertions were proved:
+
+  ```
+  {"stage":"check","mode":"bounded","bound":10,...}
+  {"stage":"check","mode":"k-induction","bound":null,...}
+  ```
+
+  A bounded run emits properties that hold to `bound` only. Sound to report,
+  but they are NOT invariants, and assuming them inside someone else's proof
+  is unsound. `invariants.txt` is named the same either way, so the log is the
+  only place that distinguishes them. (The file's line format is depended on
+  by `evaluater.py`, so a header comment there would break it.)
+
+Also recorded per round now: `minimiser` (before/after/secs) and `msa`
+(pool/variables/timed_out/secs). §3.6 and §3.7 exist because of those.
+
+### 5c. Supplying invariants to a stuck proof
+
+The natural use of this tool beyond mutation scores: when a design will not
+verify, generate proved lemmas and add them. It works, with one hard
+precondition — **`--unbounded`**, which switches both the block check and the
+final check to k-induction (`Options.cpp:538`, `AssertionWriter.cpp:75`).
+
+The verdict mapping is conservative: only EBMC exit 0 counts as verified, so an
+inconclusive k-induction is dropped, never promoted.
+
+Measured cost of the stronger check, s27 and s298: none. Same mined count
+(30, 113), 100% survived k-induction, same runtime (5s, 6s). Negative control
+on s298's first invariant `(! (G107 == G108))`:
+
+```
+true.sv   --k-induction  exit 0    UNSAT: inductive proof successful  PROVED
+false.sv  --k-induction  exit 10   REFUTED
+```
+
+Not yet measured on the large combinational designs, where k-induction is
+likelier to come back inconclusive. Two small sequential circuits do not
+generalise.
+
 ## 6. Next
 
-1. Diagnose and fix §2.1 (deadline escape) — everything downstream depends on
-   it.
-2. Diagnose §2.2 (s382/s444 hang).
-3. Re-run the subset on a quiet machine.
-4. Run the evaluator and compare MD rates with the artifact.
-5. Send the hw-cbmc patch (§1.1) upstream.
+Items 1-4 of the previous list are done (§2.1, §2.2 fixed; the subset ran and
+was evaluated against the artifact, §4.3-4.5). Item 5 is cancelled: the
+hw-cbmc patch stays local, upstream is out of scope by decision.
+
+What is left is all optional — nothing here blocks the 1.0:
+
+1. **s953** is the one design where we score clearly below the artifact
+   (98.6% -> 86.2%). The only unexplained regression in the table.
+2. **The shipped default is not the config that was benchmarked.** The 88-run
+   used `Block_minimizer: true`; we ship `false` on the strength of one c880
+   A/B (§4.3). 22 designs would settle it.
+3. **k-induction retention on large designs** (§5c). Two small sequential
+   circuits gave 100%; that does not generalise, and the invariant-supplier
+   use depends on it.
+4. **c1355/c880/c499 residual slowdown** (§4.4). Analytical curiosity — the MSA
+   always runs, so "the pipeline without the MSA" is not a real configuration.
