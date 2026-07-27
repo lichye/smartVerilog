@@ -61,7 +61,16 @@ void testDefaults() {
     check(options.getInt("bound") == 10, "default bound is 10");
     check(options.getInt("core_timeout") == 100, "default core timeout is 100");
     check(options.getInt("timeout") == 43200, "default global timeout is 43200");
-    check(!options.getBool("blockified"), "plain SMART by default");
+    // The defaults the 88-experiment run picked (docs/FINDINGS.md §4.3).
+    // These are a decision, not an accident: assert the whole set, so a
+    // change to any one of them has to be deliberate.
+    check(options.getBool("blockified"), "iterate by default");
+    check(options.getBool("msa"), "with the MSA strategy");
+    check(!options.getBool("random"), "not the random one");
+    check(options.getBool("minimizer") && options.getBool("end_minimizer"),
+          "minimise the final assertion set");
+    check(!options.getBool("block_minimizer"),
+          "but not between rounds: it costs more than it saves");
     check(options.getInt("jobs") >= 1, "jobs defaults to something runnable");
 }
 
