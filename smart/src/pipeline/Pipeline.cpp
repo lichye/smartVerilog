@@ -1,5 +1,7 @@
 #include "Pipeline.h"
 
+#include "../Version.h"
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -14,6 +16,7 @@
 #include <random>
 #include <set>
 #include <sstream>
+#include <unistd.h>
 
 #include "AssertionWriter.h"
 #include "setups.h"
@@ -28,6 +31,12 @@
 namespace smart {
 namespace pipeline {
 namespace {
+
+// Elapsed seconds since `since`, for the run-log's per-stage timings.
+double seconds(std::chrono::steady_clock::time_point since) {
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() - since)
+        .count();
+}
 
 namespace fs = std::filesystem;
 
@@ -51,16 +60,23 @@ std::string jsonEscape(const std::string& text) {
 // Append one JSON object to the run log. Line-buffered and flushed per record
 // on purpose: the log has to survive the run being killed, which is precisely
 // when it is worth reading.
+//
+// Every record carries the writer's pid. Reopening in append mode means a run
+// whose workdir is deleted underneath it will recreate the file and keep
+// writing, so two runs' records can end up interleaved in one log with two
+// independent `t` timelines. Observed, and not detectable without this field.
+// Group by "run" before reading any timing out of a log.
 class RunLog {
 public:
-    explicit RunLog(std::string path) : path_(std::move(path)) {}
+    explicit RunLog(std::string path)
+        : path_(std::move(path)), pid_(static_cast<long>(::getpid())) {}
 
     void record(const std::string& fields) {
         std::lock_guard<std::mutex> lock(mutex_);
         std::ofstream out(path_, std::ios::app);
         if (!out) return;
-        out << "{\"t\":" << std::fixed << std::setprecision(3) << elapsed()
-            << "," << fields << "}\n";
+        out << "{\"run\":" << pid_ << ",\"t\":" << std::fixed
+            << std::setprecision(3) << elapsed() << "," << fields << "}\n";
     }
 
 private:
@@ -70,6 +86,7 @@ private:
             .count();
     }
     std::string path_;
+    long pid_;
     std::mutex mutex_;
     std::chrono::steady_clock::time_point start_ = std::chrono::steady_clock::now();
 };
@@ -260,7 +277,8 @@ ExitCode Pipeline::run(RunSummary& summary) {
     }
 
     RunLog runLog(work.runLogFile());
-    runLog.record("\"stage\":\"start\",\"top\":\"" + jsonEscape(top) +
+    runLog.record("\"stage\":\"start\",\"version\":\"" + std::string(smart::version()) +
+                  "\",\"top\":\"" + jsonEscape(top) +
                   "\",\"design\":\"" + jsonEscape(mainFile) +
                   "\",\"jobs\":" + std::to_string(options_.getInt("jobs")) +
                   ",\"core_timeout\":" +
@@ -494,6 +512,7 @@ ExitCode Pipeline::run(RunSummary& summary) {
         // Between rounds, drop the invariants the others already imply: a
         // smaller assertion set means a larger, more useful MSA.
         if (options_.getBool("block_minimizer")) {
+            const auto minStart = std::chrono::steady_clock::now();
             try {
                 const auto minimised = mus::minimiseAssertions(
                     work.sygusResultFile(), work.sygusResultFile(),
@@ -502,8 +521,17 @@ ExitCode Pipeline::run(RunSummary& summary) {
                     say("[" + timestamp() + "] minimiser: " +
                         std::to_string(minimised.before) + " -> " +
                         std::to_string(minimised.after) + " invariants");
+                runLog.record(
+                    "\"stage\":\"minimiser\",\"round\":" + std::to_string(round) +
+                    ",\"before\":" + std::to_string(minimised.before) +
+                    ",\"after\":" + std::to_string(minimised.after) +
+                    ",\"secs\":" + std::to_string(seconds(minStart)));
             } catch (const std::exception& e) {
                 say("note: minimiser skipped: " + std::string(e.what()));
+                runLog.record(
+                    "\"stage\":\"minimiser\",\"round\":" + std::to_string(round) +
+                    ",\"error\":\"" + jsonEscape(e.what()) + "\",\"secs\":" +
+                    std::to_string(seconds(minStart)));
             }
         }
 
@@ -512,6 +540,7 @@ ExitCode Pipeline::run(RunSummary& summary) {
 
         std::vector<std::string> msaPool;
         if (useMsa) {
+            const auto msaStart = std::chrono::steady_clock::now();
             try {
                 const auto found = mus::getMus(
                     work.variablesFile(), work.sygusResultFile(),
@@ -522,9 +551,19 @@ ExitCode Pipeline::run(RunSummary& summary) {
                     " of " + std::to_string(variables.size()) +
                     " variables still underspecified" +
                     (found.timedOut ? " (timed out, result is not minimal)" : ""));
+                runLog.record(
+                    "\"stage\":\"msa\",\"round\":" + std::to_string(round) +
+                    ",\"pool\":" + std::to_string(msaPool.size()) +
+                    ",\"variables\":" + std::to_string(variables.size()) +
+                    ",\"timed_out\":" + (found.timedOut ? "true" : "false") +
+                    ",\"secs\":" + std::to_string(seconds(msaStart)));
             } catch (const std::exception& e) {
                 say("note: MSA failed (" + std::string(e.what()) +
                     "), falling back to random blocks");
+                runLog.record(
+                    "\"stage\":\"msa\",\"round\":" + std::to_string(round) +
+                    ",\"error\":\"" + jsonEscape(e.what()) + "\",\"secs\":" +
+                    std::to_string(seconds(msaStart)));
             }
         }
 
@@ -575,6 +614,80 @@ ExitCode Pipeline::run(RunSummary& summary) {
     summary.minedAssertions = mined.size();
 
     std::vector<std::string> assertions(mined.begin(), mined.end());
+
+    // End-of-run minimisation: drop assertions the rest already imply. The
+    // minimiser works on the `.sl` definitions, so the survivors have to be
+    // mapped back to the Verilog strings we emit — runtime/CompareResult.txt
+    // is that mapping, written by each block as
+    //     <verilog assertion>:
+    //     ( (define-fun inv (...) Bool <body>) )
+    if (options_.getBool("minimizer") && options_.getBool("end_minimizer") &&
+        assertions.size() > 1) {
+        try {
+            const auto reduced = work.runtime() + "/reducedResult.sl";
+            const auto minimised = mus::minimiseAssertions(
+                work.sygusResultFile(), reduced,
+                static_cast<int>(options_.getInt("end_minimizer_timeout")));
+
+            // Which define-fun bodies survived.
+            std::set<std::string> keptBodies;
+            for (const auto& line : minimised.keptDefinitions) {
+                const auto open = line.find("Bool ");
+                if (open == std::string::npos) continue;
+                auto body = line.substr(open + 5);
+                while (!body.empty() && (body.back() == ')' || body.back() == ' '))
+                    body.pop_back();
+                keptBodies.insert(body);
+            }
+
+            // Walk the mapping and keep only the assertions whose definition
+            // survived. An assertion we cannot find a definition for is KEPT:
+            // dropping something we failed to understand would silently weaken
+            // the result.
+            std::map<std::string, bool> survives;
+            {
+                std::ifstream in(work.compareResultFile());
+                std::string line, current;
+                while (std::getline(in, line)) {
+                    if (!line.empty() && line.back() == ':' &&
+                        line.find("define-fun") == std::string::npos) {
+                        current = line.substr(0, line.size() - 1);
+                        continue;
+                    }
+                    if (current.empty() || line.find("define-fun") == std::string::npos)
+                        continue;
+                    const auto open = line.find("Bool ");
+                    if (open == std::string::npos) continue;
+                    auto body = line.substr(open + 5);
+                    while (!body.empty() && (body.back() == ')' || body.back() == ' '))
+                        body.pop_back();
+                    if (keptBodies.count(body) != 0) survives[current] = true;
+                    else if (survives.find(current) == survives.end())
+                        survives[current] = false;
+                    current.clear();
+                }
+            }
+
+            std::vector<std::string> kept;
+            for (const auto& assertion : assertions) {
+                const auto found = survives.find(assertion);
+                if (found == survives.end() || found->second) kept.push_back(assertion);
+            }
+
+            if (!kept.empty() && kept.size() < assertions.size()) {
+                say("[" + timestamp() + "] end minimiser: " +
+                    std::to_string(assertions.size()) + " -> " +
+                    std::to_string(kept.size()) + " assertions");
+                runLog.record("\"stage\":\"end-minimiser\",\"before\":" +
+                              std::to_string(assertions.size()) + ",\"after\":" +
+                              std::to_string(kept.size()));
+                assertions = kept;
+            }
+        } catch (const std::exception& e) {
+            say("note: end minimiser skipped: " + std::string(e.what()));
+        }
+    }
+
     {
         std::ostringstream lines;
         for (const auto& assertion : assertions) lines << assertion << "\n";
@@ -610,7 +723,15 @@ ExitCode Pipeline::run(RunSummary& summary) {
                 case emit::CheckStatus::Error: ++errors; break;
             }
         }
-        runLog.record("\"stage\":\"check\",\"checked\":" +
+        // Record HOW they were proved, not just how many. A bounded run
+        // emits properties that hold to `bound` only — sound to report, but
+        // NOT invariants, and unsound to assume in someone else's proof.
+        // Anything reading invariants.txt has to know which it got.
+        runLog.record(std::string("\"stage\":\"check\",\"mode\":\"") +
+                      (check.unbounded ? "k-induction" : "bounded") + "\",\"bound\":" +
+                      (check.unbounded ? std::string("null")
+                                       : std::to_string(check.bound)) +
+                      ",\"checked\":" +
                       std::to_string(checked.size()) + ",\"verified\":" +
                       std::to_string(verified.size()) + ",\"refuted\":" +
                       std::to_string(refuted) + ",\"timed_out\":" +
@@ -685,7 +806,8 @@ ExitCode checkEnvironment(const Options& options, const std::string& selfExecuta
                   << firstLineOf(shellQuote(path) + " " + tool.versionFlag) << "\n";
     }
 
-    std::cout << "[ok]      smart     " << selfExecutable << "\n";
+    std::cout << "[ok]      smart     " << selfExecutable << "  " << smart::version()
+              << "\n";
     std::cout << "jobs default: " << options.getInt("jobs") << "\n";
     return ok ? ExitCode::Success : ExitCode::EnvironmentError;
 }
