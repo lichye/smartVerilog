@@ -530,6 +530,73 @@ that is understood and accepted.
 
 Oracle script: `check_oracle.py` (kept with the run harness).
 
+### 4.6 Trace policy: searching for stimulus does not pay
+
+The question was whether stimulus that visits more of the design produces
+better assertions. The search itself works — it does reach more states, within
+the same trace count and depth. What fails is the step from there to detection.
+
+22 designs, shipped defaults, fixed MutationBenchmark mutants, one machine:
+
+| | random vs fuzz |
+|---|---|
+| ΔMD mean | **-0.21pp** |
+| ΔMD median | **+0.00pp** |
+| better / worse / unchanged | **7 / 7 / 8** |
+| correlation, extra states vs ΔMD | **+0.06** |
+
+| design | rand MD | fuzz MD | ΔMD | rand assertions | fuzz assertions | states rand -> fuzz |
+|---|---|---|---|---|---|---|
+| c1355 | 66.7% | 60.3% | **-6.41** | 1319 | 945 | 30 -> 30 |
+| c17 | 100.0% | 100.0% | +0.00 | 19 | 21 | 6 -> 7 |
+| c432 | 100.0% | 100.0% | +0.00 | 419 | 411 | 30 -> 30 |
+| c499 | 57.4% | 58.9% | **+1.49** | 285 | 249 | 30 -> 30 |
+| c880 | 93.7% | 94.5% | +0.78 | 665 | 717 | 30 -> 30 |
+| s1488 | 80.2% | 80.8% | +0.60 | 971 | 1039 | 30 -> 30 |
+| s27 | 88.2% | 88.2% | +0.00 | 28 | 29 | 11 -> 12 |
+| s298 | 78.1% | 78.1% | +0.00 | 148 | 187 | 12 -> 12 |
+| s344 | 85.5% | 87.7% | **+2.23** | 221 | 248 | 18 -> 24 |
+| s349 | 83.3% | 82.2% | **-1.11** | 200 | 211 | 18 -> 24 |
+| s382 | 73.2% | 73.2% | +0.00 | 200 | 242 | 12 -> 12 |
+| s386 | 80.5% | 81.1% | +0.59 | 276 | 263 | 25 -> 29 |
+| s400 | 74.5% | 74.5% | +0.00 | 205 | 263 | 12 -> 12 |
+| s420 | 84.0% | 82.8% | **-1.26** | 287 | 466 | 5 -> 12 |
+| s444 | 76.2% | 75.7% | -0.49 | 204 | 281 | 12 -> 12 |
+| s510 | 74.7% | 75.1% | +0.45 | 280 | 339 | 14 -> 15 |
+| s641 | 94.5% | 93.3% | **-1.24** | 1075 | 1085 | 30 -> 30 |
+| s713 | 91.3% | 91.3% | +0.00 | 1333 | 1140 | 30 -> 30 |
+| s820 | 70.5% | 69.8% | -0.67 | 716 | 715 | 30 -> 30 |
+| s832 | 81.8% | 81.8% | +0.00 | 658 | 875 | 30 -> 30 |
+| s838 | 86.1% | 85.7% | -0.41 | 576 | 889 | 5 -> 11 |
+| s953 | 86.2% | 87.1% | +0.93 | 631 | 694 | 30 -> 30 |
+
+**s838 is the cell that settles it.** It was the one large design badly
+under-sampled at random (5 states of the 30 the budget allows). The search
+took it to 11, and assertions from 576 to 889 — **+54%** — and detection went
+DOWN 0.41 points.
+
+That is the third effect from §3.8 in its purest form: an invariant that must
+hold over more states is a weaker claim, and a weaker assertion catches fewer
+mutants. The extra assertions were real, verified, and individually worth
+less. Yield would have called this a large win; MD calls it a small loss.
+
+Two supporting observations:
+
+- **Most designs are already at the ceiling.** 3 traces x 10 cycles caps at 30
+  states, and c1355/c432/c499/c880/s641/s713/s820/s832/s953/s1488 reach 30/30
+  at random. There is nothing for a search to add, and the changed stimulus
+  just reshuffles which states are seen — c1355 lost 6.41 points that way,
+  the largest single move in the table, with no change in state count.
+- **Under-sampling does not predict benefit.** The three designs where the
+  search added the most states gave +2.23, -1.11 and -1.26. The correlation
+  over all 22 is +0.06.
+
+`trace_policy` stays `random`. The fuzz path is kept, not deleted: the
+measurement rules on the current grammar, and a grammar that can express
+stronger relations (§3.6, the `bv compare` TODO) would deserve the question
+asked again — a wider state set is only a liability while the language cannot
+say anything strong about it.
+
 ## 5. Environment facts worth not rediscovering
 
 - The VCD scanner is flex-generated **without** `%option reentrant` and keeps

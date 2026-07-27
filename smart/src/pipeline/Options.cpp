@@ -62,10 +62,27 @@ std::vector<OptionSpec> buildTable() {
         {"simulation_timeout", "simulation-timeout", 0, T::Int, 300LL, "", "SECS",
          "per-trace simulation limit; 0 disables"},
         // How the stimulus is chosen. `random` draws every input independently
-        // every cycle. `fuzz` searches for sequences that visit more states,
-        // keeping the SAME trace count and depth — depth is not the lever,
-        // because more sampled cycles means more positive constraints per
-        // SyGuS call, which has a fixed budget.
+        // every cycle. `fuzz` searches for sequences that visit more states at
+        // the same trace count and depth.
+        //
+        // `random` is the default because searching does not pay. Measured
+        // over 22 designs against the fixed mutant set (docs/FINDINGS.md §4.6):
+        // mutation detection moved -0.21pp on average and +0.00pp at the
+        // median, 7 designs better, 7 worse, 8 unchanged. The correlation
+        // between the extra states found and the change in detection was
+        // +0.06 — none.
+        //
+        // The search works; the hypothesis behind it does not. On s838 it took
+        // state coverage from 5 to 11 and assertions from 576 to 889 (+54%),
+        // and detection went DOWN 0.41pp. An invariant that must hold over
+        // more states is a weaker claim, and a weaker assertion catches fewer
+        // mutants — the extra assertions were real and individually worth
+        // less.
+        //
+        // Kept because it is the honest way to ask the question again after
+        // the grammar changes: a richer grammar could express stronger
+        // relations over the same wider state set, which is exactly the case
+        // this measurement cannot rule on.
         {"trace_policy", "trace-policy", 0, T::String, std::string("random"), "",
          "NAME", "stimulus generation: random | fuzz"},
         {"fuzz_iterations", "fuzz-iterations", 0, T::Int, 500LL, "", "N",
