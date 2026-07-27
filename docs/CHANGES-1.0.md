@@ -1,6 +1,8 @@
-# SMART 1.0 — results
+# SMART 1.0 — what changed and what it cost
 
-Three changes account for the difference. Numbers first.
+A work record, not a paper. What was built, what it measured, what turned out
+to be wrong, and what is still open. Numbers first throughout; anything stated
+without one is flagged as such.
 
 Setup: one machine, 4 configs × 22 designs (88 experiments), fixed
 MutationBenchmark mutant set, `-j16`. Mutant counts match the artifact's on
@@ -192,15 +194,142 @@ detection. c880 reported 100%; the true figure is 61.6%.
 
 ---
 
-## 6. Open
+## 6. Stimulus search — built, measured, not adopted
 
-1. **s953** — the one design clearly below the artifact (98.6% → 86.2%).
-2. The shipped default is not the configuration that was benchmarked (§4).
-3. k-induction retention measured only on s27/s298 (both 100%) — does not
-   generalise to large combinational designs.
-4. c1355 / c880 / c499: our *non-MSA* work is slower than the artifact's
-   (residual 0.5–0.9×). We emit far more assertions there (c880 680 vs 455) —
-   the obvious but unverified suspect.
+The premise: uniform random draws revisit a small corner of a control FSM, so
+the states that reach the synthesiser are a poor sample. Reaching the
+interesting states usually needs a RUN of cycles holding one input steady —
+a load sequence, a counter walking to its bound — and independent per-cycle
+draws produce such a run with probability falling off exponentially in its
+length. On plena, eight consecutive cycles from a 3-in-16 subset is ~1.5e-6
+per starting position.
+
+Built: the generated harness takes an external stimulus file, can skip the
+waveform (a search round runs thousands of times and throws it away), and
+reports the states it visited. The state vector comes from
+`verilator --xml-only`, which elaborates without compiling. A corpus-based
+search mutates sequences — the operator that matters pins one signal across a
+span of cycles — and greedy set cover picks the final traces. Same trace
+count, same depth: only the content changes.
+
+It works. On s838 it took state coverage from 5 to 11 and assertions from 576
+to 889, **+54%**.
+
+**Detection went down 0.41 points.**
+
+Over 22 designs:
+
+| | random vs fuzz |
+|---|---|
+| ΔMD mean | **-0.21pp** |
+| ΔMD median | **+0.00pp** |
+| better / worse / unchanged | **7 / 7 / 8** |
+| correlation, extra states vs ΔMD | **+0.06** |
+
+An invariant that must hold over more states is a weaker claim, and a weaker
+assertion catches fewer mutants. The extra assertions were real and verified
+and individually worth less. **Scored by assertion count this was a large win.**
+
+Two things the table also shows:
+
+- Most designs are already at the ceiling. 3 traces x 10 cycles caps at 30
+  states and ten designs reach 30/30 at random, so a search has nothing to
+  add and merely reshuffles which states are seen — c1355 lost 6.41 points
+  that way with no change in state count.
+- Under-sampling does not predict benefit: the three designs where the search
+  added the most states gave +2.23, -1.11, -1.26.
+
+`--trace-policy fuzz` stays in the tool, off by default. The measurement rules
+on the current boolean grammar; a grammar that could express stronger
+relations over a wider state set is the case it cannot rule on.
+
+---
+
+## 7. Two things worth having regardless
+
+**Duplicate constraints.** A block sees k variables, so two sampled states
+differing anywhere else produce a byte-identical constraint. On c880: 108,853
+positive constraints across 3,238 blocks, 65,771 distinct — **40% pure
+repetition**, worst block 81%, one constraint appearing 11 times in 36.
+Dropping them loses nothing; on s838 the emitted set went 41,591 -> 19,471
+with yield unchanged.
+
+**Why a block found nothing.** The log said `no-assertion` for three outcomes
+that want opposite responses. Decoded from exit codes and now labelled:
+
+| | s838 | c880 |
+|---|---|---|
+| verified | 55.7% | 20.2% |
+| **SyGuS infeasible** | **43.8%** | **46.8%** |
+| candidate refuted | 0.5% | 28.7% |
+| killed on time | 0% | 4.2% |
+
+This contradicts the obvious reading. More positive states do make each SyGuS
+call slower, but at this scale that costs 0-4% of blocks. What loses half of
+them is that no boolean relation over the block's k variables satisfies the
+constraints at all. **Speeding up the solver buys almost nothing; choosing the
+variables better, or widening the grammar, is where the blocks are.**
+
+---
+
+## 8. Two claims that did not survive
+
+Both were made from one design and corrected after 22:
+
+- **"The MSA is negligible, there is nothing to gain."** True on s298 (0.25s
+  per round). On c880 the MSA is 11.1% of the run and grows to 4.22s per
+  round. The conclusion survived — the between-rounds minimiser still cannot
+  help, because by then it removes 0.3-0.5% — but for the opposite reason at
+  each scale.
+- **"Turning off the per-round minimiser gains +1.04pp."** That was c880
+  alone. Over 22 designs: +0.28pp mean, **+0.00pp median**, 7 better and 5
+  worse, total time 4610s -> 4655s. Both inside the noise. The default did not
+  change; the justification did — it does measurable work for no measurable
+  gain, which is a simplicity argument, not a performance one.
+
+The shipped default now has a number of its own: **22 designs, MD mean 82.12%,
+total 4655s.**
+
+---
+
+## 9. Open
+
+1. **s953** — the one design clearly below the artifact (98.6% -> 86.2%).
+2. **k-induction retention at scale.** `--unbounded` turns the output into
+   real invariants, and on s27/s298 it cost nothing (100% survived, same
+   runtime). Two small sequential circuits do not generalise; the large
+   combinational designs are untested, and the invariant-supplier use depends
+   on it.
+3. **BitVec comparisons in the grammar.** The insertion point is marked in
+   `SyGuSGenerater.cpp` (`//wait for add bv compare grammar`). Nearly half of
+   all blocks fail as infeasible, and a counter bound like `count <= limit` is
+   not expressible today. This is where §7 says the blocks are.
+4. c1355 / c880 / c499: our non-MSA work is slower than the artifact's
+   (residual 0.5-0.9x). We emit far more assertions there — the obvious but
+   unverified suspect.
+
+---
+
+## 10. How to read results here
+
+Three habits this round earned:
+
+- **Assertion count misleads.** §6 would have been a +54% success by that
+  measure and was a small loss by detection. Yield rises when richer inputs
+  rescue a block, falls when they make it infeasible, and stays flat while
+  each invariant gets weaker. Only the mutation rate separates them.
+- **One design is not a measurement.** Both claims in §8 came from a single
+  A/B and neither survived 22 designs.
+- **A config key nobody reads is worse than no key.** `Workflow.Minimizer`
+  sat in the shipped configs for a release doing nothing, so every `mini`
+  result — ours and the artifact's — was a re-run of the plain configuration.
+  The `trace_policy` key was held back until the code behind it existed.
+
+Provenance is built in: `smart --version`, the version in every generated
+file's header and every run log's first record, `"run"` (writer pid) on each
+log line, and `"mode"` on the check record saying whether the assertions were
+proved bounded or by k-induction. `docs/FINDINGS.md` carries the full detail
+including the dead ends.
 
 ---
 
