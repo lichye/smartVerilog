@@ -78,13 +78,28 @@ def run_fm_on_verilog_file(verilog_file,properties,verilog_related_files):
             else:
                 ebmc_cmd = ["timeout","180","ebmc",new_file_path,"--k-induction","--top",top_module]
             ebmc_result = subprocess.run(ebmc_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-            if(ebmc_result.returncode != 0):
-                if(ebmc_result.returncode == 124):
-                    return_result.append({verilog_file:"timeout"})
-                else:
-                    return_result.append({verilog_file:"error"})
-            else:
+            # EBMC exit codes: 0 = every assertion proved (the mutant survives),
+            # 10 = an assertion was refuted (the mutant is detected),
+            # 124 = killed by timeout(1). Anything else means ebmc itself did
+            # not run — 127 for "command not found" above all.
+            #
+            # Treating every non-zero code as a detection, which this used to
+            # do, turns a missing ebmc into a 100.0% mutation-detection rate for
+            # every design. That is a plausible-looking number, so it survives
+            # review; it was only caught here by comparing against previously
+            # published rates. A metric that cannot fail loudly fails quietly,
+            # in the flattering direction.
+            if(ebmc_result.returncode == 0):
                 return_result.append({verilog_file:"verified"})
+            elif(ebmc_result.returncode == 10):
+                return_result.append({verilog_file:"error"})
+            elif(ebmc_result.returncode == 124):
+                return_result.append({verilog_file:"timeout"})
+            else:
+                print(f"EBMC did not run on {verilog_file} "
+                      f"(exit {ebmc_result.returncode}); not counting it as a "
+                      f"detection. Is ebmc on PATH?")
+                return_result.append({verilog_file:"toolerror"})
 
         except Exception as e:
             print(f"Failed to create .sby file: {e}")
@@ -153,6 +168,7 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
         print("Finish parallel processing")
     # print("The result is: ",thread_result)
 
+    tool_errors = []
     for result in thread_result:
         filename = result.keys()
         value = result.values()
@@ -160,6 +176,13 @@ def run_fm_on_verilog_files(directory, properties, sby_path="sby"):
             error_files.append(list(filename)[0])
         if list(value)[0] == "timeout":
             timeout_list.append(list(filename)[0])
+        if list(value)[0] == "toolerror":
+            tool_errors.append(list(filename)[0])
+
+    if tool_errors:
+        print(f"WARNING: ebmc failed to run on {len(tool_errors)} of "
+              f"{len(thread_result)} mutants. The detection rate below is "
+              f"computed without them and is NOT comparable with a clean run.")
 
     return error_files
 

@@ -151,6 +151,15 @@ def run_experiment(target, config, keep_work, extra_args):
         print(f"Previous results moved to {previous.relative_to(ROOT)}")
     result_dir.mkdir(parents=True)
 
+    # Mutation evaluation needs the FIXED mutant set. mutation.py picks its
+    # operators at random, so generating them per run gives the same count with
+    # different content (383 mutants on c880, 294 of them different between two
+    # runs) and no two runs are comparable. Clone the set with:
+    #   git clone https://github.com/lichye/MutationBenchmark.git
+    mutants = ROOT / "MutationBenchmark" / target / "benchmarks"
+    if mutants.is_dir():
+        print(f"Using the fixed mutants in {mutants.relative_to(ROOT)}")
+
     work_dir = result_dir / "work"
     command = [str(binary), str(rtl),
                "--top", target,
@@ -162,6 +171,10 @@ def run_experiment(target, config, keep_work, extra_args):
     print(f"=== {target} with {config_path.name} ===")
     print("$ " + " ".join(command))
     completed = subprocess.run(command)
+
+    # Hand the evaluator everything it needs, in the layout it expects.
+    if mutants.is_dir():
+        shutil.copytree(mutants, result_dir / "benchmarks", dirs_exist_ok=True)
 
     # Lift the interesting artefacts out of the workdir.
     for name in ["assertions.txt", "invariants.txt", "effective-config.json"]:
