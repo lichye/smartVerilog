@@ -528,7 +528,7 @@ counts and mined sets — so the precondition fails and they are inconclusive,
 not counterexamples. The pipeline is not bit-reproducible under parallelism;
 that is understood and accepted.
 
-Oracle script: `check_oracle.py` (kept with the run harness).
+Oracle script: `tools/experiments/check_oracle.py`.
 
 ### 4.6 Trace policy: searching for stimulus does not pay
 
