@@ -10,9 +10,13 @@
 
 #include "Harness.h"
 
+#include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <fstream>
+#include <map>
 #include <sstream>
+#include <system_error>
 
 namespace smart {
 namespace simgen {
@@ -46,6 +50,23 @@ std::string freeRegRef(const std::string& top, const std::string& name) {
     return "top->rootp->" + top + "__DOT__" + name;
 }
 
+// Wrap a drive in "use the scripted value if the stimulus file still has one".
+// Falling back to the draw means a short file degrades to random rather than
+// silently driving zeros for the rest of the trace.
+std::string scripted(const std::string& target, const std::string& randomForm,
+                     const std::string& indent) {
+    std::ostringstream os;
+    os << indent << "{\n"
+       << indent << "  bool ok = false;\n"
+       << indent << "  const long long v = nextStim(&ok);\n"
+       << indent << "  if (ok) " << target << " = v;\n"
+       << indent << "  else {\n"
+       << randomForm
+       << indent << "  }\n"
+       << indent << "}\n";
+    return os.str();
+}
+
 std::string driveLine(const std::string& target, int width,
                       const SignalSpec* spec, const std::string& indent) {
     if (spec != nullptr && !spec->values.empty()) {
@@ -75,6 +96,131 @@ const SignalSpec* specFor(const HarnessOptions& options, const std::string& name
 
 }  // namespace
 
+
+// --- state signal enumeration ------------------------------------------------
+//
+// `verilator --xml-only` elaborates and dumps the AST without compiling, which
+// is the cheapest way to learn what signals a design has. We want the top
+// module's outputs and internals: the driven inputs are excluded on purpose,
+// because a state vector containing them is dominated by the stimulus itself
+// and tells a search nothing about where the design went.
+namespace {
+
+std::string quote(const std::string& s) { return "'" + s + "'"; }
+
+// The generated XML is regular, so a scan beats pulling in an XML library.
+std::string attribute(const std::string& tag, const std::string& name) {
+    const auto key = name + "=\"";
+    const auto at = tag.find(key);
+    if (at == std::string::npos) return {};
+    const auto from = at + key.size();
+    const auto to = tag.find('"', from);
+    if (to == std::string::npos) return {};
+    return tag.substr(from, to - from);
+}
+
+}  // namespace
+
+std::vector<StateSignal> enumerateStateSignals(
+    const std::vector<std::string>& designFiles, const std::string& top,
+    const std::string& verilator, const std::string& scratchDir) {
+    std::vector<StateSignal> signals;
+    if (designFiles.empty()) return signals;
+
+    std::error_code error;
+    fs::create_directories(scratchDir, error);
+
+    std::ostringstream command;
+    command << quote(verilator) << " --xml-only -Wno-fatal --top-module "
+            << quote(top) << " --Mdir " << quote(scratchDir + "/xml");
+    for (const auto& file : designFiles) command << " " << quote(file);
+    command << " > /dev/null 2>&1";
+    if (std::system(command.str().c_str()) != 0) return signals;
+
+    std::ifstream in(scratchDir + "/xml/V" + top + ".xml");
+    if (!in) return signals;
+    std::string xml((std::istreambuf_iterator<char>(in)),
+                    std::istreambuf_iterator<char>());
+
+    // dtype id -> width. A basicdtype with no left/right is one bit.
+    std::map<std::string, int> widths;
+    for (std::size_t at = xml.find("<basicdtype"); at != std::string::npos;
+         at = xml.find("<basicdtype", at + 1)) {
+        const auto end = xml.find('>', at);
+        if (end == std::string::npos) break;
+        const auto tag = xml.substr(at, end - at);
+        const auto id = attribute(tag, "id");
+        if (id.empty()) continue;
+        const auto left = attribute(tag, "left"), right = attribute(tag, "right");
+        int width = 1;
+        if (!left.empty() && !right.empty()) {
+            try {
+                width = std::stoi(left) - std::stoi(right) + 1;
+            } catch (const std::exception&) {
+                width = 1;
+            }
+        }
+        widths[id] = width;
+    }
+
+    // Only the module marked topModule="1"; a submodule's signals are not
+    // reachable through the flat accessors we generate.
+    const auto topAt = xml.find("topModule=\"1\"");
+    if (topAt == std::string::npos) return signals;
+    const auto scopeEnd = xml.find("</module>", topAt);
+
+    for (std::size_t at = xml.find("<var ", topAt);
+         at != std::string::npos && at < scopeEnd;
+         at = xml.find("<var ", at + 1)) {
+        const auto end = xml.find('>', at);
+        if (end == std::string::npos) break;
+        const auto tag = xml.substr(at, end - at);
+        const auto name = attribute(tag, "name");
+        const auto dir = attribute(tag, "dir");
+        if (name.empty() || dir == "input") continue;
+        // Verilator's own temporaries (__VdfgTmp_*, __Vtask*, ...) appear in
+        // the AST but are not emitted as members of the root class, so naming
+        // one produces code that does not compile. They are not design state
+        // in any case.
+        if (name.rfind("__", 0) == 0) continue;
+
+        StateSignal signal;
+        signal.name = name;
+        signal.isPort = !dir.empty();
+        const auto found = widths.find(attribute(tag, "dtype_id"));
+        signal.width = found == widths.end() ? 1 : found->second;
+        // Wider than a QData has no plain integral accessor; hashing it would
+        // not compile. Rare for control state, and skipping is honest.
+        if (signal.width > 64) continue;
+        signals.push_back(signal);
+    }
+    return signals;
+}
+
+DrivenWidths drivenWidths(const frontend::ModuleInfo& info,
+                          const HarnessOptions& options) {
+    DrivenWidths widths;
+    const auto clock = options.clock.empty()
+                           ? frontend::guessClock(info)
+                           : std::optional<std::string>(options.clock);
+    const auto reset = clock ? (options.reset ? options.reset
+                                              : frontend::guessReset(info, clock))
+                             : std::optional<frontend::ResetInfo>();
+
+    for (const auto& reg : info.freeRegs)
+        if (reg.kind == "anyconst") widths.constant.push_back(effectiveWidth(reg.width));
+
+    for (const auto& port : info.inputs()) {
+        if (clock && port.name == *clock) continue;
+        if (reset && port.name == reset->signal) continue;
+        widths.perCycle.push_back(effectiveWidth(port.width));
+    }
+    for (const auto& reg : info.freeRegs)
+        if (reg.kind == "anyseq") widths.perCycle.push_back(effectiveWidth(reg.width));
+
+    return widths;
+}
+
 std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
                                    const HarnessOptions& options) {
     const auto clock = options.clock.empty()
@@ -85,7 +231,13 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
                              : std::optional<frontend::ResetInfo>();
 
     const std::string model = "V" + info.top;
-    const bool hasFreeRegs = !info.freeRegs.empty();
+    // The root header is what makes <top>__DOT__<name> a complete type. Free
+    // registers need it, and so does any internal signal in the state vector.
+    const bool needsRoot =
+        !info.freeRegs.empty() ||
+        std::any_of(options.stateSignals.begin(), options.stateSignals.end(),
+                    [](const StateSignal& s) { return !s.isPort; });
+    const bool hasFreeRegs = needsRoot;
 
     std::ostringstream os;
     os << "// Auto-generated by SMART (simgen/Verilator.cpp) — do not edit.\n"
@@ -97,28 +249,61 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
        << "#include \"" << model << ".h\"\n";
     if (hasFreeRegs) os << "#include \"" << model << "___024root.h\"\n";
     os << "#include <cstdlib>\n"
-       << "#include <string>\n\n"
+       << "#include <fstream>\n"
+       << "#include <set>\n"
+       << "#include <sstream>\n"
+       << "#include <string>\n"
+       << "#include <vector>\n\n"
        << "int main(int argc, char** argv) {\n"
        << "    unsigned seed = " << options.seed << ";\n"
        << "    std::string vcdPath = \"dump.vcd\";\n"
+       << "    std::string stimPath, statesPath;\n"
+       << "    bool dump = true;\n"
        << "    for (int i = 1; i < argc; ++i) {\n"
        << "        const std::string arg = argv[i];\n"
        << "        if (arg.rfind(\"+seed=\", 0) == 0) seed = std::stoul(arg.substr(6));\n"
        << "        else if (arg.rfind(\"+vcd=\", 0) == 0) vcdPath = arg.substr(5);\n"
+       << "        else if (arg.rfind(\"+stim=\", 0) == 0) stimPath = arg.substr(6);\n"
+       << "        else if (arg.rfind(\"+states=\", 0) == 0) statesPath = arg.substr(8);\n"
+       << "        else if (arg == \"+nodump\") dump = false;\n"
        << "    }\n\n"
-       << "    Verilated::traceEverOn(true);\n"
+       // A fuzzing round runs this thousands of times and throws the waveform
+       // away; writing one costs more than the simulation. +nodump skips it.
+       << "    std::vector<long long> stim;\n"
+       << "    std::size_t stimAt = 0;\n"
+       << "    if (!stimPath.empty()) {\n"
+       << "        std::ifstream in(stimPath);\n"
+       << "        std::string line;\n"
+       << "        while (std::getline(in, line)) {\n"
+       << "            if (line.empty() || line[0] == '#') continue;\n"
+       << "            std::istringstream fields(line);\n"
+       << "            long long v;\n"
+       << "            while (fields >> v) stim.push_back(v);\n"
+       << "        }\n"
+       << "    }\n"
+       // Runs out of stimulus -> fall back to the RNG, so a short or truncated
+       // file degrades to the old behaviour instead of driving zeros.
+       << "    auto nextStim = [&](bool* ok) -> long long {\n"
+       << "        if (stimAt < stim.size()) { *ok = true; return stim[stimAt++]; }\n"
+       << "        *ok = false; return 0;\n"
+       << "    };\n\n"
+       << "    std::set<std::string> statesSeen;\n\n"
+       << "    if (dump) Verilated::traceEverOn(true);\n"
        << "    " << model << "* top = new " << model << ";\n"
        << "    VerilatedVcdC* trace = new VerilatedVcdC;\n"
-       << "    top->trace(trace, 99);\n"
-       << "    trace->open(vcdPath.c_str());\n"
+       << "    if (dump) { top->trace(trace, 99); trace->open(vcdPath.c_str()); }\n"
        << "    ::srandom(seed);\n\n"
        << "    vluint64_t now = 0;\n";
 
-    // anyconst: drawn once, before anything runs.
+    // anyconst: drawn once, before anything runs. These consume the first
+    // entries of the stimulus file, so a fuzzer writes them ahead of cycle 0.
     for (const auto& reg : info.freeRegs) {
         if (reg.kind != "anyconst") continue;
-        os << driveLine(freeRegRef(info.top, reg.name), reg.width,
-                        specFor(options, reg.name), "    ");
+        const auto target = freeRegRef(info.top, reg.name);
+        os << scripted(target,
+                       driveLine(target, reg.width, specFor(options, reg.name),
+                                 "      "),
+                       "    ");
     }
 
     std::vector<frontend::Port> driven;
@@ -141,29 +326,75 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
     }
 
     os << "\n    for (int cycle = 0; cycle < " << options.cycles << "; ++cycle) {\n";
+    // Per cycle, in this order: driven ports, then anyseq free registers.
+    // The stimulus file is read flat, so this order is its format.
     for (const auto& port : driven)
-        os << driveLine("top->" + port.name, port.width, specFor(options, port.name),
-                        "        ");
+        os << scripted("top->" + port.name,
+                       driveLine("top->" + port.name, port.width,
+                                 specFor(options, port.name), "          "),
+                       "        ");
     for (const auto& reg : info.freeRegs) {
         if (reg.kind != "anyseq") continue;
-        os << driveLine(freeRegRef(info.top, reg.name), reg.width,
-                        specFor(options, reg.name), "        ");
+        const auto target = freeRegRef(info.top, reg.name);
+        os << scripted(target,
+                       driveLine(target, reg.width, specFor(options, reg.name),
+                                 "          "),
+                       "        ");
     }
 
     if (clock) {
         // One full clock period per cycle, sampled on both edges so the trace
         // carries the settled values either side of the edge.
         os << "        top->" << *clock << " = 1; top->eval();\n"
-           << "        trace->dump(now); now += 5;\n"
+           << "        if (dump) trace->dump(now);\n        now += 5;\n"
            << "        top->" << *clock << " = 0; top->eval();\n"
-           << "        trace->dump(now); now += 5;\n";
+           << "        if (dump) trace->dump(now);\n        now += 5;\n";
     } else {
         os << "        top->eval();\n"
-           << "        trace->dump(now); now += 10;\n";
+           << "        if (dump) trace->dump(now);\n        now += 10;\n";
+    }
+
+    // What the fuzzer scores a sequence by: how many distinct states the run
+    // visits. Uniform random stimulus tends to revisit a small corner of a
+    // control FSM, and a state never visited cannot appear in a constraint.
+    //
+    // The vector is the observable state -- output ports and free registers.
+    // It is a PROXY: internal registers with no port of their own are only
+    // counted where they show through. Widening it means naming internal
+    // signals, which ModuleInfo does not currently carry.
+    {
+        std::vector<std::string> observed;
+        if (!options.stateSignals.empty()) {
+            // Enumerated from the design, so internal registers count too.
+            for (const auto& signal : options.stateSignals)
+                observed.push_back(signal.isPort
+                                       ? "top->" + signal.name
+                                       : freeRegRef(info.top, signal.name));
+        } else {
+            for (const auto& port : info.ports)
+                if (port.dir == "output") observed.push_back("top->" + port.name);
+            for (const auto& reg : info.freeRegs)
+                observed.push_back(freeRegRef(info.top, reg.name));
+        }
+
+        if (!observed.empty()) {
+            os << "        {\n"
+               << "            std::ostringstream state;\n";
+            for (std::size_t i = 0; i < observed.size(); ++i)
+                os << "            state << " << (i ? "',' << " : "")
+                   << "static_cast<long long>(" << observed[i] << ");\n";
+            os << "            statesSeen.insert(state.str());\n"
+               << "        }\n";
+        }
     }
 
     os << "    }\n\n"
-       << "    trace->close();\n"
+       << "    if (!statesPath.empty()) {\n"
+       << "        std::ofstream out(statesPath);\n"
+       << "        out << statesSeen.size() << \"\\n\";\n"
+       << "        for (const auto& s : statesSeen) out << s << \"\\n\";\n"
+       << "    }\n"
+       << "    if (dump) trace->close();\n"
        << "    top->final();\n"
        << "    delete top;\n"
        << "    delete trace;\n"

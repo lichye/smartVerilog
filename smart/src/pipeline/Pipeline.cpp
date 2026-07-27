@@ -308,9 +308,27 @@ ExitCode Pipeline::run(RunSummary& summary) {
         return ExitCode::UserError;
     }
 
+    const auto policyName = options_.getString("trace_policy");
+    if (policyName == "fuzz") {
+        if (harness.simulator != simgen::Simulator::Verilator) {
+            std::cerr << "smart: --trace-policy fuzz needs the verilator "
+                         "backend (the Icarus harness has no stimulus hook)\n";
+            return ExitCode::UserError;
+        }
+        harness.policy = simgen::TracePolicy::Fuzz;
+        harness.fuzzIterations =
+            static_cast<int>(options_.getInt("fuzz_iterations"));
+    } else if (policyName == "random" || policyName.empty()) {
+        harness.policy = simgen::TracePolicy::Random;
+    } else {
+        std::cerr << "smart: unknown trace policy '" << policyName
+                  << "' (known: random, fuzz)\n";
+        return ExitCode::UserError;
+    }
+
     say("[" + timestamp() + "] simulating " + std::to_string(harness.traces) +
         " traces x " + std::to_string(harness.cycles) + " cycles with " +
-        simulatorName);
+        simulatorName + ", " + policyName + " stimulus");
     try {
         // Simulate the design as it sits in the workdir, so the traces match
         // the sources the blocks reason about.
@@ -321,12 +339,28 @@ ExitCode Pipeline::run(RunSummary& summary) {
 
         // The workdir root, not sim_src: runSimulations makes its own
         // sim_src/ underneath for the assume-stripped copies.
-        simgen::runSimulations(info, workdirDesign, work.root(),
-                               work.simResultsDir(), harness);
+        const auto sim = simgen::runSimulations(info, workdirDesign, work.root(),
+                                                work.simResultsDir(), harness);
         runLog.record("\"stage\":\"simulate\",\"simulator\":\"" +
                       jsonEscape(simulatorName) + "\",\"traces\":" +
                       std::to_string(harness.traces) + ",\"cycles\":" +
                       std::to_string(harness.cycles));
+        if (sim.fuzz.ran) {
+            say("[" + timestamp() + "] fuzz: " +
+                std::to_string(sim.fuzz.statesSelected) + " states in " +
+                std::to_string(harness.traces) + " traces (random baseline " +
+                std::to_string(sim.fuzz.statesRandom) + ", " +
+                std::to_string(sim.fuzz.statesSeen) + " seen over " +
+                std::to_string(sim.fuzz.iterations) + " runs)");
+            runLog.record("\"stage\":\"fuzz\",\"iterations\":" +
+                          std::to_string(sim.fuzz.iterations) +
+                          ",\"states_selected\":" +
+                          std::to_string(sim.fuzz.statesSelected) +
+                          ",\"states_seen\":" +
+                          std::to_string(sim.fuzz.statesSeen) +
+                          ",\"states_random\":" +
+                          std::to_string(sim.fuzz.statesRandom));
+        }
     } catch (const simgen::MissingToolError& e) {
         std::cerr << "smart: " << e.what() << "\n"
                   << "smart: the simulator is not on PATH. Either add it,\n"

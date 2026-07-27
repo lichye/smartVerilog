@@ -42,6 +42,36 @@ struct SignalSpec {
 // internal free registers by plain hierarchical assignment.
 enum class Simulator { Verilator, Icarus };
 
+// How the stimulus is chosen. Random draws every input independently every
+// cycle; Fuzz searches for sequences that reach more states, at the same trace
+// count and depth. See Fuzz.h for why depth is not the lever.
+enum class TracePolicy { Random, Fuzz };
+
+// A signal the fuzzer scores state diversity over. `isPort` picks the
+// accessor: ports are members of the model, internals live on the flattened
+// root as <top>__DOT__<name>.
+struct StateSignal {
+    std::string name;
+    bool isPort = false;
+    int width = 1;
+};
+
+// Enumerate the top module's non-input signals with `verilator --xml-only`,
+// which elaborates without compiling. Returns an empty vector if verilator
+// cannot be run or the XML cannot be read — the caller then falls back to the
+// ports it already knows.
+std::vector<StateSignal> enumerateStateSignals(
+    const std::vector<std::string>& designFiles, const std::string& top,
+    const std::string& verilator, const std::string& scratchDir);
+
+struct FuzzOutcome {
+    bool ran = false;
+    int iterations = 0;
+    int statesSelected = 0;
+    int statesSeen = 0;
+    int statesRandom = 0;
+};
+
 struct HarnessOptions {
     Simulator simulator = Simulator::Verilator;
     int cycles = 10;          // trace depth (--cycles)
@@ -60,6 +90,14 @@ struct HarnessOptions {
     std::string iverilog = "iverilog";
     std::string vvp = "vvp";
     std::string verilator = "verilator";
+
+    // What to hash when measuring state diversity. Empty means "outputs and
+    // free registers only", which on a design with one output port is far too
+    // coarse to steer a search.
+    std::vector<StateSignal> stateSignals;
+
+    TracePolicy policy = TracePolicy::Random;
+    int fuzzIterations = 500;
 
     // A simulation that does not terminate must not hang the run: stimulus
     // that drives a design into a zero-delay loop otherwise spins at 100% CPU
@@ -82,9 +120,21 @@ std::string renderTestbench(const frontend::ModuleInfo& info,
 std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
                                    const HarnessOptions& options);
 
+// Bit widths of the values the generated harness consumes, in the order it
+// reads them: anyconst registers once, then per cycle the driven ports
+// followed by the anyseq registers. The fuzzer needs this to build stimulus
+// the harness will accept.
+struct DrivenWidths {
+    std::vector<int> constant;
+    std::vector<int> perCycle;
+};
+DrivenWidths drivenWidths(const frontend::ModuleInfo& info,
+                          const HarnessOptions& options);
+
 struct SimResult {
     std::vector<std::string> vcdPaths;  // one per trace, in seed order
     std::string command;                // last command run, for diagnostics
+    FuzzOutcome fuzz;                   // empty unless the fuzz policy ran
 };
 
 // Thrown when a tool the harness needs is not on PATH — distinct from a

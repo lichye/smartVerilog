@@ -112,7 +112,8 @@ target_link_libraries(hwcbmc_dump PRIVATE smart_hwcbmc_frontend)
 # --- simgen (WP3): testbench generation + iverilog/vvp ----------------------
 add_library(smart_simgen STATIC
     ${SMART_SRC}/simgen/Harness.cpp
-    ${SMART_SRC}/simgen/Verilator.cpp)
+    ${SMART_SRC}/simgen/Verilator.cpp
+    ${SMART_SRC}/simgen/Fuzz.cpp)
 target_include_directories(smart_simgen PUBLIC ${SMART_SRC}/simgen)
 target_link_libraries(smart_simgen PUBLIC smart_frontend)
 

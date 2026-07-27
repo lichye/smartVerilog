@@ -1,5 +1,7 @@
 #include "Harness.h"
 
+#include "Fuzz.h"
+
 #include <array>
 #include <chrono>
 #include <cstdio>
@@ -312,9 +314,18 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
         // workdir from the other simulator is never mistaken for this one.
         const auto harnessPath = fs::path(workDir) / "sim_main.cpp";
         {
+            // Learn the design's own signals first, so state diversity is
+            // measured over internal registers and not just the ports. This
+            // elaborates without compiling; on failure the harness falls back
+            // to outputs and free registers.
+            HarnessOptions withState = options;
+            if (withState.stateSignals.empty())
+                withState.stateSignals = enumerateStateSignals(
+                    designFiles, info.top, options.verilator, workDir);
+
             std::ofstream out(harnessPath);
             if (!out) throw std::runtime_error("cannot write " + harnessPath.string());
-            out << renderVerilatorHarness(info, options);
+            out << renderVerilatorHarness(info, withState);
         }
 
         compile << options.verilator << " --cc --exe --build --trace"
@@ -357,6 +368,29 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
                                  " failed:\n" + compileOutput +
                                  "\ncommand: " + result.command);
 
+    // With the fuzz policy, search for the stimulus first; the loop below then
+    // replays the winners with the waveform on. Same trace count, same depth —
+    // only the content differs, so nothing downstream sees a bigger problem.
+    std::vector<std::string> chosenStimulus;
+    if (useVerilator && options.policy == TracePolicy::Fuzz) {
+        const auto widths = drivenWidths(info, options);
+        FuzzInput fuzz;
+        fuzz.simulator = simPath.string();
+        fuzz.scratchDir = (fs::path(workDir) / "fuzz").string();
+        fuzz.constWidths = widths.constant;
+        fuzz.cycleWidths = widths.perCycle;
+        fuzz.cycles = options.cycles;
+        fuzz.traces = options.traces;
+        fuzz.iterations = options.fuzzIterations;
+        fuzz.seed = options.seed;
+        fuzz.timeoutSeconds = options.simulationTimeoutSeconds;
+
+        const auto found = fuzzStimulus(fuzz);
+        chosenStimulus = found.stimulusFiles;
+        result.fuzz = {true, found.iterations, found.statesSelected,
+                       found.statesSeen, found.statesRandom};
+    }
+
     for (int i = 0; i < options.traces; ++i) {
         const auto vcdPath =
             fs::path(outputDir) /
@@ -373,6 +407,8 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
             simulate << options.vvp << " " << quote(simPath.string());
         simulate << " +seed=" << (options.seed + i)
                  << " +vcd=" << quote(vcdPath.string());
+        if (i < static_cast<int>(chosenStimulus.size()))
+            simulate << " +stim=" << quote(chosenStimulus[i]);
         result.command = simulate.str();
 
         bool timedOut = false;

@@ -61,6 +61,15 @@ std::vector<OptionSpec> buildTable() {
          "NAME", "trace generator: verilator | iverilog"},
         {"simulation_timeout", "simulation-timeout", 0, T::Int, 300LL, "", "SECS",
          "per-trace simulation limit; 0 disables"},
+        // How the stimulus is chosen. `random` draws every input independently
+        // every cycle. `fuzz` searches for sequences that visit more states,
+        // keeping the SAME trace count and depth — depth is not the lever,
+        // because more sampled cycles means more positive constraints per
+        // SyGuS call, which has a fixed budget.
+        {"trace_policy", "trace-policy", 0, T::String, std::string("random"), "",
+         "NAME", "stimulus generation: random | fuzz"},
+        {"fuzz_iterations", "fuzz-iterations", 0, T::Int, 500LL, "", "N",
+         "simulations the fuzz policy may spend searching"},
 
         // --- verification ----------------------------------------------
         {"bound", "bound", 0, T::Int, 10LL, "Checker_settings.bounded_depth", "N",
