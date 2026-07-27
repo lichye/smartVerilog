@@ -330,6 +330,53 @@ moving between rounds (c3540 842->847, s38584 11077->11065).
 
 Reproduce with `build/bin/mus_bench <variables.txt> <SygusResult.sl> [timeout]`.
 
+### 3.8 Positive states: the ceiling, the redundancy, and what "more" costs
+
+Three facts about the constraints a block is given, which together explain why
+"sample more of the design" and "make the synthesiser's job harder" looked like
+one knob.
+
+**The state ceiling is traces x cycles.** A 10-cycle trace visits at most 10
+states, so the shipped 3 x 10 caps at 30 no matter how good the stimulus is.
+Whether a design has room is measurable before doing anything about it —
+`states_random` in the run log against that product:
+
+| design | random coverage / ceiling | room |
+|---|---|---|
+| c432 | 30 / 30 | none — already saturated |
+| s838 | 5 / 30 | 6x under-sampled |
+
+Searching within the same budget took s838 from 5 to 11 and its verified
+assertions from 576 to 913. c432 is unchanged, as predicted.
+
+**40% of the constraints were repeats.** A block sees k variables; two states
+that differ anywhere else project to the same k values and produce a
+byte-identical constraint. On c880: 108,853 positive constraints across 3,238
+blocks, 65,771 distinct. The worst block was 81% duplicates, one constraint
+appearing 11 times in 36. Deduplicating is free — a repeat constrains nothing
+the first did not — and on s838 cut the emitted set from 41,591 to 19,471 with
+the yield unchanged (576 -> 581, inside the run-to-run spread).
+
+So roughly half of the coupling between coverage and difficulty was repetition
+rather than information.
+
+**But more DISTINCT positive states is not simply better.** Each one is a
+constraint the invariant must satisfy, and they pull three ways at once:
+
+1. *Helps.* A candidate synthesised from narrow traces is often true only of
+   the few states seen; EBMC refutes it, CEGIS re-proposes, and the block can
+   exhaust its refinement budget for nothing. Richer states move that
+   rejection from the expensive check to the cheap one.
+2. *Hurts.* Spread widely enough, no boolean relation over the block's k
+   variables satisfies all of them: SyGuS returns infeasible and the block
+   yields nothing.
+3. *Hurts, subtly.* An invariant that must accept more states is a weaker
+   claim, and a weaker assertion detects fewer mutants.
+
+Assertion count cannot distinguish these — (1) raises it, (2) lowers it, and
+(3) leaves it alone while lowering MD. Only the mutation rate answers, which
+is why the policy study measures that and not yield.
+
 ## 4. Benchmark data
 
 ### 4.1 Subset run (container, 2026-07-26)
