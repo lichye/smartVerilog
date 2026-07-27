@@ -8,6 +8,7 @@
 // see BlockRunner.h for why blocks are processes and not threads.
 
 #include <cstdlib>
+#include "Version.h"
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -96,6 +97,11 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         std::cerr << "smart: " << e.what() << "\n\n" << Options::usage();
         return static_cast<int>(ExitCode::UserError);
+    }
+
+    if (options.versionRequested()) {
+        std::cout << "smart " << smart::version() << "\n";
+        return 0;
     }
 
     if (options.helpRequested()) {

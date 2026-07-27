@@ -75,6 +75,7 @@ public:
 
     bool helpRequested() const { return help_; }
     bool checkEnvRequested() const { return checkEnv_; }
+    bool versionRequested() const { return version_; }
     bool dumpConfigRequested() const { return dumpConfig_; }
     bool dumpFrontendRequested() const { return dumpFrontend_; }
 
@@ -92,6 +93,7 @@ private:
     std::vector<std::string> warnings_;
     bool help_ = false;
     bool checkEnv_ = false;
+    bool version_ = false;
     bool dumpConfig_ = false;
     bool dumpFrontend_ = false;
 };

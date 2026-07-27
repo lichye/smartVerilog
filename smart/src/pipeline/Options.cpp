@@ -111,9 +111,26 @@ std::vector<OptionSpec> buildTable() {
          "SECS", "per-block wall-clock budget"},
 
         // --- block strategy ---------------------------------------------
-        {"blockified", "blockified", 0, T::Bool, false, "Workflow.Blockified", "",
+        //
+        // Iterate with the MSA strategy by default. Measured over 22 designs
+        // against the fixed MutationBenchmark mutants (2026-07-26):
+        //
+        //   config           MD mean  MD median  assertions  total time
+        //   smart (one-shot)   67.3%      66.0%         202        312s
+        //   blockified+MSA     81.9%      82.4%         326       4569s
+        //
+        // 14.6 points of mutation detection for 15x the wall clock. Detection
+        // is the metric the tool exists to move, so it wins the default;
+        // `--no-blockified` is there when the budget matters more.
+        //
+        // The random strategy is NOT the default despite a nominally equal MD
+        // mean (82.14% vs 82.06% on the 20 designs where it finished): its
+        // median is 1.15 points LOWER, it emits 6.6x the assertions (median
+        // 1968 vs 298), takes 2.7x the time, and failed outright on the two
+        // hardest designs (c880, c1355) where MSA scored 92.7% and 67.4%.
+        {"blockified", "blockified", 0, T::Bool, true, "Workflow.Blockified", "",
          "iterate: mine, then re-block from what was found"},
-        {"msa", "msa", 0, T::Bool, false, "Blockified_settings.MSA", "",
+        {"msa", "msa", 0, T::Bool, true, "Blockified_settings.MSA", "",
          "MSA block strategy (implies --blockified)"},
         {"random", "random", 0, T::Bool, false, "Blockified_settings.Random", "",
          "random block strategy (implies --blockified)"},
@@ -136,11 +153,25 @@ std::vector<OptionSpec> buildTable() {
          "dump the assertion set after every round"},
 
         // --- minimiser ---------------------------------------------------
-        {"minimizer", "", 0, T::Bool, false, "Workflow.Minimizer", "",
+        //
+        // On by default at the end, off by default between rounds. Measured on
+        // c880 (46 rounds, 680 assertions, 855s): the between-rounds minimiser
+        // cost 40.7s — 4.8% of the run — to remove 0.3-0.5% of the assertions
+        // (206->206, 621->620). The only thing it feeds is the MSA pool, and
+        // shrinking that pool by 0.4% saves well under a second of the 94.8s
+        // the MSA costs. It pays for itself only on small designs, where it
+        // does remove 20-27% (s298) but costs 0.17s total either way.
+        //
+        // The end-of-run pass is a different trade: one call, and what it
+        // shrinks is the artefact a person reads (s27: 49 -> 28).
+        //
+        // Config/*.json set both keys explicitly, so the historical presets
+        // keep their own behaviour regardless of what these defaults say.
+        {"minimizer", "", 0, T::Bool, true, "Workflow.Minimizer", "",
          "run the end-of-run assertion minimiser"},
         {"end_minimizer", "", 0, T::Bool, true, "Minimizer_settings.End_minimizer",
          "", "minimise the final assertion set"},
-        {"block_minimizer", "", 0, T::Bool, true,
+        {"block_minimizer", "", 0, T::Bool, false,
          "Minimizer_settings.Block_minimizer", "", "minimise between rounds"},
         {"end_minimizer_timeout", "", 0, T::Int, 300LL,
          "Minimizer_settings.End_Minimizer_timeout", "SECS", ""},
@@ -438,6 +469,7 @@ void Options::parseCommandLine(int argc, char** argv) {
 
         if (arg == "--help" || arg == "-h") { help_ = true; continue; }
         if (arg == "--check-env") { checkEnv_ = true; continue; }
+        if (arg == "--version") { version_ = true; continue; }
         if (arg == "--dump-config") { dumpConfig_ = true; continue; }
         if (arg == "--dump-frontend") { dumpFrontend_ = true; continue; }
         if (arg == "--config") { pendingConfigs.push_back(requireValue(arg)); continue; }
@@ -540,11 +572,14 @@ std::string Options::usage() {
        << "emits the ones EBMC proves, as <top>_assertion.sv.\n\n"
        << "Actions:\n"
        << "  -h, --help              this message\n"
+       << "      --version           print the version and exit\n"
        << "      --check-env         report tool versions and exit\n"
        << "      --dump-config       print the resolved configuration and exit\n"
        << "      --dump-frontend     print the parsed module as JSON and exit\n"
        << "      --config FILE       JSON config; new flat or legacy schema\n"
        << "  -v / -q                 more / less output\n\n"
+       << "Any boolean flag below can be turned off with --no-<flag>, e.g.\n"
+       << "--no-blockified for the one-shot mode (much faster, lower detection).\n\n"
        << "Options (every one is also a config key of the same name):\n";
 
     for (const auto& spec : optionTable()) {
