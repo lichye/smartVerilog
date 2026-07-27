@@ -48,6 +48,10 @@ struct BlockRunnerOptions {
     std::string executable;   // the binary to exec (this one, by default)
     std::string workDir;      // child's working directory
     std::string topModule;
+    // Module to mine in; empty means topModule.
+    std::string mineModule;
+    // Module DEFINITION the property is written into; empty means mineModule.
+    std::string injectModule;
     std::string configPath;   // resolved config, in the new flat schema
     std::string logsDir;
     int jobs = 1;

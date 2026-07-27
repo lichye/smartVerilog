@@ -149,12 +149,13 @@ void VerilogChecker::writeVerilogFile() {
         }
 
 
-        if (currentModuleName == topModule) {
-            printDebug("Current module is top module", 4);
+        const std::string target = injectModule.empty() ? topModule : injectModule;
+        if (currentModuleName == target) {
+            printDebug("Current module is the injection target", 4);
             isModule = true;
         } else {
             printDebug("Current module name: " + currentModuleName, 4);
-            printDebug("Top module name: " + topModule, 4);
+            printDebug("Injection target: " + target, 4);
             isModule = false;
         }
     }
@@ -173,7 +174,8 @@ void VerilogChecker::writeVerilogFile() {
     printDebug("Modified Verilog file is stored in " + formalFilePath,3);
 
     if(!insertProperties) {
-        printError("Error: Unable to insert properties in the module "+topModule+"\n");
+        printError("Error: Unable to insert properties in the module "+
+                   (injectModule.empty() ? topModule : injectModule)+"\n");
         exit(1);
     }
     // print("Successfully wrote formal file "+formalFilePath+"\n");
@@ -378,6 +380,10 @@ void VerilogChecker::setReachabilityBound(int reachabilityBound) {
 
 void VerilogChecker::setUnboundCheck(bool unboundCheck) {
     this->unboundCheck = unboundCheck;
+}
+
+void VerilogChecker::setInjectModule(std::string injectModule) {
+    this->injectModule = injectModule;
 }
 
 void VerilogChecker::setTopModule(std::string topModule) {

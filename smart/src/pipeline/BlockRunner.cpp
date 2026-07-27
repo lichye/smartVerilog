@@ -100,7 +100,13 @@ BlockResult runOne(const BlockJob& job, const BlockRunnerOptions& options,
                                          job.variablesFile,
                                          job.coreId,
                                          std::to_string(job.latency),
-                                         options.configPath};
+                                         options.configPath,
+                                         options.mineModule.empty()
+                                             ? options.topModule
+                                             : options.mineModule,
+                                         options.injectModule.empty()
+                                             ? options.topModule
+                                             : options.injectModule};
         std::vector<char*> argv;
         argv.reserve(args.size() + 1);
         for (auto& arg : args) argv.push_back(arg.data());

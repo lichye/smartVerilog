@@ -121,6 +121,52 @@ std::string attribute(const std::string& tag, const std::string& name) {
 
 }  // namespace
 
+namespace {
+
+// Run `verilator --xml-only` and return the XML, or empty on failure.
+std::string elaborateXml(const std::vector<std::string>& designFiles,
+                         const std::string& top, const std::string& verilator,
+                         const std::string& scratchDir) {
+    if (designFiles.empty()) return {};
+    std::error_code error;
+    fs::create_directories(scratchDir, error);
+
+    std::ostringstream command;
+    command << quote(verilator) << " --xml-only -Wno-fatal --top-module "
+            << quote(top) << " --Mdir " << quote(scratchDir + "/xml");
+    for (const auto& file : designFiles) command << " " << quote(file);
+    command << " > /dev/null 2>&1";
+    if (std::system(command.str().c_str()) != 0) return {};
+
+    std::ifstream in(scratchDir + "/xml/V" + top + ".xml");
+    if (!in) return {};
+    return std::string((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+}
+
+}  // namespace
+
+std::string definingModule(const std::vector<std::string>& designFiles,
+                           const std::string& top, const std::string& instance,
+                           const std::string& verilator,
+                           const std::string& scratchDir) {
+    const auto xml = elaborateXml(designFiles, top, verilator, scratchDir);
+    if (xml.empty()) return {};
+
+    for (std::size_t at = xml.find("<cell "); at != std::string::npos;
+         at = xml.find("<cell ", at + 1)) {
+        const auto end = xml.find('>', at);
+        if (end == std::string::npos) break;
+        const auto tag = xml.substr(at, end - at);
+        if (attribute(tag, "name") != instance) continue;
+        const auto defined = attribute(tag, "submodname");
+        // The top cell names itself; that is not an instance of something
+        // else, so treat it as "already a module name".
+        return defined == instance ? std::string() : defined;
+    }
+    return {};
+}
+
 std::vector<StateSignal> enumerateStateSignals(
     const std::vector<std::string>& designFiles, const std::string& top,
     const std::string& verilator, const std::string& scratchDir) {

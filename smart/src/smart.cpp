@@ -30,6 +30,8 @@ std::string smt_path    = "runtime/smt_results";
 std::string ebmcPath = "runtime/formal/formal.sv";
 std::string ebmcReachable = "runtime/formal/reachable.sv";
 std::string moduleName = "";
+std::string mineModule = "";
+std::string injectModule = "";
 std::string verilogSrcPath = "";
 std::string resultFileDir = "";
 std::string generateSMTResultPath();
@@ -64,8 +66,10 @@ State* createNegativeState();
 // per process.
 namespace smart { namespace pipeline {
 int runSmartBlock(int argc, char* argv[]){
-  if(argc!=8){
-    print("Usage: smart.out <currentDir> <topmodule> <result_file> <variables_file> <core_id> <latency> <config>\n");
+  // 8 is the historical contract; the two trailing arguments are optional so
+  // an old caller (or a hand-run smart.out) still works unchanged.
+  if(argc<8 || argc>10){
+    print("Usage: smart.out <currentDir> <topmodule> <result_file> <variables_file> <core_id> <latency> <config> [mine_module] [inject_module]\n");
     return -1;
   }
   else{
@@ -76,6 +80,11 @@ int runSmartBlock(int argc, char* argv[]){
     core_id = argv[5];
     latency = std::stoi(argv[6]);
     configPath = argv[7];
+    // Optional: the module whose signals are candidates and whose body the
+    // property goes into. Absent means the design top, which is the old
+    // contract and what every existing caller passes.
+    mineModule = argc > 8 ? argv[8] : moduleName;
+    injectModule = argc > 9 ? argv[9] : mineModule;
   }
 
   // The same option table the pipeline uses, so a block understands both the
@@ -107,7 +116,7 @@ int runSmartBlock(int argc, char* argv[]){
   // Blocks of one run must not all draw the same negative states.
   StateMaker::setSeed(seed + static_cast<unsigned>(std::stoul(core_id.empty() ? "0" : core_id)));
 
-  module = new Module(moduleName);
+  module = new Module(mineModule);
   sygus = new SyGuSGenerater();
   sygus->setSygusTimeoutMs(static_cast<int>(options.getInt("sygus_timeout_ms")));
   sygus->setUseSubprocess(options.getBool("sygus_subprocess"));
@@ -117,6 +126,7 @@ int runSmartBlock(int argc, char* argv[]){
 
 
   checker->setTopModule(moduleName);
+  checker->setInjectModule(injectModule);
   checker->setTimer(timer);
   checker->setBound(boundedDepth);
   checker->setReachabilityBound(

@@ -56,6 +56,7 @@ class VerilogChecker {
         void setReachabilityBound(int);
         void setUnboundCheck(bool);
         void setTopModule(std::string);
+        void setInjectModule(std::string);
         void setModuleTime(std::string);
         void setHomePath(std::string);
         Constrains fixupConstrains(Constrains);
@@ -78,6 +79,11 @@ class VerilogChecker {
         std::string formalFilePath;
         std::string tracePath;
         std::string topModule;
+        // The module the properties are written INTO, which is not always the
+        // one EBMC elaborates from. A hierarchical design is checked with
+        // --top <design top> while the invariant belongs to whichever module
+        // its variables live in. Empty means "same as topModule".
+        std::string injectModule;
         std::string moduleTime;
 
         std::vector<std::string> properties;

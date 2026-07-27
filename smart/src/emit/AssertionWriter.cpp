@@ -137,7 +137,10 @@ std::vector<CheckResult> checkAssertions(const std::string& designFile,
                                        std::to_string(index) + extension;
                 try {
                     std::ofstream out(candidate);
-                    out << injectAssertions(source, options.topModule,
+                    out << injectAssertions(source,
+                                            options.injectModule.empty()
+                                                ? options.topModule
+                                                : options.injectModule,
                                             {assertions[index]});
                     out.close();
 

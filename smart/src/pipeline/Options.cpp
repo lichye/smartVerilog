@@ -32,6 +32,12 @@ std::vector<OptionSpec> buildTable() {
         // --- input / output --------------------------------------------
         {"top", "top", 0, T::String, std::string(""), "", "NAME",
          "top module name (default: file stem)"},
+        // Which module the invariants are about. The design is still
+        // elaborated and checked from `top`; this selects whose signals become
+        // candidates and whose body the assertions are written into, so a
+        // submodule can be mined while its parent supplies the environment.
+        {"module", "module", 0, T::String, std::string(""), "", "NAME",
+         "module to mine in (default: the top module)"},
         {"output", "output", 'o', T::String, std::string(""), "", "FILE",
          "output file (default: <top>_assertion.sv next to the input)"},
         {"workdir", "workdir", 0, T::String, std::string(""), "", "DIR",

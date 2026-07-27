@@ -24,6 +24,10 @@ namespace emit {
 struct CheckOptions {
     std::string ebmc = "ebmc";
     std::string topModule;
+    // Where the property is written. EBMC still elaborates from topModule; in
+    // a hierarchical design the invariant belongs to the module its variables
+    // live in. Empty means topModule.
+    std::string injectModule;
     int bound = 10;
     bool unbounded = false;   // --k-induction instead of a bound
     int timeoutSeconds = 180;

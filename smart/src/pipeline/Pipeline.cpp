@@ -219,8 +219,21 @@ ExitCode Pipeline::run(RunSummary& summary) {
     if (top.empty()) top = fs::path(mainFile).stem().string();
     summary.top = top;
 
+    // The module the invariants are about. The design is still elaborated,
+    // simulated and checked as a whole from `top`; this only decides whose
+    // signals become candidates and whose body the assertions are written
+    // into. Pointing it at a submodule mines that block with its parent as
+    // the environment.
+    std::string mineModule = options_.getString("module");
+    if (mineModule.empty()) mineModule = top;
+    // A VCD scope is an instance (DFF_0); a property is written into a module
+    // definition (dff). Candidate variables key off the former, injection off
+    // the latter, and only the design knows the mapping.
+    std::string injectModule = mineModule;
+
     std::vector<std::string> designFiles =
         inputs.size() > 1 ? inputs : designFilesFor(mainFile, top);
+
 
     // ---- frontend ------------------------------------------------------
     frontend::ModuleInfo info;
@@ -247,6 +260,19 @@ ExitCode Pipeline::run(RunSummary& summary) {
     std::string workRoot = options_.getString("workdir");
     if (workRoot.empty()) workRoot = "smart-work-" + top;
     WorkDir work(fs::absolute(workRoot).string());
+
+    // A VCD scope is an instance; a property is written into a module
+    // definition. Ask the elaborator which module the named instance is, and
+    // fall back to treating the name as a module when it is not an instance.
+    if (mineModule != top) {
+        const auto defined = simgen::definingModule(designFiles, top, mineModule,
+                                                    "verilator", work.root());
+        if (!defined.empty()) {
+            injectModule = defined;
+            say("[" + timestamp() + "] mining instance " + mineModule +
+                ", writing into module " + injectModule);
+        }
+    }
     summary.workDir = work.root();
 
     try {
@@ -379,7 +405,7 @@ ExitCode Pipeline::run(RunSummary& summary) {
     // ---- pre-analysis --------------------------------------------------
     std::vector<std::string> variables;
     try {
-        variables = candidateVariables(top, work.simResultsDir());
+        variables = candidateVariables(mineModule, work.simResultsDir());
     } catch (const std::exception& e) {
         std::cerr << "smart: cannot read the traces back: " << e.what() << "\n";
         summary.workDirKept = true;
@@ -418,6 +444,8 @@ ExitCode Pipeline::run(RunSummary& summary) {
     runner.executable = self_;
     runner.workDir = work.root();
     runner.topModule = top;
+    runner.mineModule = mineModule;
+    runner.injectModule = injectModule;
     runner.configPath = work.effectiveConfigFile();
     runner.logsDir = work.logsDir();
     runner.jobs = jobs;
@@ -754,6 +782,7 @@ ExitCode Pipeline::run(RunSummary& summary) {
     if (options_.getBool("checker") && !assertions.empty()) {
         emit::CheckOptions check;
         check.topModule = top;
+        check.injectModule = injectModule;
         check.bound = static_cast<int>(options_.getInt("bound"));
         check.unbounded = options_.getBool("check_unbounded");
         check.timeoutSeconds = static_cast<int>(options_.getInt("check_timeout"));
@@ -813,7 +842,8 @@ ExitCode Pipeline::run(RunSummary& summary) {
     summary.outputFile = output;
 
     try {
-        emit::writeAssertionFile(mainFile, output, top, verified, options_.toJson());
+        emit::writeAssertionFile(mainFile, output, injectModule, verified,
+                                 options_.toJson());
     } catch (const std::exception& e) {
         std::cerr << "smart: cannot write " << output << ": " << e.what() << "\n";
         summary.workDirKept = true;
