@@ -489,8 +489,29 @@ ExitCode Pipeline::run(RunSummary& summary) {
                     mined.insert(result.assertion).second)
                     ++foundThisRound;
 
+                // Why a block found nothing decides what to do about it, and
+                // the three reasons want opposite responses. Measured on
+                // s838/c880: infeasible 44-47%, refuted 0.5-29%, killed
+                // 0-4%. Without this the log said "no-assertion" for all
+                // three and the exit code had to be decoded by hand.
+                //
+                //   0    the block verified an assertion
+                //   1    a candidate was synthesised and did not verify
+                //   255  smart.cpp exit(-1): SyGuS found nothing, or cvc5 gave
+                //        up on the problem
+                //   127  the child never got as far as running
+                //   -1   killed by a signal, i.e. it ran out of wall clock
+                const char* reason =
+                    result.exitCode == 0     ? "verified"
+                    : result.exitCode == 1   ? "refuted"
+                    : result.exitCode == 255 ? "infeasible"
+                    : result.exitCode == 127 ? "setup-failed"
+                    : result.exitCode < 0    ? "killed"
+                                             : "other";
+
                 std::ostringstream record;
-                record << "\"block\":\"" << jsonEscape(result.job.coreId)
+                record << "\"reason\":\"" << reason << "\","
+                       << "\"block\":\"" << jsonEscape(result.job.coreId)
                        << "\",\"round\":" << round
                        << ",\"latency\":" << result.job.latency
                        << ",\"pid\":" << result.pid
