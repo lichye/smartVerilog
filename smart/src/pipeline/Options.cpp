@@ -163,13 +163,21 @@ std::vector<OptionSpec> buildTable() {
 
         // --- minimiser ---------------------------------------------------
         //
-        // On by default at the end, off by default between rounds. Measured on
-        // c880 (46 rounds, 680 assertions, 855s): the between-rounds minimiser
-        // cost 40.7s — 4.8% of the run — to remove 0.3-0.5% of the assertions
-        // (206->206, 621->620). The only thing it feeds is the MSA pool, and
-        // shrinking that pool by 0.4% saves well under a second of the 94.8s
-        // the MSA costs. It pays for itself only on small designs, where it
-        // does remove 20-27% (s298) but costs 0.17s total either way.
+        // On by default at the end, off by default between rounds.
+        //
+        // Off is a simplicity call, not a performance one. Over 22 designs
+        // turning it off moved the mutation rate by +0.28pp on average and
+        // +0.00pp at the median (7 better, 5 worse, 10 unchanged), and the
+        // total time by 4610s -> 4655s. Both are inside the noise.
+        //
+        // What is measurable is that it does work for nothing: on c880 it cost
+        // 40.7s, 4.8% of the run, to remove 0.3-0.5% of the assertions
+        // (206->206, 621->620), because by then the set is already
+        // irredundant. It only bites on small designs, where it does remove
+        // 20-27% (s298) but the MSA it feeds costs 0.17s either way.
+        //
+        // An earlier version of this comment claimed +1.04pp from a single
+        // c880 A/B. That did not survive the 22-design run.
         //
         // The end-of-run pass is a different trade: one call, and what it
         // shrinks is the artefact a person reads (s27: 49 -> 28).

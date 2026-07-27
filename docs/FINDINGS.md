@@ -466,8 +466,22 @@ above, because every shipped config sets that key to true:
 | on | 48 | 680 | 92.69% | 40.7s |
 | **off** | 52 | **733** | **93.73%** | 0 |
 
-More assertions, +1.04 points of MD, and 40.7s back. **Not yet measured across
-all 22 designs** — the 88-run used `Block_minimizer: true`. One data point.
+More assertions, +1.04 points of MD, and 40.7s back — **on this one design**.
+
+It did not generalise. Measured across all 22 designs (shipped defaults, same
+harness, fixed mutants):
+
+| | off vs on |
+|---|---|
+| ΔMD mean | +0.28pp |
+| ΔMD median | **+0.00pp** |
+| better / worse / unchanged | 7 / 5 / 10 |
+| MD mean | 81.84% -> 82.12% |
+| total time | 4610s -> 4655s |
+
+Both are inside the run-to-run spread. Off stays the default because it does
+measurable work for no measurable gain, not because it wins — and this is a
+reminder of what a single-design A/B is worth.
 
 ### 4.4 Against the artifact, controlled
 
