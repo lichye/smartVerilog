@@ -116,6 +116,27 @@ Fields that exist because of specific mistakes:
 | `docs/PLAN-cpp-single-binary*.md` | the rewrite plan and its tracker (complete) |
 | `ARTIFACT.md`, `artifact/` | frozen for the published artifact — deliberately still describes the container flow |
 
+## Mining inside a submodule
+
+`--module <instance>` points the miner at a scope other than the top:
+
+```bash
+smart s27.sv --module DFF_0        # mines dff's internals, checks all instances
+```
+
+Three names that used to be one, and are not interchangeable:
+
+- **`--top`** — what EBMC elaborates. Always the design top.
+- **`--module`** — a **VCD scope**, which is an *instance* (`DFF_0`). Its
+  signals become the candidate variables.
+- **the injection target** — a module *definition* (`dff`), resolved from the
+  instance by `verilator --xml-only`'s cell list. Writing into the definition
+  means every instance is constrained, so an invariant that only held in the
+  instance you mined gets refuted rather than silently kept.
+
+Passing a module name where an instance is expected fails loudly: the trace
+has no scope by that name and the run stops with "no candidate variables".
+
 ## Live gotchas
 
 - **hw-cbmc drops a single `(* anyseq *)`** — `attr_spec_list` discards `$1`.
