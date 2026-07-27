@@ -141,6 +141,9 @@ target_link_libraries(smart_mus PUBLIC cvc5_api)
 add_executable(test_mus ${SMART_SRC}/mus/test_mus.cpp)
 target_link_libraries(test_mus PRIVATE smart_mus)
 
+add_executable(mus_bench ${SMART_SRC}/mus/mus_bench.cpp)
+target_link_libraries(mus_bench PRIVATE smart_mus)
+
 # --- emit (WP7): final EBMC gate + the file the user gets -------------------
 add_library(smart_emit STATIC ${SMART_SRC}/emit/AssertionWriter.cpp)
 target_include_directories(smart_emit PUBLIC ${SMART_SRC}/emit)
