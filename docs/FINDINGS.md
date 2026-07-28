@@ -723,6 +723,55 @@ Not yet measured on the large combinational designs, where k-induction is
 likelier to come back inconclusive. Two small sequential circuits do not
 generalise.
 
+### 5d. Mining inside a submodule — what works and what is untested
+
+Works, end to end, on real hierarchical designs:
+
+```
+smart i2c_master_axil.sv --module i2c_master_inst
+  mining instance i2c_master_inst, writing into module i2c_master
+  120 candidate variables
+  40 verified assertions -> ./i2c_master_assertion.sv
+```
+
+Four things had to come apart or be added:
+
+1. `--module` names a **VCD scope**, i.e. an *instance*. The property goes
+   into a module *definition*, resolved through `verilator --xml-only`'s cell
+   list. Verilator specialises parameterised modules
+   (`axis_fifo__D20_DBc_K0_L0_U0`); the suffix is stripped so the property
+   lands in `axis_fifo`, constraining every specialisation. One that holds
+   only for the parameterisation that was mined gets refuted — observed on
+   i2c_master_axil's three axis_fifo instances.
+2. The property is written into whichever **file** declares that module, not
+   the top's file. Everything else is handed to EBMC untouched, which was
+   already the structure; only the choice of file was wrong.
+3. The **output** is that file, named after the module, so a top-named file
+   that does not contain the assertions cannot be produced.
+4. **Free registers inside instances are now driven.** The frontend only
+   reports the top's, and the harness had no instance path, so a submodule's
+   `(* anyseq *)` sat at zero for the whole trace — not free, and silently
+   narrowing every constraint drawn from it. Measured on a two-level design:
+   0 for ten cycles before, 7 distinct values after.
+
+**Untested, and the likely first failures:**
+
+- **Leaf-name collisions.** `Trace::getAllSignals(moduleName)` matches a
+  single scope name. Two instances with the same leaf name in different parts
+  of the hierarchy have not been tried; `--module fifo` where three `fifo`
+  instances exist is undefined behaviour today, not a diagnosed error.
+- **Depth beyond one level.** `cmd_fifo_inst` sits inside a generate block and
+  resolved correctly, but nothing deeper has been run.
+- **`--module` given a module name rather than an instance** fails with "no
+  candidate variables", which is true but unhelpful. Mapping a type to its
+  instances (or naming the ambiguity) is not done.
+- **The fuzz policy's state vector is still top-only** — `enumerateStateSignals`
+  does not follow into instances, so `--trace-policy fuzz --module X` measures
+  the wrong states. Harmless while fuzz is off by default.
+- **No mutation measurement.** Every number above is "it ran and EBMC proved
+  them". Whether submodule-scope assertions are *worth* anything by MD is
+  unmeasured, and MD is the metric.
+
 ## 6. Next
 
 Items 1-4 of the previous list are done (§2.1, §2.2 fixed; the subset ran and
