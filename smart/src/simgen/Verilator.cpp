@@ -131,6 +131,17 @@ std::string elaborateXml(const std::vector<std::string>& designFiles,
     std::error_code error;
     fs::create_directories(scratchDir, error);
 
+    // Two callers want this — the instance list and the state signals — and
+    // elaborating twice is pure waste. The XML is written into the workdir, so
+    // reuse it when it is already there.
+    const auto cached = scratchDir + "/xml/V" + top + ".xml";
+    if (fs::exists(cached, error)) {
+        std::ifstream in(cached);
+        if (in)
+            return std::string((std::istreambuf_iterator<char>(in)),
+                               std::istreambuf_iterator<char>());
+    }
+
     std::ostringstream command;
     command << quote(verilator) << " --xml-only -Wno-fatal --top-module "
             << quote(top) << " --Mdir " << quote(scratchDir + "/xml");
@@ -145,6 +156,33 @@ std::string elaborateXml(const std::vector<std::string>& designFiles,
 }
 
 }  // namespace
+
+std::vector<Instance> enumerateInstances(
+    const std::vector<std::string>& designFiles, const std::string& top,
+    const std::string& verilator, const std::string& scratchDir) {
+    std::vector<Instance> instances;
+    const auto xml = elaborateXml(designFiles, top, verilator, scratchDir);
+    if (xml.empty()) return instances;
+
+    for (std::size_t at = xml.find("<cell "); at != std::string::npos;
+         at = xml.find("<cell ", at + 1)) {
+        const auto end = xml.find('>', at);
+        if (end == std::string::npos) break;
+        const auto tag = xml.substr(at, end - at);
+
+        Instance instance;
+        instance.hierarchy = attribute(tag, "hier");
+        instance.module = attribute(tag, "submodname");
+        if (instance.hierarchy.empty() || instance.module.empty()) continue;
+        // The top names itself; it is not an instance of anything.
+        if (instance.hierarchy == top) continue;
+        const auto mangled = instance.module.find("__");
+        if (mangled != std::string::npos)
+            instance.module = instance.module.substr(0, mangled);
+        instances.push_back(instance);
+    }
+    return instances;
+}
 
 std::string definingModule(const std::vector<std::string>& designFiles,
                            const std::string& top, const std::string& instance,
@@ -263,6 +301,8 @@ DrivenWidths drivenWidths(const frontend::ModuleInfo& info,
 
     for (const auto& reg : info.freeRegs)
         if (reg.kind == "anyconst") widths.constant.push_back(effectiveWidth(reg.width));
+    for (const auto& reg : options.hierFreeRegs)
+        if (reg.kind == "anyconst") widths.constant.push_back(effectiveWidth(reg.width));
 
     for (const auto& port : info.inputs()) {
         if (clock && port.name == *clock) continue;
@@ -270,6 +310,8 @@ DrivenWidths drivenWidths(const frontend::ModuleInfo& info,
         widths.perCycle.push_back(effectiveWidth(port.width));
     }
     for (const auto& reg : info.freeRegs)
+        if (reg.kind == "anyseq") widths.perCycle.push_back(effectiveWidth(reg.width));
+    for (const auto& reg : options.hierFreeRegs)
         if (reg.kind == "anyseq") widths.perCycle.push_back(effectiveWidth(reg.width));
 
     return widths;
@@ -288,7 +330,7 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
     // The root header is what makes <top>__DOT__<name> a complete type. Free
     // registers need it, and so does any internal signal in the state vector.
     const bool needsRoot =
-        !info.freeRegs.empty() ||
+        !info.freeRegs.empty() || !options.hierFreeRegs.empty() ||
         std::any_of(options.stateSignals.begin(), options.stateSignals.end(),
                     [](const StateSignal& s) { return !s.isPort; });
     const bool hasFreeRegs = needsRoot;
@@ -359,6 +401,14 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
                                  "      "),
                        "    ");
     }
+    for (const auto& reg : options.hierFreeRegs) {
+        if (reg.kind != "anyconst") continue;
+        const auto target = "top->rootp->" + reg.flatPath;
+        os << scripted(target,
+                       driveLine(target, reg.width, specFor(options, reg.name),
+                                 "      "),
+                       "    ");
+    }
 
     std::vector<frontend::Port> driven;
     for (const auto& port : info.inputs()) {
@@ -390,6 +440,14 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
     for (const auto& reg : info.freeRegs) {
         if (reg.kind != "anyseq") continue;
         const auto target = freeRegRef(info.top, reg.name);
+        os << scripted(target,
+                       driveLine(target, reg.width, specFor(options, reg.name),
+                                 "          "),
+                       "        ");
+    }
+    for (const auto& reg : options.hierFreeRegs) {
+        if (reg.kind != "anyseq") continue;
+        const auto target = "top->rootp->" + reg.flatPath;
         os << scripted(target,
                        driveLine(target, reg.width, specFor(options, reg.name),
                                  "          "),

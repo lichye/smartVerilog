@@ -74,6 +74,27 @@ std::vector<StateSignal> enumerateStateSignals(
     const std::vector<std::string>& designFiles, const std::string& top,
     const std::string& verilator, const std::string& scratchDir);
 
+// A free register that lives inside an instance rather than in the top
+// module. `(* anyseq *)` means "drive this like an input" wherever it is
+// written, and Verilator reaches it by its flattened path.
+struct HierarchicalFreeReg {
+    std::string kind;      // "anyseq" | "anyconst"
+    int width = 1;
+    std::string flatPath;  // <top>__DOT__<instance>__DOT__<name>
+    std::string name;      // local name, for looking up an input spec
+};
+
+// Instances in the design, as `verilator --xml-only` reports them: the
+// hierarchical path (i2c_master_axil.genblk1.cmd_fifo_inst) and the module it
+// is an instance of, with Verilator's parameter-specialisation suffix removed.
+struct Instance {
+    std::string hierarchy;
+    std::string module;
+};
+std::vector<Instance> enumerateInstances(
+    const std::vector<std::string>& designFiles, const std::string& top,
+    const std::string& verilator, const std::string& scratchDir);
+
 struct FuzzOutcome {
     bool ran = false;
     int iterations = 0;
@@ -105,6 +126,9 @@ struct HarnessOptions {
     // free registers only", which on a design with one output port is far too
     // coarse to steer a search.
     std::vector<StateSignal> stateSignals;
+
+    // Free registers inside instances; the top's own are in ModuleInfo.
+    std::vector<HierarchicalFreeReg> hierFreeRegs;
 
     TracePolicy policy = TracePolicy::Random;
     int fuzzIterations = 500;
