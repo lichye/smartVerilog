@@ -51,6 +51,13 @@ std::string ebmcCommand(const std::string& designFile, const CheckOptions& optio
 
 // Inject `assertion` into `source` before the `endmodule` that closes module
 // `top`. Returns the modified source.
+// Which of `files` declares `module <name>`. A design's modules are not all
+// in the file named after the top: mining i2c_master_axil's i2c_master_inst
+// writes into module i2c_master, which lives in i2c_master.sv. Returns an
+// empty string when no file declares it.
+std::string fileDeclaringModule(const std::vector<std::string>& files,
+                                const std::string& name);
+
 std::string injectAssertions(const std::string& source, const std::string& top,
                              const std::vector<std::string>& assertions);
 

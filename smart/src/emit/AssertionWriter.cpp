@@ -81,6 +81,18 @@ std::string ebmcCommand(const std::string& designFile,
     return command.str();
 }
 
+std::string fileDeclaringModule(const std::vector<std::string>& files,
+                                const std::string& name) {
+    const std::regex declaration("\\bmodule\\s+" + name + "\\b");
+    for (const auto& file : files) {
+        std::error_code error;
+        if (!fs::exists(file, error)) continue;
+        const auto source = readFile(file);
+        if (std::regex_search(source, declaration)) return file;
+    }
+    return {};
+}
+
 std::string injectAssertions(const std::string& source, const std::string& top,
                              const std::vector<std::string>& assertions) {
     if (assertions.empty()) return source;

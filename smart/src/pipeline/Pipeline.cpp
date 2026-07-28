@@ -788,16 +788,21 @@ ExitCode Pipeline::run(RunSummary& summary) {
         check.timeoutSeconds = static_cast<int>(options_.getInt("check_timeout"));
         check.jobs = jobs;
         check.scratchDir = work.formalDir();
-        for (std::size_t i = 1; i < designFiles.size(); ++i)
-            check.extraFiles.push_back(work.verilogDir() + "/" +
-                                       fs::path(designFiles[i]).filename().string());
+        // The property goes into whichever file declares the target module,
+        // and every other file is handed to EBMC untouched.
+        std::vector<std::string> inWorkdir;
+        for (const auto& file : designFiles)
+            inWorkdir.push_back(work.verilogDir() + "/" +
+                                fs::path(file).filename().string());
+        auto target = emit::fileDeclaringModule(inWorkdir, injectModule);
+        if (target.empty()) target = inWorkdir.front();
+        for (const auto& file : inWorkdir)
+            if (file != target) check.extraFiles.push_back(file);
 
         say("[" + timestamp() + "] checking " + std::to_string(assertions.size()) +
             " assertions against the original design");
 
-        const auto checked = emit::checkAssertions(
-            work.verilogDir() + "/" + fs::path(mainFile).filename().string(),
-            assertions, check);
+        const auto checked = emit::checkAssertions(target, assertions, check);
         std::size_t refuted = 0, timedOutChecks = 0, errors = 0;
         for (const auto& result : checked) {
             switch (result.status) {
@@ -833,16 +838,22 @@ ExitCode Pipeline::run(RunSummary& summary) {
     }
 
     // ---- emit ----------------------------------------------------------
+    // Emit the file that declares the module the assertions went into — for a
+    // single-file design that is the input, and for a multi-file one it is the
+    // submodule's own file, named after it so the two cannot be confused.
+    auto sourceForOutput = emit::fileDeclaringModule(designFiles, injectModule);
+    if (sourceForOutput.empty()) sourceForOutput = mainFile;
+
     std::string output = options_.getString("output");
     if (output.empty()) {
         const auto parent = fs::path(mainFile).parent_path();
-        output = (parent.empty() ? fs::path(".") : parent).string() + "/" + top +
-                 "_assertion.sv";
+        output = (parent.empty() ? fs::path(".") : parent).string() + "/" +
+                 injectModule + "_assertion.sv";
     }
     summary.outputFile = output;
 
     try {
-        emit::writeAssertionFile(mainFile, output, injectModule, verified,
+        emit::writeAssertionFile(sourceForOutput, output, injectModule, verified,
                                  options_.toJson());
     } catch (const std::exception& e) {
         std::cerr << "smart: cannot write " << output << ": " << e.what() << "\n";

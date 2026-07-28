@@ -159,10 +159,18 @@ std::string definingModule(const std::vector<std::string>& designFiles,
         if (end == std::string::npos) break;
         const auto tag = xml.substr(at, end - at);
         if (attribute(tag, "name") != instance) continue;
-        const auto defined = attribute(tag, "submodname");
+        auto defined = attribute(tag, "submodname");
         // The top cell names itself; that is not an instance of something
         // else, so treat it as "already a module name".
-        return defined == instance ? std::string() : defined;
+        if (defined == instance) return {};
+        // Verilator specialises a parameterised module per parameter set and
+        // names the result `axis_fifo__D20_DBc_K0_L0_U0`. No such module is
+        // written anywhere, so the property has to go into the source name.
+        // That constrains every specialisation, which is the honest reading:
+        // an invariant that only holds for one parameterisation gets refuted.
+        const auto mangled = defined.find("__");
+        if (mangled != std::string::npos) defined = defined.substr(0, mangled);
+        return defined;
     }
     return {};
 }

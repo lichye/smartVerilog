@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 #include "SyGuSGenerater.h"
 #include "State.h"
 #include "StateMaker.h"
+#include "emit/AssertionWriter.h"
 #include "VerilogChecker.h"
 #include "SmtFunctionParser.h"
 #include "Module.h"
@@ -110,6 +111,23 @@ int runSmartBlock(int argc, char* argv[]){
 
   bool isLTL = (latency > 0);
   verilogSrcPath = currentDir + "/runtime/verilog/"+moduleName+".sv";
+  // The property goes into the file that DECLARES the target module, which is
+  // not the top's file once the design spans more than one: mining
+  // i2c_master_axil's i2c_master_inst writes into module i2c_master, and that
+  // lives in i2c_master.sv. Every other file is passed to EBMC unchanged, so
+  // pointing the checker at the right one is the whole fix.
+  if(injectModule != moduleName){
+    std::vector<std::string> candidates;
+    try{
+      for(const auto& entry :
+          std::filesystem::directory_iterator(currentDir + "/runtime/verilog")){
+        if(entry.is_regular_file() && entry.path().extension() == ".sv")
+          candidates.push_back(entry.path().string());
+      }
+    }catch(const std::exception&){ }
+    const auto declaring = smart::emit::fileDeclaringModule(candidates, injectModule);
+    if(!declaring.empty()) verilogSrcPath = declaring;
+  }
   smt_path = currentDir + "/runtime/smt_results/"+core_id;
   std::string sygusPath = "runtime/smt_results/sygus"+core_id+".sl";
   fs::create_directory(smt_path);
