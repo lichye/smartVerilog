@@ -40,8 +40,20 @@ int hardwareCores();
 // keyword blocklist then had to remove. Reading the trace loader's own view
 // of the VCD is both simpler and exactly what the blocks can actually use:
 // smart.cpp drops any variable that is not a signal anyway.
-std::vector<std::string> candidateVariables(const std::string& top,
-                                            const std::string& simResultsDir);
+//
+// `hierarchical` additionally takes every scope BELOW the mined one, naming
+// those signals by the instance path that reaches them (`U0.count`). The count
+// of those is reported separately because hierarchy is the one input that can
+// multiply the candidate set, and the block-count formulas above are driven by
+// the total.
+struct CandidateSet {
+    std::vector<std::string> names;      // sorted, unique
+    std::size_t fromSubScopes = 0;       // how many of them carry an instance path
+};
+
+CandidateSet candidateVariables(const std::string& top,
+                                const std::string& simResultsDir,
+                                bool hierarchical = false);
 
 // Write one file per block into `variablesDir`, named `<prefix><i>.txt`.
 // Each holds `k` variables, one per line.

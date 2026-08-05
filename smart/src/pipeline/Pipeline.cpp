@@ -457,9 +457,18 @@ ExitCode Pipeline::run(RunSummary& summary) {
     }
 
     // ---- pre-analysis --------------------------------------------------
+    // Hierarchy applies to top mining only. `--module` names one scope and
+    // takes that scope's own signals; widening it there would silently change
+    // what a documented mode means.
+    const bool hierarchical =
+        options_.getBool("hierarchical") && mineModule == top;
     std::vector<std::string> variables;
+    std::size_t hierarchicalVariables = 0;
     try {
-        variables = candidateVariables(mineModule, work.simResultsDir());
+        auto found =
+            candidateVariables(mineModule, work.simResultsDir(), hierarchical);
+        variables = std::move(found.names);
+        hierarchicalVariables = found.fromSubScopes;
     } catch (const std::exception& e) {
         std::cerr << "smart: cannot read the traces back: " << e.what() << "\n";
         summary.workDirKept = true;
@@ -486,10 +495,20 @@ ExitCode Pipeline::run(RunSummary& summary) {
                                          options_.getBool("blockified"),
                                          options_.getDouble("block_size"), cores, rng);
     say("[" + timestamp() + "] " + std::to_string(variables.size()) +
-        " candidate variables, k=" + std::to_string(plan.k) + ", " +
+        " candidate variables" +
+        (hierarchicalVariables == 0
+             ? std::string()
+             : " (" + std::to_string(hierarchicalVariables) +
+                   " from submodule scopes)") +
+        ", k=" + std::to_string(plan.k) + ", " +
         std::to_string(plan.threadBlocks + plan.initBlocks) + " blocks");
+    // `variables` is the number the block-count formulas above already saw, so
+    // sub_scope_variables says how much of the round hierarchy paid for.
     runLog.record("\"stage\":\"pre-analysis\",\"variables\":" +
-                  std::to_string(variables.size()) + ",\"k\":" +
+                  std::to_string(variables.size()) + ",\"hierarchical\":" +
+                  (hierarchical ? "true" : "false") +
+                  ",\"sub_scope_variables\":" +
+                  std::to_string(hierarchicalVariables) + ",\"k\":" +
                   std::to_string(plan.k) + ",\"blocks\":" +
                   std::to_string(plan.threadBlocks + plan.initBlocks));
 

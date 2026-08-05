@@ -38,6 +38,19 @@ std::vector<OptionSpec> buildTable() {
         // submodule can be mined while its parent supplies the environment.
         {"module", "module", 0, T::String, std::string(""), "", "NAME",
          "module to mine in (default: the top module)"},
+        // Submodule internals as candidates when mining the top, named by the
+        // instance path that reaches them (`U0.count`). EBMC 5.6 in-tree
+        // proves and refutes such references non-vacuously from an assertion
+        // written in the top module, under both --bound and --k-induction, at
+        // one and at two levels of nesting (U0.count, U0.V0.lcount) — measured
+        // before this was built, because the whole feature rests on it.
+        // ON by default: a flat design has no scopes below the top and so
+        // gains no candidates, and a hierarchical design is meant to work
+        // without a flag rather than after hand-flattening. `--no-hierarchical`
+        // restores leaf-scope-only mining. Ignored under `--module`, which
+        // mines one named scope and must keep doing exactly that.
+        {"hierarchical", "hierarchical", 0, T::Bool, true, "", "",
+         "submodule signals are candidates too when mining the top module"},
         {"output", "output", 'o', T::String, std::string(""), "", "FILE",
          "output file (default: <top>_assertion.sv next to the input)"},
         {"workdir", "workdir", 0, T::String, std::string(""), "", "DIR",

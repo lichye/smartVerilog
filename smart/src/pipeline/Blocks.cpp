@@ -35,16 +35,23 @@ int subsetCount(std::size_t variableCount, double blockSize, int cores) {
     return std::max(static_cast<int>(n), std::max(cores, 1));
 }
 
-std::vector<std::string> candidateVariables(const std::string& top,
-                                            const std::string& simResultsDir) {
-    Module module(top);
+CandidateSet candidateVariables(const std::string& top,
+                                const std::string& simResultsDir,
+                                bool hierarchical) {
+    Module module(top, hierarchical);
     module.addTracesfromDir(SIM, simResultsDir);
 
     std::vector<Signal>* signals = module.getAllSignals();
     std::set<std::string> unique;
     for (const auto& signal : *signals) unique.insert(signal.name);
 
-    return std::vector<std::string>(unique.begin(), unique.end());
+    CandidateSet found;
+    found.names.assign(unique.begin(), unique.end());
+    // A dot can only have come from an instance path: a Verilog identifier
+    // cannot contain one.
+    for (const auto& name : found.names)
+        if (name.find('.') != std::string::npos) ++found.fromSubScopes;
+    return found;
 }
 
 int writeBlocks(const std::vector<std::string>& variables, int count, int k,

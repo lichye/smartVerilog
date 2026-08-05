@@ -134,7 +134,12 @@ int runSmartBlock(int argc, char* argv[]){
   // Blocks of one run must not all draw the same negative states.
   StateMaker::setSeed(seed + static_cast<unsigned>(std::stoul(core_id.empty() ? "0" : core_id)));
 
-  module = new Module(mineModule);
+  // Mining the top: the whole subtree below it is candidate material, and the
+  // variables file this block was given already names its share by instance
+  // path. Under --module the mined scope stands alone, exactly as before.
+  const bool hierarchical =
+      options.getBool("hierarchical") && mineModule == moduleName;
+  module = new Module(mineModule, hierarchical);
   sygus = new SyGuSGenerater();
   sygus->setSygusTimeoutMs(static_cast<int>(options.getInt("sygus_timeout_ms")));
   sygus->setUseSubprocess(options.getBool("sygus_subprocess"));

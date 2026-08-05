@@ -5,8 +5,9 @@
 #include <set>
 namespace fs = std::filesystem;
 
-Module::Module(std::string inputModuleName){
+Module::Module(std::string inputModuleName, bool inputHierarchical){
     this->moduleName = inputModuleName;
+    this->hierarchical = inputHierarchical;
 }
 
 void Module::addTrace(TraceType traceType,std::string input_tracePath){
@@ -16,7 +17,10 @@ void Module::addTrace(TraceType traceType,std::string input_tracePath){
             return;
         }
     }
-    Trace* trace = new Trace(traceType,input_tracePath);
+    // The mined scope is the hierarchy root, so a submodule's signals arrive
+    // already named by the instance path that reaches them from it.
+    Trace* trace = new Trace(traceType,input_tracePath,
+                             hierarchical ? moduleName : std::string());
     traces.push_back(trace);
     tracePaths.push_back(input_tracePath);
 }

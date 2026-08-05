@@ -11,8 +11,9 @@ Trace::Trace()
     smtPath = "";
 }
 
-Trace::Trace(TraceType ctype, std::string path){
+Trace::Trace(TraceType ctype, std::string path, std::string root){
     traceType = ctype;
+    hierarchyRoot = root;
 
     //lock the file parser mutex
     std::lock_guard<std::mutex> lock(VCDFileParserMutex);
@@ -140,11 +141,14 @@ void Trace::readVCDFile(VCDFile* vcdFile){
 
     std::vector<VCDTime>* timestamps = vcdFile -> get_timestamps();
 
+    const auto naming = scopeNaming(vcdFile);
+
     //loop the signals and the time to make the map
     for(VCDScope* scope : *vcdFile -> get_scopes()){
+        const auto& named = naming.at(scope);
         for(VCDSignal* signal : scope -> signals){
-            
-            Signal s = createSignal(signal,scope->name);
+
+            Signal s = createSignal(signal,named.first,named.second);
 
             std::vector<Value*>* values = new std::vector<Value*>();
             
@@ -178,8 +182,9 @@ void Trace::readVCDFile(VCDFile* vcdFile){
         //Each time, there is a state
         State* state = new State();
         for(VCDScope* scope: *vcdFile->get_scopes()){
+            const auto& named = naming.at(scope);
             for(VCDSignal* signal: scope->signals){
-                Signal s = createSignal(signal,scope->name);
+                Signal s = createSignal(signal,named.first,named.second);
                 VCDValue* val = vcdFile->get_signal_value_at(signal->hash,time);
                 if(val == nullptr){
                     if(traceType == TraceType::SMT){
@@ -200,13 +205,52 @@ void Trace::readVCDFile(VCDFile* vcdFile){
     }
 }
 
-Signal Trace::createSignal(VCDSignal* vcdSignal,std::string moduleName){
+// Which module a scope's signals are attributed to, and what instance path
+// their names carry.
+//
+// Without a hierarchy root every scope answers for itself: moduleName is the
+// scope's own leaf name and names are bare, which is what
+// getAllSignals(moduleName) has always filtered on.
+//
+// With a root, the root scope and everything below it answer for the ROOT, and
+// a descendant's signals are prefixed with the instance path that reaches them
+// (top.U0.count -> "U0.count"). That is both a unique key — full paths cannot
+// collide the way leaf names can — and the Verilog hierarchical reference the
+// assertion is finally written with, so nothing has to be translated later.
+// Scopes outside the root's subtree (the Verilator testbench wrapper `TOP`
+// sits above it) keep the flat naming and so stay out of the candidate set.
+std::map<const VCDScope*,std::pair<std::string,std::string>>
+Trace::scopeNaming(VCDFile* vcdFile) const {
+    std::map<const VCDScope*,std::pair<std::string,std::string>> naming;
+    for(VCDScope* scope : *vcdFile->get_scopes()){
+        std::pair<std::string,std::string> named{scope->name, ""};
+        if(!hierarchyRoot.empty()){
+            // Walk up to the nearest ancestor named like the root, building
+            // the path below it as we go.
+            std::string path;
+            for(const VCDScope* at = scope;
+                at != nullptr && at->type != VCD_SCOPE_ROOT; at = at->parent){
+                if(at->name == hierarchyRoot){
+                    named = {hierarchyRoot, path};
+                    break;
+                }
+                path = path.empty() ? at->name : at->name + "." + path;
+            }
+        }
+        naming[scope] = named;
+    }
+    return naming;
+}
+
+Signal Trace::createSignal(VCDSignal* vcdSignal,const std::string& moduleName,
+                           const std::string& instancePath){
     Signal s;
     assert(vcdSignal!=nullptr);
     //assert(vcdSignal->scope != nullptr);
     s.moduleName = moduleName;//189
     s.type = translateSignalType(vcdSignal);
-    s.name = vcdSignal -> reference;
+    s.name = instancePath.empty() ? vcdSignal->reference
+                                  : instancePath + "." + vcdSignal->reference;
     s.lindex = vcdSignal -> lindex;
     s.rindex = vcdSignal -> rindex;
     return s;

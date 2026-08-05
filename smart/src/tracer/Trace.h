@@ -21,8 +21,12 @@ class   Trace{
     public:
         Trace();
         
-        Trace(TraceType type, std::string path);
-        
+        // hierarchyRoot names the VCD scope whose whole subtree becomes
+        // candidate material. Empty (the default) keeps the historical
+        // behaviour: a signal belongs to the scope that declares it and
+        // nothing below the mined scope is visible.
+        Trace(TraceType type, std::string path, std::string hierarchyRoot = "");
+
         ~Trace();
         
         std::vector<std::vector<Value*>>* getConstraints(std::vector<Signal>*);
@@ -48,6 +52,9 @@ class   Trace{
 
         std::string smtPath;
 
+        // "" disables hierarchical naming; see the constructor.
+        std::string hierarchyRoot;
+
         int valueLength;
 
         //major data structure to store the signal values
@@ -61,7 +68,18 @@ class   Trace{
         
         SignalType translateSignalType(VCDSignal*);
 
-        Signal createSignal(VCDSignal*,std::string);
+        // instancePath is the dotted path from the hierarchy root down to the
+        // signal's own scope, exclusive of both ends ("" for a signal in the
+        // root scope, "U0" one level down). It becomes the signal's name
+        // prefix, which is exactly the Verilog hierarchical reference the
+        // assertions are written with.
+        Signal createSignal(VCDSignal*,const std::string& moduleName,
+                            const std::string& instancePath);
+
+        // moduleName/instancePath for every scope in the file, resolved once
+        // per trace because the state loop revisits every scope per timestamp.
+        std::map<const VCDScope*,std::pair<std::string,std::string>>
+            scopeNaming(VCDFile*) const;
 
 };
 
