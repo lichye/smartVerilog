@@ -857,6 +857,19 @@ Whether elaboration failure on an instance-deletion mutant should count as
 *detection* (the assertion names structure the mutation removed) is a
 judgment call not taken here; counting it as detection would flip the sign.
 
+**The target case, measured on i2c_master_axil (yield only — no fixed mutants
+exist for HWSpec, so MD is not comparable):** candidates 425 vs 110 (74% from
+sub-scopes). B finished in 38 min with 43 verified assertions, all top-level
+and mostly single-signal holds (`(! cmd_fifo_full)`). A was capped at 45 min
+mid-round-10 with >=56 unique verified so far (a lower bound; the final
+aggregation never ran), of which **32 are dotted properties on
+`i2c_master_inst` internals** — cross-instance equalities and implications
+that B *structurally cannot produce*, its candidate pool excludes them. None
+of the axis_fifo instances' candidates had produced assertions before the
+cap. Two costs came with it: rounds are slower (the 3.9x pool), and on this
+design mining did not converge within 45 min at all — runtime on real
+hierarchical designs is an open cost of the default.
+
 Also surfaced: `Benchmark/user/tiny_and/` (the svmodule ctest fixture) was
 never tracked by git, so a fresh checkout fails 1/5 suites. Fixed by tracking
 it. The fuzz state vector is top-only here too (same limitation as §5d).
