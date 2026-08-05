@@ -89,7 +89,11 @@ target_include_directories(smart_frontend PUBLIC ${SMART_SRC}/frontend)
 # The block logic itself lives in smart_core as runSmartBlock().
 add_executable(smart_out ${SMART_SRC}/smart_main.cpp)
 set_target_properties(smart_out PROPERTIES OUTPUT_NAME smart.out)
-target_link_libraries(smart_out PRIVATE smart_core smart_pipeline)
+# smart_emit: runSmartBlock() resolves the file declaring the inject module
+# through emit::fileDeclaringModule (smart.cpp:128). The `smart` binary already
+# linked it; smart.out did not, so `cmake --build build` failed at link since
+# e31e679 while ctest stayed green (no suite builds smart.out).
+target_link_libraries(smart_out PRIVATE smart_core smart_pipeline smart_emit)
 
 # Standalone frontend dump + spec tests (WP2-regex evidence, kept green).
 add_executable(frontend_dump ${SMART_SRC}/frontend/frontend_dump.cpp)
