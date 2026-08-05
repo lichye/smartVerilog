@@ -772,6 +772,62 @@ Four things had to come apart or be added:
   them". Whether submodule-scope assertions are *worth* anything by MD is
   unmeasured, and MD is the metric.
 
+### 5e. Hierarchical mining at the top — flattening without flattening
+
+The intent behind multi-module support, stated 2026-08-05: mine at the **top**
+of a hierarchical design with submodule internals visible as candidates, so
+nobody hand-flattens a design again. `--module` (mining *inside* a submodule,
+§5d) is the complementary mode and is unchanged.
+
+**Feasibility was measured before anything was built.** The in-tree EBMC 5.6
+accepts SVA in the top referencing submodule signals by hierarchical name —
+depth 1 (`U0.count`) and depth 2 (`U0.V0.lcount`), PROVED and REFUTED with a
+real counterexample (not vacuous), bounded and k-induction. That gate opened
+Stage 2.
+
+**What shipped** (`29729b6`..`abf6950`, implemented by an opus agent, reviewed
+independently by a sonnet agent — verdict: approve, zero defects):
+
+- `Trace::scopeNaming()` resolves each VCD scope to `(module, instancePath)`
+  once per trace; a descendant signal's candidate name is `U0.count`. Scopes
+  outside the mined subtree (Verilator's `TOP` wrapper) keep flat naming and
+  stay out.
+- Option `hierarchical`, default **on**: flat designs have no sub-scopes, so
+  behaviour is identical by construction (verified: c17 both ways, same 19
+  assertions up to one commuted `||`). `--no-hierarchical` is byte-for-byte
+  the old path.
+- s27 at top: 41 candidates (21 from sub-scopes), **69 verified vs 28**
+  baseline, with cross-instance assertions like
+  `(((DFF_0.M == G0) && DFF_1.M) |-> DFF_2.M)`.
+
+**No mangling exists, on purpose.** SMT-LIB simple symbols admit `.`;
+cvc5 1.2.0 round-trips `U0.q` through `synth-fun` and back out of
+`define-fun`, and both s-expression tokenisers split on parens/whitespace
+only. The dotted name is carried end-to-end — variables file, block subsets,
+MSA, emitted Verilog — because a mangle/unmangle pair would have had to be
+threaded through `mus::getMus`'s two inputs, which read from opposite sides.
+The reviewer hunted specifically for other consumers that split on `.` and
+found none touching signal names.
+
+**Two pre-existing defects surfaced and were fixed on the way:**
+
+- `smart.out` had failed to link since `e31e679` and nobody noticed — no
+  ctest suite builds it (`29729b6`). There are now 5 suites; the new `trace`
+  suite pins exact candidate sets for flat/hierarchical/`--module` modes.
+- `VCDScope::parent` was never initialised for root scopes; `scopeNaming()`
+  is the first real consumer of parent links, so the fix (`835d9f2`) is
+  load-bearing, not cleanup.
+
+**Found, not fixed:** in-process cvc5 segfaults (exit 139) when a block holds
+>=4 same-width bitvector variables and the 5s tlimit fires. Reproduced on a
+flat design, so pre-existing and unrelated to hierarchy — but it silently
+turns blocks into `killed` at ~0.1s. Worth its own investigation.
+
+**Open:** whether the extra assertions are *worth* anything by MD. 69 vs 28 on
+s27 is yield, and yield is not the metric — measurement against the fixed
+mutants is the acceptance step still outstanding. The fuzz state vector is
+top-only here too (same limitation as §5d).
+
 ## 6. Next
 
 Items 1-4 of the previous list are done (§2.1, §2.2 fixed; the subset ran and
