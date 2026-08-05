@@ -72,6 +72,10 @@ void testDefaults() {
     check(!options.getBool("block_minimizer"),
           "but not between rounds: it costs more than it saves");
     check(options.getInt("jobs") >= 1, "jobs defaults to something runnable");
+    // A flat design has no scopes below the top, so this costs it nothing;
+    // a hierarchical one is supposed to work without being flattened first.
+    check(options.getBool("hierarchical"),
+          "submodule signals are candidates by default");
 }
 
 void testCommandLine() {
@@ -88,6 +92,10 @@ void testCommandLine() {
 
     auto negated = parse({"design.sv", "--no-keep-work"});
     check(!negated.getBool("keep_work"), "--no-<flag> turns a boolean off");
+
+    auto flat = parse({"design.sv", "--no-hierarchical"});
+    check(!flat.getBool("hierarchical"),
+          "--no-hierarchical restores leaf-scope-only mining");
 
     auto strategy = parse({"design.sv", "--msa"});
     check(strategy.getBool("msa") && strategy.getBool("blockified"),

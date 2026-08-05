@@ -60,6 +60,10 @@ file(GLOB SMART_CORE_SOURCES
     ${SMART_SRC}/tracer/*.cpp
     ${SMART_SRC}/helper/*.cpp
     ${SMART_SRC}/sygus/*.cpp)
+# Tests live next to the code they test, and these four directories are picked
+# up by wildcard. Without this a test_*.cpp added under one of them is linked
+# into the library with its own main() and the build fails on the second one.
+list(FILTER SMART_CORE_SOURCES EXCLUDE REGEX "/test_[^/]*\\.cpp$")
 
 add_library(smart_core STATIC
     ${SMART_CORE_SOURCES}
@@ -177,6 +181,15 @@ set_target_properties(smart PROPERTIES
 add_executable(vcd_signals ${SMART_SRC}/simgen/vcd_signals.cpp)
 target_link_libraries(vcd_signals PRIVATE smart_core)
 
+# Which VCD scopes become candidate variables, and under what name. Blocks.cpp
+# is compiled in directly because it belongs to the `smart` executable rather
+# than to a library, and candidateVariables() is the entry point the pipeline
+# actually calls.
+add_executable(test_trace
+    ${SMART_SRC}/tracer/test_trace.cpp
+    ${SMART_SRC}/pipeline/Blocks.cpp)
+target_link_libraries(test_trace PRIVATE smart_core)
+
 # WP2A link spike: proves the hw-cbmc frontend links and exposes what
 # ModuleInfo needs. Kept as the minimal reproducer if linking ever breaks.
 add_executable(hwcbmc_spike EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_spike.cpp)
@@ -191,3 +204,4 @@ add_test(NAME options COMMAND test_options
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME emit COMMAND test_emit)
 add_test(NAME mus COMMAND test_mus)
+add_test(NAME trace COMMAND test_trace)
