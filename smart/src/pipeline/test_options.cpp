@@ -72,10 +72,12 @@ void testDefaults() {
     check(!options.getBool("block_minimizer"),
           "but not between rounds: it costs more than it saves");
     check(options.getInt("jobs") >= 1, "jobs defaults to something runnable");
-    // A flat design has no scopes below the top, so this costs it nothing;
-    // a hierarchical one is supposed to work without being flattened first.
-    check(options.getBool("hierarchical"),
-          "submodule signals are candidates by default");
+    // Off since docs/FINDINGS.md §5e: on structural netlists sub-scope
+    // candidates are the top's own nets renamed (-0.55pp detection, 2-5x the
+    // time); on behavioral RTL they are real hidden state. The tool cannot
+    // tell the two apart, so hierarchy is opted into.
+    check(!options.getBool("hierarchical"),
+          "submodule signals are not candidates unless asked for");
 }
 
 void testCommandLine() {
@@ -93,9 +95,11 @@ void testCommandLine() {
     auto negated = parse({"design.sv", "--no-keep-work"});
     check(!negated.getBool("keep_work"), "--no-<flag> turns a boolean off");
 
-    auto flat = parse({"design.sv", "--no-hierarchical"});
-    check(!flat.getBool("hierarchical"),
-          "--no-hierarchical restores leaf-scope-only mining");
+    auto hier = parse({"design.sv", "--hierarchical"});
+    check(hier.getBool("hierarchical"),
+          "--hierarchical opts into sub-scope candidates");
+    check(!parse({"design.sv", "--no-hierarchical"}).getBool("hierarchical"),
+          "--no-hierarchical still names the default");
 
     auto strategy = parse({"design.sv", "--msa"});
     check(strategy.getBool("msa") && strategy.getBool("blockified"),

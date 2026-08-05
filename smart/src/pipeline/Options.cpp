@@ -44,13 +44,24 @@ std::vector<OptionSpec> buildTable() {
         // written in the top module, under both --bound and --k-induction, at
         // one and at two levels of nesting (U0.count, U0.V0.lcount) — measured
         // before this was built, because the whole feature rests on it.
-        // ON by default: a flat design has no scopes below the top and so
-        // gains no candidates, and a hierarchical design is meant to work
-        // without a flag rather than after hand-flattening. `--no-hierarchical`
-        // restores leaf-scope-only mining. Ignored under `--module`, which
-        // mines one named scope and must keep doing exactly that.
-        {"hierarchical", "hierarchical", 0, T::Bool, true, "", "",
-         "submodule signals are candidates too when mining the top module"},
+        // OFF by default (docs/FINDINGS.md §5e). Whether it pays depends on
+        // the design, and the tool cannot tell which kind it has. On
+        // structural netlists every submodule internal is a combinational
+        // function of the instance's ports, so the top already sees an
+        // equivalent net and sub-scope candidates carry no new information:
+        // over four ISCAS89 designs against the fixed mutants, mean -0.55pp
+        // detection once the DFF-removal scoring artifact is excluded (raw
+        // -9.75pp), for 2-5x the mining time through block dilution. On
+        // behavioral RTL submodules hold state that never reaches the top's
+        // ports, and hierarchy is the only way to it: on i2c_master_axil it
+        // produced 32 verified cross-instance properties the leaf-scope run
+        // structurally cannot express. So the safe default is the old
+        // behaviour, and an experimenter who knows their design passes
+        // `--hierarchical`. Ignored under `--module`, which mines one named
+        // scope and must keep doing exactly that.
+        {"hierarchical", "hierarchical", 0, T::Bool, false, "", "",
+         "submodule signals are candidates too when mining the top module "
+         "(off by default; pays on behavioral RTL, not on netlists)"},
         {"output", "output", 'o', T::String, std::string(""), "", "FILE",
          "output file (default: <top>_assertion.sv next to the input)"},
         {"workdir", "workdir", 0, T::String, std::string(""), "", "DIR",

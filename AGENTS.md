@@ -118,19 +118,25 @@ Fields that exist because of specific mistakes:
 
 ## Mining the top of a hierarchical design
 
-Default. Candidates come from the top's scope **and every scope below it**,
-each named by the instance path that reaches it — `U0.count`, `U0.V0.lcount` —
-which is also the hierarchical reference the assertion is written with. EBMC
-proves and refutes those references from a property in the top module, so
-nothing has to be flattened by hand first.
+`--hierarchical`, **off by default**. It takes candidates from the top's scope
+**and every scope below it**, each named by the instance path that reaches it —
+`U0.count`, `U0.V0.lcount` — which is also the hierarchical reference the
+assertion is written with. EBMC proves and refutes those references from a
+property in the top module, so nothing has to be flattened by hand first.
 
 ```bash
-smart hier.sv          # assert property (U0.q == r); into module hier
+smart hier.sv --hierarchical   # assert property (U0.q == r); into module hier
 ```
 
-A flat design has no scopes below the top and so gains no candidates: the
-candidate set is byte-identical either way. `--no-hierarchical` restores
-leaf-scope-only mining. The run log says how much hierarchy cost:
+Off by default because it only pays on **behavioral** RTL and the tool cannot
+tell what it was handed (docs/FINDINGS.md §5e). A structural submodule's
+internals are combinational functions of its ports, so the top already sees an
+equivalent net: -0.55pp detection over four ISCAS89 designs for 2-5x the mining
+time. A behavioral submodule hides registers and FSM state that never reach a
+port, and hierarchy is the only way to reach them at all. A flat design has no
+scopes below the top, so its candidate set is byte-identical either way.
+
+The run log says how much hierarchy cost:
 
 ```bash
 jq -c 'select(.stage=="pre-analysis")' smart-work-<top>/run-log.jsonl
