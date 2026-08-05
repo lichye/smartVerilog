@@ -21,7 +21,7 @@ Order matters in one place: oss-cad-suite ships cvc5 1.0.1-dev and ours is
 
 ```bash
 cmake -B build -S . && cmake --build build -j$(nproc)   # builds smart
-cd build && ctest                                       # 4 suites
+cd build && ctest                                       # 5 suites
 smart --check-env                                       # what the tool sees
 ```
 
@@ -116,9 +116,36 @@ Fields that exist because of specific mistakes:
 | `docs/PLAN-cpp-single-binary*.md` | the rewrite plan and its tracker (complete) |
 | `ARTIFACT.md`, `artifact/` | frozen for the published artifact — deliberately still describes the container flow |
 
+## Mining the top of a hierarchical design
+
+Default. Candidates come from the top's scope **and every scope below it**,
+each named by the instance path that reaches it — `U0.count`, `U0.V0.lcount` —
+which is also the hierarchical reference the assertion is written with. EBMC
+proves and refutes those references from a property in the top module, so
+nothing has to be flattened by hand first.
+
+```bash
+smart hier.sv          # assert property (U0.q == r); into module hier
+```
+
+A flat design has no scopes below the top and so gains no candidates: the
+candidate set is byte-identical either way. `--no-hierarchical` restores
+leaf-scope-only mining. The run log says how much hierarchy cost:
+
+```bash
+jq -c 'select(.stage=="pre-analysis")' smart-work-<top>/run-log.jsonl
+# {"stage":"pre-analysis","variables":41,"hierarchical":true,"sub_scope_variables":21,...}
+```
+
+`sub_scope_variables` is the part of `variables` that came from below the top,
+and `variables` is what the k/block-count formulas already saw — hierarchy is
+the one input that can multiply the candidate set.
+
 ## Mining inside a submodule
 
-`--module <instance>` points the miner at a scope other than the top:
+`--module <instance>` points the miner at a scope other than the top. It is a
+different question, not a narrower one: hierarchy is off there, so the named
+scope contributes its own signals and nothing below it.
 
 ```bash
 smart s27.sv --module DFF_0        # mines dff's internals, checks all instances
