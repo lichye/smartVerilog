@@ -842,16 +842,29 @@ denominator — a real evaluater defect, now on record). Excluding those from
 both sides: mean -0.55pp, median -1.32pp — **a wash trending slightly
 negative**, not the win the 1.6-2.4x assertion counts suggest.
 
-Two readings, both honest:
+The attribution (Leiqi, 2026-08-05) is **structural vs behavioral Verilog**,
+and it predicts both results:
 
-- On ISCAS89 the "hierarchy" is alias wrappers — dff ports mirror top nets —
-  so sub-scope candidates are near-duplicates that dilute blocks and double
-  the assertion count for no detection. 2-5x mining time for -0.55pp is a
-  cost, not a wash.
-- The feature's actual target — designs where top-only mining sees nearly
-  nothing (the two-level fixture: 3 candidates, 0 assertions without it) —
-  has no B baseline to lose to. There, hierarchical is not an optimisation
-  but the difference between mining and not mining.
+- **Structural netlists** (ISCAS): a submodule is a wrapper around gates, and
+  every internal signal is a combinational function of its ports — all
+  information flows through the boundary, so the top already sees an
+  equivalent net. Sub-scope candidates are the same nets renamed: no new
+  information in, so detection cannot move (-0.55pp is noise), and the only
+  real effects are block dilution and 2-5x mining time.
+- **Behavioral RTL** (i2c): submodules hold registers and FSM state that are
+  *not* exported through ports and do not exist at the top at all. Sub-scope
+  candidates are genuinely new state variables; the properties they yield
+  (`bus_active == bus_active_reg`) are unreachable any other way.
+
+The criterion is whether the submodule contains state the top cannot see.
+Structural designs by construction do not; behavioral ones usually do.
+
+**Ruling (Leiqi, 2026-08-05): default OFF.** The tool cannot reliably
+classify a design as structural or behavioral, so the safe default is the old
+behaviour; whoever runs a hierarchy-aware experiment knows their design and
+passes `--hierarchical` deliberately. This also points at the future
+refinement: prefer sub-scope *registers* (state) as candidates and deprioritise
+purely combinational internal nets, rather than any alias-elimination pass.
 
 Whether elaboration failure on an instance-deletion mutant should count as
 *detection* (the assertion names structure the mutation removed) is a
