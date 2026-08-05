@@ -823,10 +823,43 @@ found none touching signal names.
 flat design, so pre-existing and unrelated to hierarchy — but it silently
 turns blocks into `killed` at ~0.1s. Worth its own investigation.
 
-**Open:** whether the extra assertions are *worth* anything by MD. 69 vs 28 on
-s27 is yield, and yield is not the metric — measurement against the fixed
-mutants is the acceptance step still outstanding. The fuzz state vector is
-top-only here too (same limitation as §5d).
+**Measured (2026-08-05, container `smart-test` at `dd5eb20`, fixed mutants,
+four ISCAS89 designs, A = default hierarchical / B = `--no-hierarchical`):**
+
+| design | mutants | MD% A | MD% B | Δpp raw | Δpp adjusted | assertions A/B |
+|---|---|---|---|---|---|---|
+| s27  | 17  | 64.71 | 82.35 | -17.65 | -2.88 | 68/28 |
+| s298 | 137 | 67.15 | 77.37 | -10.22 | -2.53 | 288/148 |
+| s344 | 179 | 77.65 | 84.92 | -7.26  | -0.12 | 463/221 |
+| s349 | 180 | 78.89 | 82.78 | -3.89  | +3.35 | 455/200 |
+
+Raw mean -9.75pp — hierarchical loses on every design. But most of the gap is
+a **scoring artifact**: ISCAS89's DFF-removal operator deletes the very
+instance the dotted assertions name (`DFF_0.Q`), so EBMC cannot elaborate the
+mutant and `evaluater.py` counts it as *undetected* (its warning claims
+tool-errors are excluded from the rate; the arithmetic keeps them in the
+denominator — a real evaluater defect, now on record). Excluding those from
+both sides: mean -0.55pp, median -1.32pp — **a wash trending slightly
+negative**, not the win the 1.6-2.4x assertion counts suggest.
+
+Two readings, both honest:
+
+- On ISCAS89 the "hierarchy" is alias wrappers — dff ports mirror top nets —
+  so sub-scope candidates are near-duplicates that dilute blocks and double
+  the assertion count for no detection. 2-5x mining time for -0.55pp is a
+  cost, not a wash.
+- The feature's actual target — designs where top-only mining sees nearly
+  nothing (the two-level fixture: 3 candidates, 0 assertions without it) —
+  has no B baseline to lose to. There, hierarchical is not an optimisation
+  but the difference between mining and not mining.
+
+Whether elaboration failure on an instance-deletion mutant should count as
+*detection* (the assertion names structure the mutation removed) is a
+judgment call not taken here; counting it as detection would flip the sign.
+
+Also surfaced: `Benchmark/user/tiny_and/` (the svmodule ctest fixture) was
+never tracked by git, so a fresh checkout fails 1/5 suites. Fixed by tracking
+it. The fuzz state vector is top-only here too (same limitation as §5d).
 
 ## 6. Next
 
