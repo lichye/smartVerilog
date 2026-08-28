@@ -13,12 +13,12 @@ cd "$here"
 jobs="${1:-16}"
 work="${SMOKE_DIR:-$here/smoke-out}"
 smart="$here/build/smart"
-ebmc="$here/third_party/hw-cbmc/src/ebmc/ebmc"
+ebmc="$here/.deps/hw-cbmc/src/ebmc/ebmc"
 
 [ -x "$smart" ] || { echo "build the tool first: cmake --build build --target smart"; exit 2; }
 
 # Put our own tools first (the suite ships an older cvc5).
-export PATH="$here/third_party/hw-cbmc/src/ebmc:$here/otherTools/cvc5/bin:$here/otherTools/oss-cad-suite/bin:$PATH"
+export PATH="$here/.deps/hw-cbmc/src/ebmc:$here/otherTools/cvc5/bin:$here/otherTools/oss-cad-suite/bin:$PATH"
 
 designs=(
     "required Benchmark/user/tiny_and tiny_and"

@@ -63,7 +63,7 @@ def setup_env():
     load_env(ROOT / "otherTools/oss-cad-suite/environment")
 
     extra = []
-    for path in [ROOT / "third_party/hw-cbmc/src/ebmc",  # EBMC we built
+    for path in [ROOT / ".deps/hw-cbmc/src/ebmc",        # EBMC we built
                  ROOT / "otherTools/cvc5/bin"]:          # cvc5 we built
         if path.exists():
             extra.append(str(path))

@@ -1,19 +1,18 @@
 # The scripts behind the numbers
 
-Every measured claim in `docs/FINDINGS.md` §4 came from one of these. They ran
-in a container so the toolchain was fixed and the host stayed clean, and the
-paths below are that container's — `/work/smartVerilog` is the checkout,
-`/work/MB` is `MutationBenchmark/`. Adjust or bind-mount to suit; nothing here
-depends on being containerised.
+These scripts reproduce SMART's configuration and stimulus-policy studies.
+The historical runs used `/work/smartVerilog` for the checkout and `/work/MB`
+for `MutationBenchmark/`; adjust or bind-mount those paths as needed. Nothing
+here depends on being containerised.
 
 | script | what it produced |
 |---|---|
 | `eval_one.sh <config> <design>` | one cell: mine with a `Config/*.json`, then score against the fixed mutants |
-| `runall.sh` | §4.3, the 4 x 22 config ranking |
+| `runall.sh` | the 4 x 22 config ranking |
 | `eval_pol.sh <policy> <design>` | one cell at the shipped defaults under one `--trace-policy` |
-| `runpol.sh` | §4.6, the 2 x 22 stimulus-policy study |
-| `check_oracle.py [log]` | §4.5, the end-minimiser soundness oracle |
-| `policy_table.py [log]` | §4.6, the policy comparison table |
+| `runpol.sh` | the 2 x 22 stimulus-policy study |
+| `check_oracle.py [log]` | the end-minimiser soundness oracle |
+| `policy_table.py [log]` | the policy comparison table |
 | `bv_ab.py prepare/run/summarise` | controlled `off` vs `unsigned` BitVec-predicate Stage A/B |
 
 ## Controlled BitVec-predicate A/B
@@ -22,11 +21,11 @@ depends on being containerised.
 Stage A/B selections are not a valid value experiment yet. The current fixed
 suite is overwhelmingly scalar, and no suitable fixed multi-bit-vector
 benchmark plus frozen mutant set has been selected. Use the commands below only
-for plumbing checks until that prerequisite in `docs/PLAN-bv-predicates.md` is
-closed; do not report their output as a BitVec effectiveness result.
+for plumbing checks until that prerequisite is closed; do not report their
+output as a BitVec effectiveness result.
 
-`bv_ab.py` implements the preparation and bookkeeping protocol from
-`docs/PLAN-bv-predicates.md`. Preparation validates that every design already
+`bv_ab.py` implements a controlled preparation and bookkeeping protocol.
+Preparation validates that every design already
 has a non-empty fixed mutant set, hashes those files, the main/sibling RTL, the
 frozen config, and the SMART binary, records the Git state, tool versions, host
 and cell load average, and writes the exact mining commands. It does **not** run

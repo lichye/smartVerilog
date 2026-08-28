@@ -1,29 +1,28 @@
 #!/usr/bin/env bash
-# Build the hw-cbmc submodule: the `ebmc` binary (verification backend) and
+# Build the downloaded hw-cbmc checkout: the `ebmc` binary (verification backend) and
 # the static libraries the SMART frontend adapter links against (WP2A).
 #
-# Usage: third_party/build-hw-cbmc.sh [make-jobs]
+# Usage: tools/build-hw-cbmc.sh [make-jobs]
 #
-# This compiles most of CBMC and takes a while — in Docker it must live in
-# its own cached layer (plan gotcha 17).
+# This compiles most of CBMC and takes a while.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-submodule="$here/hw-cbmc"
+submodule="$(cd "$here/.." && pwd)/.deps/hw-cbmc"
+patches_dir="$here/patches/hw-cbmc"
 jobs="${1:-$(nproc)}"
 
 if [ ! -d "$submodule/lib/cbmc/src" ]; then
-    echo "error: nested cbmc submodule missing — run:" >&2
-    echo "       git submodule update --init --recursive" >&2
+    echo "error: nested cbmc dependency missing — run ./install.sh" >&2
     exit 1
 fi
 
 # Patches are needed only while compiling hw-cbmc.  Record which ones were
-# already present so a normal `./install.sh` leaves the submodule clean rather
+# already present so a normal `./install.sh` leaves the dependency clean rather
 # than making every developer's checkout look modified.  Pre-existing manual
 # patches are deliberately left alone.
 shopt -s nullglob
-patches=("$here"/patches/*.patch)
+patches=("$patches_dir"/*.patch)
 pre_applied=()
 for patch in "${patches[@]}"; do
     if git -C "$submodule" apply --reverse --check "$patch" >/dev/null 2>&1; then
@@ -46,7 +45,7 @@ restore_new_patches() {
 }
 trap restore_new_patches EXIT
 
-"$here/apply-patches.sh"
+"$here/apply-hw-cbmc-patches.sh"
 
 # CBMC's SAT backend is downloaded, not vendored.
 if [ ! -d "$submodule/lib/cbmc/minisat-2.2.1" ]; then

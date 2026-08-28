@@ -1,6 +1,6 @@
 // Harness: generate VCD traces with Verilator by default, with Icarus Verilog
 // available as an optional backend (WP3). This is the native C++ replacement
-// for the old cocotb-driven flow; see docs/PLAN-cpp-single-binary.md WP3.
+// for the old cocotb-driven flow.
 //
 // Stimulus semantics are a port of gen_bench.render_sim_py — the frozen
 // behavioural spec — not of its code: seed the RNG, draw each `(* anyconst *)`

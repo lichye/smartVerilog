@@ -4,7 +4,7 @@
 set -u
 pol=$1; b=$2
 cd /work/smartVerilog
-export PATH="/work/smartVerilog/third_party/hw-cbmc/src/ebmc:/work/smartVerilog/otherTools/cvc5/bin:/work/smartVerilog/otherTools/oss-cad-suite/bin:$PATH"
+export PATH="/work/smartVerilog/.deps/hw-cbmc/src/ebmc:/work/smartVerilog/otherTools/cvc5/bin:/work/smartVerilog/otherTools/oss-cad-suite/bin:$PATH"
 command -v ebmc >/dev/null || { echo "FATAL: ebmc not on PATH"; exit 2; }
 d=Benchmark/fmcad2025/$b
 wk=/work/wk2/${pol}_${b}

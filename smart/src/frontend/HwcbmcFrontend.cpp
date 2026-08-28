@@ -90,7 +90,7 @@ int widthOf(const typet& type)
 
 // `(* anyseq *)` / `(* anyconst *)`. Attribute shape in the parse tree:
 //   verilog_attributes -> 0: verilog_attribute -> * name: symbol(base_name)
-// NOTE this only works with the patch in third_party/patches/ applied;
+// NOTE this only works with the patch in tools/patches/hw-cbmc/ applied;
 // unpatched hw-cbmc silently drops single-attribute instances.
 bool hasAttribute(const irept& decl, const char* name)
 {

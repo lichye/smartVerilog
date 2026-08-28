@@ -1,8 +1,8 @@
-# Patches applied to the `hw-cbmc` submodule
+# Patches applied to the downloaded `hw-cbmc` dependency
 
-Applied by `third_party/apply-patches.sh`, which the Docker images and the
-CMake build both call before building `third_party/hw-cbmc`. The script is
-idempotent (it skips a patch that already applies in reverse).
+Applied by `tools/apply-hw-cbmc-patches.sh` while building `.deps/hw-cbmc`.
+The script is idempotent, and the build wrapper restores newly applied patches
+after compilation so the dependency checkout remains clean.
 
 ## 0001-verilog-keep-single-attribute-instances.patch
 
@@ -28,5 +28,5 @@ adapter (WP2) needs from hw-cbmc. Verified on `ebmc-5.6`, `ebmc-6.0` and
 
 The fix is one line: move `$1` into the fresh list.
 
-Retire this patch once it is merged upstream and the submodule is bumped past
-the merge commit.
+Retire this patch once it is merged upstream and `HWCBMC_REV` in `install.sh`
+is bumped past the merge commit.

@@ -1,12 +1,20 @@
 # Local toolchains, fixed mutants, and research data. These are intentionally
 # outside the source release; never replace this list with a broad git-clean.
+/.deps/
 /otherTools/
 /MutationBenchmark/
 /Results/
 /CaseStudy/
 /artifact/
-/Docker/artifact/
 /fmsdArtifact/
+/third_party/
+/smart/third_party/
+/Docker/
+/scripts/
+
+# Internal research and agent material is kept locally, not published.
+/docs/
+/AGENTS.md
 
 # `tiny_and` is the shipped smoke fixture. Other user experiments are local
 # inputs, not accidental additions to the public benchmark corpus.

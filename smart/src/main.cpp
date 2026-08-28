@@ -26,7 +26,7 @@ namespace {
 namespace fs = std::filesystem;
 
 // Make the tools that live in this checkout visible without the user having
-// to arrange it. install.sh builds ebmc into third_party/ and unpacks
+// to arrange it. install.sh builds ebmc into .deps/ and unpacks
 // iverilog into otherTools/, both of which sit at a known place relative to
 // the binary — so `./build/smart design.sv` works straight after an install,
 // which is what the ReadMe promises. An explicit PATH still wins: these are
@@ -39,7 +39,7 @@ void addBundledToolsToPath(const std::string& self) {
     const std::vector<fs::path> candidates = {
         // Release archives put smart and ebmc next to each other in bin/.
         executableDir,
-        root / "third_party/hw-cbmc/src/ebmc",
+        root / ".deps/hw-cbmc/src/ebmc",
         root / "otherTools/cvc5/bin",
         root / "otherTools/oss-cad-suite/bin",
     };

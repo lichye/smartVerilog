@@ -78,7 +78,7 @@ target_include_directories(smart_core PUBLIC
     ${SMART_SRC}/helper
     ${SMART_SRC}/sygus
     ${SMART_GENERATED}
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party)  # vendored nlohmann/json.hpp
+    ${NLOHMANN_INCLUDE_DIR})
 
 target_link_libraries(smart_core PUBLIC Threads::Threads cvc5_api)
 
@@ -107,7 +107,7 @@ add_executable(test_svmodule ${SMART_SRC}/frontend/test_svmodule.cpp)
 target_link_libraries(test_svmodule PRIVATE smart_frontend)
 
 # --- the hw-cbmc-backed frontend (WP2) --------------------------------------
-# hw-cbmc itself is built once by install.sh / third_party/build-hw-cbmc.sh;
+# hw-cbmc itself is built once by install.sh / tools/build-hw-cbmc.sh;
 # the custom target only re-runs if its libraries are missing, so linking
 # against it costs a plain `all` build nothing.
 add_library(smart_hwcbmc_frontend STATIC
@@ -138,7 +138,7 @@ target_link_libraries(test_verilator_state PRIVATE smart_simgen)
 add_library(smart_pipeline STATIC ${SMART_SRC}/pipeline/Options.cpp)
 target_include_directories(smart_pipeline PUBLIC
     ${SMART_SRC}/pipeline
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+    ${NLOHMANN_INCLUDE_DIR})
 
 target_link_libraries(smart_core PUBLIC smart_pipeline)
 

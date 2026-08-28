@@ -6,7 +6,7 @@
 // Usage: hwcbmc_spike <file.sv> [top]
 // Prints a human-readable summary; exit 0 on success.
 //
-// Build (see docs/PLAN-cpp-single-binary.md WP2A for the recorded link set).
+// Build with the same pinned hw-cbmc link set as the production frontend.
 
 #include <verilog/verilog_expr.h>
 #include <verilog/verilog_language.h>

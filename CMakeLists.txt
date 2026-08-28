@@ -17,7 +17,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # ctest needs this at the top level, or the subdirectory tests are invisible.
 enable_testing()
 
-add_subdirectory(third_party)
+include(cmake/Dependencies.cmake)
 # Second argument: the subdirectory's build tree. Without it CMake would
 # mirror the source layout and create build/smart AS A DIRECTORY, which is
 # exactly where the binary wants to be.

@@ -44,7 +44,7 @@ std::vector<OptionSpec> buildTable() {
         // written in the top module, under both --bound and --k-induction, at
         // one and at two levels of nesting (U0.count, U0.V0.lcount) — measured
         // before this was built, because the whole feature rests on it.
-        // OFF by default (docs/FINDINGS.md §5e). Whether it pays depends on
+        // OFF by default. Whether it pays depends on
         // the design, and the tool cannot tell which kind it has. On
         // structural netlists every submodule internal is a combinational
         // function of the instance's ports, so the top already sees an
@@ -96,7 +96,7 @@ std::vector<OptionSpec> buildTable() {
         // the same trace count and depth.
         //
         // `random` is the default because searching does not pay. Measured
-        // over 22 designs against the fixed mutant set (docs/FINDINGS.md §4.6):
+        // over 22 designs against the fixed mutant set:
         // mutation detection moved -0.21pp on average and +0.00pp at the
         // median, 7 designs better, 7 worse, 8 unchanged. The correlation
         // between the extra states found and the change in detection was

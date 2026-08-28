@@ -5,7 +5,7 @@
 # SMART needs four external programs, and this repo carries all of them:
 #
 #   smart      build/                            the binary itself
-#   ebmc       third_party/hw-cbmc/src/ebmc/     model checker (submodule)
+#   ebmc       .deps/hw-cbmc/src/ebmc/           model checker
 #   cvc5       otherTools/cvc5/bin/              SyGuS + MSA solver
 #   verilator  otherTools/oss-cad-suite/bin/     trace generation (iverilog too)
 #
@@ -49,7 +49,7 @@ _smart_prepend() {
 
 # Prepended in reverse priority: the last one ends up first.
 _smart_prepend "$SMART_ROOT/otherTools/oss-cad-suite/bin"
-_smart_prepend "$SMART_ROOT/third_party/hw-cbmc/src/ebmc"
+_smart_prepend "$SMART_ROOT/.deps/hw-cbmc/src/ebmc"
 _smart_prepend "$SMART_ROOT/otherTools/cvc5/bin"   # must beat oss-cad-suite's
 _smart_prepend "$SMART_ROOT/build"
 export PATH
@@ -71,9 +71,9 @@ _smart_missing=0
 _smart_report smart "$SMART_ROOT/build/smart" \
     "$("$SMART_ROOT/build/smart" --version 2>/dev/null | head -1)" \
     "cmake -B build && cmake --build build --target smart -j\$(nproc)" || _smart_missing=1
-_smart_report ebmc "$SMART_ROOT/third_party/hw-cbmc/src/ebmc/ebmc" \
-    "$("$SMART_ROOT/third_party/hw-cbmc/src/ebmc/ebmc" --version 2>/dev/null | head -1)" \
-    "./install.sh  (builds the hw-cbmc submodule)" || _smart_missing=1
+_smart_report ebmc "$SMART_ROOT/.deps/hw-cbmc/src/ebmc/ebmc" \
+    "$("$SMART_ROOT/.deps/hw-cbmc/src/ebmc/ebmc" --version 2>/dev/null | head -1)" \
+    "./install.sh  (downloads and builds hw-cbmc)" || _smart_missing=1
 _smart_report cvc5 "$SMART_ROOT/otherTools/cvc5/bin/cvc5" \
     "$("$SMART_ROOT/otherTools/cvc5/bin/cvc5" --version 2>/dev/null | head -1 | sed 's/This is //')" \
     "tools/build-cvc5.sh  (~30 min, one-off)" || _smart_missing=1

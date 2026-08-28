@@ -9,7 +9,7 @@ disagree with the oracle wherever the regex was guessing.
 Usage:
     python3 tools/compare_frontends.py [build/bin/hwcbmc_dump] [build/bin/frontend_dump]
 
-Divergence classes (see docs/PLAN-cpp-single-binary.md WP2):
+Divergence classes:
   width-resolved      oracle said null, hw-cbmc resolved a width  -> hw-cbmc right
   param-extra         hw-cbmc reports a constant the oracle missed-> hw-cbmc right
   order               port order differs                          -> hw-cbmc right

@@ -17,7 +17,7 @@ name="smart-$version-linux-x86_64"
 stage="$here/dist/$name"
 
 [ -x build/smart ] || { echo "build first: cmake --build build --target smart"; exit 2; }
-[ -x third_party/hw-cbmc/src/ebmc/ebmc ] || { echo "hw-cbmc is not built"; exit 2; }
+[ -x .deps/hw-cbmc/src/ebmc/ebmc ] || { echo "hw-cbmc is not built"; exit 2; }
 
 tool_available() {
     command -v "$1" >/dev/null 2>&1 ||
@@ -38,7 +38,7 @@ rm -rf "$stage"
 mkdir -p "$stage/bin"
 
 install -m 0755 build/smart "$stage/bin/smart"
-install -m 0755 third_party/hw-cbmc/src/ebmc/ebmc "$stage/bin/ebmc"
+install -m 0755 .deps/hw-cbmc/src/ebmc/ebmc "$stage/bin/ebmc"
 strip --strip-unneeded "$stage/bin/smart" "$stage/bin/ebmc" 2>/dev/null || true
 
 install -m 0644 README.md "$stage/README.md"
@@ -51,7 +51,7 @@ SMART — mine formally verified SystemVerilog assertions.
 
 Put bin/ on your PATH, or run the binaries from here. The default flow uses:
 
-  ebmc       shipped in bin/ (built from the pinned hw-cbmc submodule)
+  ebmc       shipped in bin/ (built from the pinned hw-cbmc dependency)
   verilator  NOT shipped — install Verilator, or the oss-cad-suite
              bundle: https://github.com/YosysHQ/oss-cad-suite-build
 

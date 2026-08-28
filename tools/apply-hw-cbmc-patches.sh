@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# Apply the local patches in third_party/patches/ to the hw-cbmc submodule.
+# Apply SMART's local compatibility patches to the downloaded hw-cbmc tree.
 # Idempotent: a patch that is already applied is skipped, not re-applied.
-# See third_party/patches/README.md for why each patch exists.
+# See tools/patches/hw-cbmc/README.md for why each patch exists.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-submodule="$here/hw-cbmc"
-patches="$here/patches"
+submodule="$(cd "$here/.." && pwd)/.deps/hw-cbmc"
+patches="$here/patches/hw-cbmc"
 
 if [ ! -d "$submodule/src" ]; then
-    echo "error: $submodule is empty — run:" >&2
-    echo "       git submodule update --init --recursive" >&2
+    echo "error: $submodule is missing — run ./install.sh" >&2
     exit 1
 fi
 
@@ -24,7 +23,7 @@ for patch in "$patches"/*.patch; do
         echo "applied:         $name"
     else
         echo "error: $name applies neither forward nor in reverse;" >&2
-        echo "       the submodule pin probably moved — refresh the patch." >&2
+        echo "       the pinned dependency probably moved — refresh the patch." >&2
         exit 1
     fi
 done

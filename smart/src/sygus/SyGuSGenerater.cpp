@@ -544,7 +544,7 @@ std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals, int 
     if(latency == 0){
         
         std::string startName = "MixBv"+std::to_string(signals[0].getWidth());
-        mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ") \n") +std::string("    ( \n");
+        mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ")\n") +std::string("    (\n");
         for(auto signal : signals){
             mixBvGrammar += std::string("\t")+signal.toSygusName()+"\n";
         }
@@ -560,7 +560,7 @@ std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals, int 
     }
     else{
         std::string startName = "MixBvX"+std::to_string(signals[0].getWidth());
-        mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ") \n") +std::string("    ( \n");
+        mixBvGrammar += std::string("("+startName+" (_ BitVec " + std::to_string(signals[0].getWidth()) + ")\n") +std::string("    (\n");
         for(auto signal : signals){
             mixBvGrammar += std::string("\t")+signal.toSygusName()+"_"+std::to_string(latency)+"\n";
         }
@@ -621,15 +621,15 @@ std::string SyGuSGenerater::createBvPredicateProductions(int latency) const
 std::string SyGuSGenerater::createAtomGrammar(bool isLTL)
 {   
     std::string boolGra =
-        std::string("(Atom Bool \n")+
+        std::string("(Atom Bool\n")+
         std::string("\t(\n");
 
     if(!isLTL){
-        boolGra += std::string("\t(= Atom Atom) \n");
+        boolGra += std::string("\t(= Atom Atom)\n");
     }    
     boolGra +=
-    std::string("\t(not Atom) \n")+
-    std::string("\t(and Atom Atom) \n")+
+    std::string("\t(not Atom)\n")+
+    std::string("\t(and Atom Atom)\n")+
     std::string("\t(or Atom Atom)\n");
     
     //add the important checker for True return
@@ -642,12 +642,12 @@ std::string SyGuSGenerater::createAtomGrammar(bool isLTL)
 std::string SyGuSGenerater::createAtomXGrammar(int latency)
 {   
     std::string boolXGra =
-    std::string("(AtomX Bool \n")+
+    std::string("(AtomX Bool\n")+
     std::string("\t(\n")+
     //std::string("; true false\n")+
-    std::string("\t(= AtomX AtomX) \n")+
-    std::string("\t(not AtomX) \n")+
-    std::string("\t(and AtomX AtomX) \n")+
+    std::string("\t(= AtomX AtomX)\n")+
+    std::string("\t(not AtomX)\n")+
+    std::string("\t(and AtomX AtomX)\n")+
     std::string("\t(or AtomX AtomX)\n");
 
     // //add the important checker for True return
@@ -660,9 +660,9 @@ std::string SyGuSGenerater::createAtomXGrammar(int latency)
 std::string SyGuSGenerater::createExprGrammar()
 {
     std::string exprGra =
-    std::string("(Expr Bool \n")+
+    std::string("(Expr Bool\n")+
     std::string("\t(\n")+
-    std::string("\t Atom \n")+
+    std::string("\t Atom\n")+
     std::string("\t (=> Atom Atom)\n");
     exprGra += std::string("\t)\n")+ std::string(")\n");
     return exprGra;
@@ -671,9 +671,9 @@ std::string SyGuSGenerater::createExprGrammar()
 std::string SyGuSGenerater::createExprXGrammar()
 {
     std::string exprXGra =
-    std::string("(ExprX Bool \n")+
+    std::string("(ExprX Bool\n")+
     std::string("\t(\n")+
-    std::string("\t (=> Atom Atom) \n")+
+    std::string("\t (=> Atom Atom)\n")+
     std::string("\t (=> Atom AtomX)\n");
     exprXGra += std::string("\t)\n")+ std::string(")\n");
     return exprXGra;

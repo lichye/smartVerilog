@@ -66,7 +66,7 @@ void testDefaults() {
           "block checks stay bounded by default");
     check(options.getInt("core_timeout") == 100, "default core timeout is 100");
     check(options.getInt("timeout") == 43200, "default global timeout is 43200");
-    // The defaults the 88-experiment run picked (docs/FINDINGS.md §4.3).
+    // The defaults selected by the 88-experiment configuration study.
     // These are a decision, not an accident: assert the whole set, so a
     // change to any one of them has to be deliberate.
     check(options.getBool("blockified"), "iterate by default");
@@ -77,7 +77,7 @@ void testDefaults() {
     check(!options.getBool("block_minimizer"),
           "but not between rounds: it costs more than it saves");
     check(options.getInt("jobs") >= 1, "jobs defaults to something runnable");
-    // Off since docs/FINDINGS.md §5e: on structural netlists sub-scope
+    // Off by default: on structural netlists sub-scope
     // candidates are the top's own nets renamed (-0.55pp detection, 2-5x the
     // time); on behavioral RTL they are real hidden state. The tool cannot
     // tell the two apart, so hierarchy is opted into.

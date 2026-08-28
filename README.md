@@ -33,16 +33,16 @@ under the checkout; nothing is installed system-wide and no container is
 required.
 
 ```bash
-git clone --recursive https://github.com/lichye/smartVerilog.git
+git clone https://github.com/lichye/smartVerilog.git
 cd smartVerilog
 ./install.sh
 ```
 
-`install.sh` builds hw-cbmc (EBMC and the Verilog frontend SMART links
-against), fetches Verilator (the default simulator) and Icarus Verilog via
-oss-cad-suite, builds libcvc5, and then builds `build/smart`. Expect the better
-part of an hour the first time, almost all of it in CBMC and cvc5; afterwards,
-rebuilding SMART takes seconds.
+`install.sh` downloads the pinned hw-cbmc source under `.deps/`, builds EBMC
+and the Verilog frontend SMART links against, fetches Verilator (the default
+simulator) and Icarus Verilog via oss-cad-suite, builds libcvc5, and then builds
+`build/smart`. Expect the better part of an hour the first time, almost all of
+it in CBMC and cvc5; afterwards, rebuilding SMART takes seconds.
 
 Host requirements: a C++17 compiler, `make`, `flex`, `bison`, `git`, `curl`
 and CMake ≥ 3.16 (`python3 -m pip install --user cmake` is enough).

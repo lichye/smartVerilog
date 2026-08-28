@@ -5,7 +5,7 @@ cd /work/smartVerilog
 # The evaluator is Python and finds its tools on PATH only. It also cannot
 # tell "assertion violated" from "ebmc failed to run" — both are a non-zero
 # exit — so a missing ebmc reports every mutant as detected, i.e. 100%.
-export PATH="/work/smartVerilog/third_party/hw-cbmc/src/ebmc:/work/smartVerilog/otherTools/cvc5/bin:/work/smartVerilog/otherTools/oss-cad-suite/bin:$PATH"
+export PATH="/work/smartVerilog/.deps/hw-cbmc/src/ebmc:/work/smartVerilog/otherTools/cvc5/bin:/work/smartVerilog/otherTools/oss-cad-suite/bin:$PATH"
 command -v ebmc >/dev/null || { echo "FATAL: ebmc not on PATH"; exit 2; }
 cfg=$1; b=$2; mto=${3:-2400}; eto=${4:-3600}
 d=$(find Benchmark -type d -name "$b" | head -1)

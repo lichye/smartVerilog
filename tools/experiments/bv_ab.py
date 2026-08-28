@@ -100,7 +100,7 @@ def run_capture(command: list[str], cwd: Path, env: dict[str, str] | None = None
 def tool_environment(repo: Path) -> dict[str, str]:
     env = os.environ.copy()
     prefixes = (
-        repo / "third_party/hw-cbmc/src/ebmc",
+        repo / ".deps/hw-cbmc/src/ebmc",
         repo / "otherTools/cvc5/bin",
         repo / "otherTools/oss-cad-suite/bin",
     )

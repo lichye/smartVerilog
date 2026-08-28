@@ -1,7 +1,7 @@
 // SVModule: SystemVerilog top-module model for the smart frontend.
 //
-// Behavioral spec: smart/src/python/gen_bench.py (frozen; see
-// docs/PLAN-cpp-single-binary.md WP2). Every function here mirrors the
+// Behavioral spec: smart/src/python/gen_bench.py (the frozen legacy frontend
+// oracle). Every function here mirrors the
 // semantics of its Python counterpart exactly — including quirks — and is
 // held to byte parity by tools/parity_frontend.py across all repo
 // benchmarks. If a quirk turns out to be a bug, fix gen_bench.py first and
