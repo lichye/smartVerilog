@@ -18,6 +18,34 @@ if [ ! -d "$submodule/lib/cbmc/src" ]; then
     exit 1
 fi
 
+# Patches are needed only while compiling hw-cbmc.  Record which ones were
+# already present so a normal `./install.sh` leaves the submodule clean rather
+# than making every developer's checkout look modified.  Pre-existing manual
+# patches are deliberately left alone.
+shopt -s nullglob
+patches=("$here"/patches/*.patch)
+pre_applied=()
+for patch in "${patches[@]}"; do
+    if git -C "$submodule" apply --reverse --check "$patch" >/dev/null 2>&1; then
+        pre_applied+=("$patch")
+    fi
+done
+
+restore_new_patches() {
+    local patch known
+    for patch in "${patches[@]}"; do
+        known=0
+        for existing in "${pre_applied[@]}"; do
+            [ "$patch" = "$existing" ] && known=1 && break
+        done
+        if [ "$known" = 0 ] && \
+           git -C "$submodule" apply --reverse --check "$patch" >/dev/null 2>&1; then
+            git -C "$submodule" apply --reverse "$patch"
+        fi
+    done
+}
+trap restore_new_patches EXIT
+
 "$here/apply-patches.sh"
 
 # CBMC's SAT backend is downloaded, not vendored.

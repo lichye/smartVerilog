@@ -35,6 +35,7 @@ Options parse(std::vector<std::string> args) {
 
     Options options;
     options.parseCommandLine(static_cast<int>(argv.size()), argv.data());
+    options.validate();
     return options;
 }
 
@@ -59,6 +60,10 @@ void testDefaults() {
     check(options.getInt("traces") == 3, "default traces is 3");
     check(options.getInt("seed") == 42, "default seed is 42");
     check(options.getInt("bound") == 10, "default bound is 10");
+    check(options.getBool("check_unbounded"),
+          "the final output is proved by k-induction by default");
+    check(!options.getBool("unbound_check"),
+          "block checks stay bounded by default");
     check(options.getInt("core_timeout") == 100, "default core timeout is 100");
     check(options.getInt("timeout") == 43200, "default global timeout is 43200");
     // The defaults the 88-experiment run picked (docs/FINDINGS.md §4.3).
@@ -78,6 +83,10 @@ void testDefaults() {
     // tell the two apart, so hierarchy is opted into.
     check(!options.getBool("hierarchical"),
           "submodule signals are not candidates unless asked for");
+    check(options.getString("bv_predicates") == "off",
+          "BitVec predicates stay off until the experiment opts in");
+    check(options.getString("assumption_mining") == "off",
+          "assumption mining is off by default");
 }
 
 void testCommandLine() {
@@ -109,8 +118,22 @@ void testCommandLine() {
     check(unbounded.getBool("check_unbounded") && unbounded.getBool("unbound_check"),
           "--unbounded sets both legacy switches");
 
+    auto boundedFinal = parse({"design.sv", "--no-final-unbounded"});
+    check(!boundedFinal.getBool("check_unbounded") &&
+              !boundedFinal.getBool("unbound_check"),
+          "--no-final-unbounded restores the bounded final check only");
+
     auto verbosity = parse({"design.sv", "-v", "-v", "-q"});
     check(verbosity.getInt("verbosity") == 1, "-v/-q accumulate");
+
+    auto predicates = parse({"design.sv", "--bv-predicates", "unsigned"});
+    check(predicates.getString("bv_predicates") == "unsigned",
+          "--bv-predicates accepts unsigned");
+
+    auto assumptions =
+        parse({"design.sv", "--assumption-mining", "suggest"});
+    check(assumptions.getString("assumption_mining") == "suggest",
+          "--assumption-mining reserves suggest mode");
 }
 
 void testFlatConfig() {
@@ -119,6 +142,8 @@ void testFlatConfig() {
         "traces": 5,
         "jobs": 8,
         "block_size": 0.25,
+        "bv_predicates": "unsigned",
+        "assumption_mining": "suggest",
         "not_a_real_key": 1
     })");
 
@@ -127,6 +152,10 @@ void testFlatConfig() {
     check(options.getInt("cycles") == 40, "flat config sets cycles");
     check(options.getInt("traces") == 5, "flat config sets traces");
     check(options.getDouble("block_size") == 0.25, "flat config sets a double");
+    check(options.getString("bv_predicates") == "unsigned",
+          "flat config accepts unsigned BitVec predicates");
+    check(options.getString("assumption_mining") == "suggest",
+          "flat config accepts reserved assumption suggest mode");
     check(hasWarningContaining(options, "not_a_real_key"),
           "unknown flat key is warned about, not fatal");
     std::remove(path.c_str());
@@ -213,11 +242,19 @@ void testStrategyDoesNotImplyIteration() {
 }
 
 void testPrecedence() {
-    const auto path = writeTemp("prec.json", R"({"cycles": 40, "jobs": 16})");
+    const auto path = writeTemp(
+        "prec.json",
+        R"({"cycles": 40, "jobs": 16, "bv_predicates": "off", "assumption_mining": "off"})");
 
-    auto options = parse({"design.sv", "--config", path, "--jobs", "4"});
+    auto options = parse({"design.sv", "--config", path, "--jobs", "4",
+                          "--bv-predicates", "unsigned",
+                          "--assumption-mining", "suggest"});
     check(options.getInt("jobs") == 4, "CLI beats config file");
     check(options.getInt("cycles") == 40, "config file beats default");
+    check(options.getString("bv_predicates") == "unsigned",
+          "CLI BitVec predicate mode beats config");
+    check(options.getString("assumption_mining") == "suggest",
+          "CLI assumption mode beats config");
 
     // Same, with the flag BEFORE --config: order on the command line must not
     // change the outcome.
@@ -243,6 +280,8 @@ void testShippedConfigs() {
         Options options;
         try {
             options.mergeJsonFile(path);
+            check(options.getBool("check_unbounded"),
+                  path + " keeps the final k-induction gate enabled");
             ++loaded;
         } catch (const std::exception& e) {
             std::cout << "FAIL " << path << ": " << e.what() << "\n";
@@ -257,7 +296,9 @@ void testShippedConfigs() {
 }
 
 void testRoundTrip() {
-    auto options = parse({"design.sv", "--cycles", "33", "--msa"});
+    auto options = parse({"design.sv", "--cycles", "33", "--msa",
+                          "--bv-predicates", "unsigned",
+                          "--assumption-mining", "suggest"});
     const auto dumped = options.toJson();
     const auto path = writeTemp("roundtrip.json", dumped);
 
@@ -266,9 +307,105 @@ void testRoundTrip() {
     check(reloaded.getInt("cycles") == 33, "--dump-config output reloads");
     check(reloaded.getBool("msa") && reloaded.getBool("blockified"),
           "and carries the derived settings");
+    check(reloaded.getString("bv_predicates") == "unsigned",
+          "--dump-config round-trips the BitVec predicate mode");
+    check(reloaded.getString("assumption_mining") == "suggest",
+          "--dump-config round-trips the reserved assumption mode");
     check(reloaded.warnings().empty(),
           "the dump is clean: reloading it warns about nothing");
     std::remove(path.c_str());
+}
+
+void testInvalidBvPredicateMode() {
+    bool cliFailed = false;
+    try {
+        (void)parse({"design.sv", "--bv-predicates", "signed"});
+    } catch (const std::exception& e) {
+        const std::string message = e.what();
+        cliFailed = message.find("off, unsigned") != std::string::npos;
+    }
+    check(cliFailed, "unknown CLI BitVec mode names off and unsigned");
+
+    const auto path = writeTemp(
+        "invalid-bv-predicates.json", R"({"bv_predicates": "arithmetic"})");
+    bool configFailed = false;
+    try {
+        Options options;
+        options.mergeJsonFile(path);
+        options.validate();
+    } catch (const std::exception& e) {
+        const std::string message = e.what();
+        configFailed = message.find("off, unsigned") != std::string::npos;
+    }
+    check(configFailed, "unknown config BitVec mode is a fatal user error");
+
+    auto overridden =
+        parse({"design.sv", "--config", path, "--bv-predicates", "unsigned"});
+    check(overridden.getString("bv_predicates") == "unsigned",
+          "validation runs after a valid CLI mode overrides config");
+    std::remove(path.c_str());
+
+    const auto wrongTypePath =
+        writeTemp("invalid-bv-predicates-type.json", R"({"bv_predicates": 1})");
+    bool wrongTypeFailed = false;
+    try {
+        Options options;
+        options.mergeJsonFile(wrongTypePath);
+        options.validate();
+    } catch (const std::exception& e) {
+        wrongTypeFailed =
+            std::string(e.what()).find("off, unsigned") != std::string::npos;
+    }
+    check(wrongTypeFailed,
+          "a non-string config BitVec mode is also a fatal user error");
+    std::remove(wrongTypePath.c_str());
+}
+
+void testInvalidAssumptionMiningMode() {
+    bool cliFailed = false;
+    try {
+        (void)parse({"design.sv", "--assumption-mining", "apply"});
+    } catch (const std::exception& e) {
+        cliFailed =
+            std::string(e.what()).find("off, suggest") != std::string::npos;
+    }
+    check(cliFailed, "unknown CLI assumption mode names off and suggest");
+
+    const auto path = writeTemp(
+        "invalid-assumption-mining.json",
+        R"({"assumption_mining": "cegar"})");
+    bool configFailed = false;
+    try {
+        Options options;
+        options.mergeJsonFile(path);
+        options.validate();
+    } catch (const std::exception& e) {
+        configFailed =
+            std::string(e.what()).find("off, suggest") != std::string::npos;
+    }
+    check(configFailed, "unknown config assumption mode is a fatal user error");
+
+    auto overridden = parse({"design.sv", "--config", path,
+                             "--assumption-mining", "off"});
+    check(overridden.getString("assumption_mining") == "off",
+          "a valid CLI assumption mode overrides invalid config");
+    std::remove(path.c_str());
+
+    const auto wrongTypePath = writeTemp(
+        "invalid-assumption-mining-type.json",
+        R"({"assumption_mining": true})");
+    bool wrongTypeFailed = false;
+    try {
+        Options options;
+        options.mergeJsonFile(wrongTypePath);
+        options.validate();
+    } catch (const std::exception& e) {
+        wrongTypeFailed =
+            std::string(e.what()).find("off, suggest") != std::string::npos;
+    }
+    check(wrongTypeFailed,
+          "a non-string config assumption mode is also a fatal user error");
+    std::remove(wrongTypePath.c_str());
 }
 
 }  // namespace
@@ -282,6 +419,8 @@ int main() {
     testPrecedence();
     testShippedConfigs();
     testRoundTrip();
+    testInvalidBvPredicateMode();
+    testInvalidAssumptionMiningMode();
 
     if (failures != 0) {
         std::cout << failures << " option test(s) failed\n";

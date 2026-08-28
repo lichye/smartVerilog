@@ -1,6 +1,7 @@
 #include "Harness.h"
 
 #include "Fuzz.h"
+#include "../helper/Shell.h"
 
 #include <array>
 #include <chrono>
@@ -151,8 +152,6 @@ std::string runWithDeadline(const std::string& command, int seconds,
     fs::remove(tmp, error);
     return text.str();
 }
-
-std::string quote(const std::string& s) { return "'" + s + "'"; }
 
 bool onPath(const std::string& tool) {
     if (tool.find('/') != std::string::npos) return fs::exists(tool);
@@ -328,7 +327,8 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
             out << renderVerilatorHarness(info, withState);
         }
 
-        compile << options.verilator << " --cc --exe --build --trace"
+        compile << helper::shellQuote(options.verilator)
+                << " --cc --exe --build --trace"
                 // We mine from the user's design; we do not lint it. Verilator
                 // treats warnings as fatal by default, and real designs carry
                 // things like an out-of-range part-select in a branch their
@@ -340,25 +340,30 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
                 // Internal free registers are only reachable when they are
                 // public; the old cocotb flow passed this unconditionally.
                 << " --public-flat-rw"
-                << " --Mdir " << quote((fs::path(workDir) / "obj_dir").string())
-                << " --top-module " << info.top
-                << " -o " << quote("sim_" + info.top);
-        compile << " -I" << quote(simSrcDir.string());
-        for (const auto& file : strippedFiles) compile << " " << quote(file);
-        compile << " " << quote(harnessPath.string());
+                << " --Mdir "
+                << helper::shellQuote((fs::path(workDir) / "obj_dir").string())
+                << " --top-module " << helper::shellQuote(info.top)
+                << " -o " << helper::shellQuote("sim_" + info.top);
+        compile << " -I" << helper::shellQuote(simSrcDir.string());
+        for (const auto& file : strippedFiles)
+            compile << " " << helper::shellQuote(file);
+        compile << " " << helper::shellQuote(harnessPath.string());
     } else {
         std::ofstream out(tbPath);
         if (!out) throw std::runtime_error("cannot write " + tbPath.string());
         out << renderTestbench(info, options);
 
-        compile << options.iverilog << " -g2012 -o " << quote(simPath.string());
+        compile << helper::shellQuote(options.iverilog) << " -g2012 -o "
+                << helper::shellQuote(simPath.string());
         // Both the stripped copies (for `include "sibling.sv"` between them)
         // and the original directory, for includes we did not copy.
-        compile << " -I " << quote(simSrcDir.string());
+        compile << " -I " << helper::shellQuote(simSrcDir.string());
         compile << " -I "
-                << quote(fs::path(designFiles.front()).parent_path().string());
-        for (const auto& file : strippedFiles) compile << " " << quote(file);
-        compile << " " << quote(tbPath.string());
+                << helper::shellQuote(
+                       fs::path(designFiles.front()).parent_path().string());
+        for (const auto& file : strippedFiles)
+            compile << " " << helper::shellQuote(file);
+        compile << " " << helper::shellQuote(tbPath.string());
     }
 
     result.command = compile.str();
@@ -402,13 +407,14 @@ SimResult runSimulations(const frontend::ModuleInfo& info,
 
         std::ostringstream simulate;
         if (useVerilator)
-            simulate << quote(simPath.string());
+            simulate << helper::shellQuote(simPath.string());
         else
-            simulate << options.vvp << " " << quote(simPath.string());
+            simulate << helper::shellQuote(options.vvp) << " "
+                     << helper::shellQuote(simPath.string());
         simulate << " +seed=" << (options.seed + i)
-                 << " +vcd=" << quote(vcdPath.string());
+                 << " +vcd=" << helper::shellQuote(vcdPath.string());
         if (i < static_cast<int>(chosenStimulus.size()))
-            simulate << " +stim=" << quote(chosenStimulus[i]);
+            simulate << " +stim=" << helper::shellQuote(chosenStimulus[i]);
         result.command = simulate.str();
 
         bool timedOut = false;

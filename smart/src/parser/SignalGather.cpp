@@ -60,7 +60,7 @@ std::vector<Signal>* SignalGather::getAllSignals(){
 }
 
 Signal SignalGather::getOneSignal(int index){
-    if(index >= signals.size()){
+    if(index < 0 || static_cast<std::size_t>(index) >= signals.size()){
         throw std::runtime_error("Index out of bounds");
     }
     

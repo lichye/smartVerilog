@@ -35,6 +35,9 @@ class SyGuSGenerater
         void setUseSubprocess(bool);
         // Keep the generated .sl file after solving (--keep-work).
         void setKeepTempFiles(bool);
+        // Phase-1 BitVec predicates are deliberately opt-in. The string form
+        // mirrors the user-facing option and leaves room for later modes.
+        void setBvPredicateMode(const std::string&);
 
     private:
         //this corelates the signal and its values
@@ -53,6 +56,8 @@ class SyGuSGenerater
         int sygusTimeoutMs = 5000;
         bool useSubprocess = false;
         bool keepTempFiles = false;
+        enum class BvPredicateMode { Off, Unsigned };
+        BvPredicateMode bvPredicateMode = BvPredicateMode::Off;
 
         std::string runCVC5SygusInProcess(const std::string&);
         std::string runCVC5SygusSubprocess(const std::string&);
@@ -67,6 +72,8 @@ class SyGuSGenerater
         std::string createExprXGrammar();
         std::string createSingleBvGrammar(Signal);
         std::string createMixBvGrammar(const std::vector<Signal>,int);
+        std::string createCmpBvGrammar(const std::vector<Signal>&,int);
+        std::string createBvPredicateProductions(int) const;
         std::string createKeyGrammar(int);
         std::string createConstraint(bool,int);
         std::string createLTLConstraint(bool,int,int);

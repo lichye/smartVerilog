@@ -14,6 +14,7 @@ Timer::Timer(){
 }
 
 void Timer::start(timerType type) {
+    (void)type;
     start_time = std::chrono::steady_clock::now(); 
 }
 
@@ -38,8 +39,9 @@ void Timer::stop(timerType type) {
 }
 
 double Timer::elapsed() const {
-    std::chrono::time_point<std::chrono::steady_clock> end_point;
-    return std::chrono::duration<double>(end_point - start_time).count();
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                         start_time)
+        .count();
 }
 
 // void Timer::printTime(){

@@ -23,6 +23,7 @@
 #include "BlockRunner.h"
 #include "Blocks.h"
 #include "Harness.h"
+#include "../helper/Shell.h"
 #include "Mus.h"
 #include "HwcbmcFrontend.h"
 #include "SVModule.h"
@@ -39,8 +40,6 @@ double seconds(std::chrono::steady_clock::time_point since) {
 }
 
 namespace fs = std::filesystem;
-
-std::string shellQuote(const std::string& text) { return "'" + text + "'"; }
 
 std::string jsonEscape(const std::string& text) {
     std::string escaped;
@@ -68,10 +67,12 @@ std::string jsonEscape(const std::string& text) {
 // Group by "run" before reading any timing out of a log.
 class RunLog {
 public:
-    explicit RunLog(std::string path)
-        : path_(std::move(path)), pid_(static_cast<long>(::getpid())) {}
+    RunLog(std::string path, bool enabled)
+        : path_(std::move(path)), pid_(static_cast<long>(::getpid())),
+          enabled_(enabled) {}
 
     void record(const std::string& fields) {
+        if (!enabled_) return;
         std::lock_guard<std::mutex> lock(mutex_);
         std::ofstream out(path_, std::ios::app);
         if (!out) return;
@@ -87,6 +88,7 @@ private:
     }
     std::string path_;
     long pid_;
+    bool enabled_;
     std::mutex mutex_;
     std::chrono::steady_clock::time_point start_ = std::chrono::steady_clock::now();
 };
@@ -203,6 +205,16 @@ ExitCode Pipeline::run(RunSummary& summary) {
         if (!quiet) std::cout << message << std::endl;
     };
 
+    // Reserve the public interface without pretending a research method has
+    // already been chosen. `suggest` is a valid configuration value (and can
+    // be round-tripped through --dump-config), but must never silently behave
+    // like `off` or generate unevidenced environment assumptions.
+    if (options_.getString("assumption_mining") != "off") {
+        std::cerr << "smart: --assumption-mining suggest is reserved; "
+                     "the assumption-mining backend is not implemented yet\n";
+        return ExitCode::UserError;
+    }
+
     // ---- input ---------------------------------------------------------
     const auto& inputs = options_.designFiles();
     if (inputs.empty()) {
@@ -302,13 +314,17 @@ ExitCode Pipeline::run(RunSummary& summary) {
         return ExitCode::Failure;
     }
 
-    RunLog runLog(work.runLogFile());
+    RunLog runLog(work.runLogFile(), options_.getBool("log"));
     runLog.record("\"stage\":\"start\",\"version\":\"" + std::string(smart::version()) +
                   "\",\"top\":\"" + jsonEscape(top) +
                   "\",\"design\":\"" + jsonEscape(mainFile) +
                   "\",\"jobs\":" + std::to_string(options_.getInt("jobs")) +
                   ",\"core_timeout\":" +
-                  std::to_string(options_.getInt("core_timeout")));
+                  std::to_string(options_.getInt("core_timeout")) +
+                  ",\"bv_predicates\":\"" +
+                  jsonEscape(options_.getString("bv_predicates")) + "\"" +
+                  ",\"assumption_mining\":\"" +
+                  jsonEscape(options_.getString("assumption_mining")) + "\"");
 
     for (const auto& warning : options_.warnings()) say("note: " + warning);
 
@@ -638,6 +654,15 @@ ExitCode Pipeline::run(RunSummary& summary) {
             std::to_string(foundThisRound) + " new assertions (" +
             std::to_string(mined.size()) + " total)");
 
+        if (options_.getBool("save_temp_assertions")) {
+            std::ostringstream snapshot;
+            for (const auto& assertion : mined) snapshot << assertion << "\n";
+            writeFile(work.root() + "/assertions-round-" +
+                          std::to_string(round) + "-latency-" +
+                          std::to_string(latency) + ".txt",
+                      snapshot.str());
+        }
+
         {
             std::size_t timedOut = 0, failed = 0, verified = 0;
             for (const auto& result : results) {
@@ -852,12 +877,16 @@ ExitCode Pipeline::run(RunSummary& summary) {
 
     // ---- final check ---------------------------------------------------
     std::vector<std::string> verified;
-    if (options_.getBool("checker") && !assertions.empty()) {
+    const bool finalChecked = options_.getBool("checker");
+    const bool finalUnbounded = options_.getBool("check_unbounded");
+    summary.finalChecked = finalChecked;
+    summary.finalUnbounded = finalUnbounded;
+    if (finalChecked && !assertions.empty()) {
         emit::CheckOptions check;
         check.topModule = top;
         check.injectModule = injectModule;
         check.bound = static_cast<int>(options_.getInt("bound"));
-        check.unbounded = options_.getBool("check_unbounded");
+        check.unbounded = finalUnbounded;
         check.timeoutSeconds = static_cast<int>(options_.getInt("check_timeout"));
         check.jobs = jobs;
         check.scratchDir = work.formalDir();
@@ -926,8 +955,14 @@ ExitCode Pipeline::run(RunSummary& summary) {
     summary.outputFile = output;
 
     try {
+        const auto verification =
+            !finalChecked
+                ? emit::VerificationMode::Unchecked
+                : (finalUnbounded ? emit::VerificationMode::KInduction
+                                  : emit::VerificationMode::Bounded);
         emit::writeAssertionFile(sourceForOutput, output, injectModule, verified,
-                                 options_.toJson());
+                                 options_.toJson(), verification,
+                                 static_cast<int>(options_.getInt("bound")));
     } catch (const std::exception& e) {
         std::cerr << "smart: cannot write " << output << ": " << e.what() << "\n";
         summary.workDirKept = true;
@@ -957,10 +992,15 @@ ExitCode checkEnvironment(const Options& options, const std::string& selfExecuta
         std::string versionFlag;
         bool required;
     };
-    const std::vector<Tool> tools = {{"iverilog", "-V", true},
-                                     {"vvp", "-V", true},
-                                     {"ebmc", "--version", true},
-                                     {"cvc5", "--version", false}};
+    const bool useVerilator = options.getString("simulator") == "verilator" ||
+                              options.getString("simulator").empty();
+    const std::vector<Tool> tools = {
+        {"verilator", "--version", useVerilator},
+        {"iverilog", "-V", !useVerilator},
+        {"vvp", "-V", !useVerilator},
+        {"ebmc", "--version", true},
+        {"cvc5", "--version", false},
+    };
 
     bool ok = true;
     for (const auto& tool : tools) {
@@ -972,7 +1012,8 @@ ExitCode checkEnvironment(const Options& options, const std::string& selfExecuta
             continue;
         }
         std::cout << "[ok]      " << tool.name << "  " << path << "  "
-                  << firstLineOf(shellQuote(path) + " " + tool.versionFlag) << "\n";
+                  << firstLineOf(helper::shellQuote(path) + " " + tool.versionFlag)
+                  << "\n";
     }
 
     std::cout << "[ok]      smart     " << selfExecutable << "  " << smart::version()

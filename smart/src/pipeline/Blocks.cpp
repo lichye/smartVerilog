@@ -51,6 +51,7 @@ CandidateSet candidateVariables(const std::string& top,
     // cannot contain one.
     for (const auto& name : found.names)
         if (name.find('.') != std::string::npos) ++found.fromSubScopes;
+    delete signals;
     return found;
 }
 

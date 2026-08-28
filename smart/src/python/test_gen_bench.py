@@ -56,7 +56,17 @@ def test_params_clock_reset():
 
 
 def test_free_regs_and_assumes():
-    text = read("artifact/CaseStudy/Input/nru_a/nru_a.sv")
+    # Keep this test independent of artifact/, which is intentionally ignored
+    # and is not present in a fresh source checkout.
+    text = """\
+module nru_a(input clk);
+  (* anyconst *) reg [3:0] attacker_hitmap;
+  (* anyseq *) reg [3:0] hitmap1;
+  always @(*) begin
+    assume(attacker_hitmap != hitmap1);
+  end
+endmodule
+"""
     info = gen_bench.parse_module(text, "nru_a")
     kinds = {(r["kind"], r["name"]) for r in info["free_regs"]}
     assert ("anyconst", "attacker_hitmap") in kinds, kinds
@@ -82,8 +92,8 @@ def test_inject_assumes():
     assert "assume(!(a && b));" in out
     assert out.index("assume") < out.index("endmodule")
     # stripping the injected assume must round-trip
-    assert "assume" not in gen_bench.strip_assumes(out).replace("assume", "assume")\
-        or not re.search(r"\bassume\s*\(", gen_bench.strip_assumes(out))
+    stripped = gen_bench.strip_assumes(out)
+    assert not re.search(r"\bassume\s*\(", stripped)
     print("ok  inject_assumes (tiny_and)")
 
 

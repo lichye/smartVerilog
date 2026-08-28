@@ -44,7 +44,7 @@
         "LTL_depth": 1
     },
     "Checker_settings":{
-        "Check_unbounded": false,
+        "Check_unbounded": true,
         "bounded_depth": 10
     },
     "Evaluation_settings":{

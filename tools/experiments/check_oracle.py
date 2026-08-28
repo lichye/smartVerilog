@@ -31,17 +31,27 @@ def trajectory(cfg, design):
     path = f"/work/wk/{cfg}_{design}/run-log.jsonl"
     if not os.path.exists(path):
         return None
-    recs, run = [], None
+    by_run = collections.defaultdict(list)
+    last_started = None
+    last_seen = None
     for line in open(path):
         try:
             d = json.loads(line)
         except json.JSONDecodeError:
             continue
         # One log can hold two runs if a workdir was deleted under a live
-        # writer; keep the last one only.
-        if run is None or d.get("run") != run:
-            run = d.get("run")
-        recs.append(d)
+        # writer. Select the most recently STARTED run, then read only its
+        # records; merely remembering the last id while appending every record
+        # mixes independent trajectories.
+        run = d.get("run")
+        if run is None:
+            continue
+        by_run[run].append(d)
+        last_seen = run
+        if d.get("stage") == "start":
+            last_started = run
+    selected = last_started if last_started is not None else last_seen
+    recs = by_run.get(selected, [])
     rounds = [d for d in recs if d.get("stage") == "round"]
     return (len(rounds), rounds[-1].get("total")) if rounds else None
 

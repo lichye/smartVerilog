@@ -56,6 +56,11 @@ public:
     // Throws std::runtime_error on a malformed command line.
     void parseCommandLine(int argc, char** argv);
 
+    // Validate relationships and finite-choice string values after all
+    // sources have been merged. Callers do this only after CLI precedence has
+    // been applied, so a valid CLI value may override a stale config value.
+    void validate() const;
+
     bool getBool(const std::string& key) const;
     long long getInt(const std::string& key) const;
     double getDouble(const std::string& key) const;

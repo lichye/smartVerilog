@@ -49,7 +49,7 @@ SygusExprType getExprType(std::string);
 class SygusExpr{
     public:
         SygusExpr();
-        ~SygusExpr();
+        virtual ~SygusExpr();
         virtual std::string toString() = 0;
 };
 
@@ -70,6 +70,7 @@ class SygusOperator: public SygusExpr
         ~SygusOperator();
         std::string toString();
         int getOperandsNumber();
+        SygusOperatorType getType() const;
     private:
         SygusOperatorType op;
 
@@ -96,7 +97,7 @@ class SygusVariableType: public SygusExpr
         virtual std::string toString()=0;
 };
 
-class SygusBitsType: public SygusExpr
+class SygusBitsType: public SygusVariableType
 {
     public:
         SygusBitsType(int);
@@ -107,7 +108,7 @@ class SygusBitsType: public SygusExpr
         int bitlength;
 };
 
-class SygusBoolType: public SygusExpr
+class SygusBoolType: public SygusVariableType
 {
     public:
         SygusBoolType();

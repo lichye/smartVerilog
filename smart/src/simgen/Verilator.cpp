@@ -9,6 +9,7 @@
 // (gen_bench.render_sim_py), not the language it is written in.
 
 #include "Harness.h"
+#include "../helper/Shell.h"
 
 #include <algorithm>
 #include <cctype>
@@ -25,15 +26,6 @@ namespace {
 namespace fs = std::filesystem;
 
 int effectiveWidth(int width) { return width > 0 ? width : 1; }
-
-// C++ type Verilator gives a signal of this width.
-const char* cppType(int width) {
-    const int w = effectiveWidth(width);
-    if (w <= 8) return "CData";
-    if (w <= 16) return "SData";
-    if (w <= 32) return "IData";
-    return "QData";
-}
 
 // A draw of `width` random bits, as a C++ expression.
 std::string randomDraw(int width) {
@@ -106,8 +98,6 @@ const SignalSpec* specFor(const HarnessOptions& options, const std::string& name
 // and tells a search nothing about where the design went.
 namespace {
 
-std::string quote(const std::string& s) { return "'" + s + "'"; }
-
 // The generated XML is regular, so a scan beats pulling in an XML library.
 std::string attribute(const std::string& tag, const std::string& name) {
     const auto key = name + "=\"";
@@ -143,9 +133,11 @@ std::string elaborateXml(const std::vector<std::string>& designFiles,
     }
 
     std::ostringstream command;
-    command << quote(verilator) << " --xml-only -Wno-fatal --top-module "
-            << quote(top) << " --Mdir " << quote(scratchDir + "/xml");
-    for (const auto& file : designFiles) command << " " << quote(file);
+    command << helper::shellQuote(verilator)
+            << " --xml-only -Wno-fatal --top-module " << helper::shellQuote(top)
+            << " --Mdir " << helper::shellQuote(scratchDir + "/xml");
+    for (const auto& file : designFiles)
+        command << " " << helper::shellQuote(file);
     command << " > /dev/null 2>&1";
     if (std::system(command.str().c_str()) != 0) return {};
 
@@ -217,22 +209,8 @@ std::vector<StateSignal> enumerateStateSignals(
     const std::vector<std::string>& designFiles, const std::string& top,
     const std::string& verilator, const std::string& scratchDir) {
     std::vector<StateSignal> signals;
-    if (designFiles.empty()) return signals;
-
-    std::error_code error;
-    fs::create_directories(scratchDir, error);
-
-    std::ostringstream command;
-    command << quote(verilator) << " --xml-only -Wno-fatal --top-module "
-            << quote(top) << " --Mdir " << quote(scratchDir + "/xml");
-    for (const auto& file : designFiles) command << " " << quote(file);
-    command << " > /dev/null 2>&1";
-    if (std::system(command.str().c_str()) != 0) return signals;
-
-    std::ifstream in(scratchDir + "/xml/V" + top + ".xml");
-    if (!in) return signals;
-    std::string xml((std::istreambuf_iterator<char>(in)),
-                    std::istreambuf_iterator<char>());
+    const auto xml = elaborateXml(designFiles, top, verilator, scratchDir);
+    if (xml.empty()) return signals;
 
     // dtype id -> width. A basicdtype with no left/right is one bit.
     std::map<std::string, int> widths;
@@ -276,11 +254,19 @@ std::vector<StateSignal> enumerateStateSignals(
         // in any case.
         if (name.rfind("__", 0) == 0) continue;
 
+        const auto found = widths.find(attribute(tag, "dtype_id"));
+        // Only a direct basicdtype has a scalar C++ accessor. Unpacked arrays,
+        // structs and other aggregate dtypes are represented by wrapper types
+        // such as VlUnpacked and cannot be cast to long long by the generated
+        // state hasher. Conservatively omitting them affects only the fuzzing
+        // score; treating an unknown dtype as a one-bit scalar breaks the whole
+        // Verilator build (axis_fifo's mem used to do exactly that).
+        if (found == widths.end()) continue;
+
         StateSignal signal;
         signal.name = name;
         signal.isPort = !dir.empty();
-        const auto found = widths.find(attribute(tag, "dtype_id"));
-        signal.width = found == widths.end() ? 1 : found->second;
+        signal.width = found->second;
         // Wider than a QData has no plain integral accessor; hashing it would
         // not compile. Rare for control state, and skipping is honest.
         if (signal.width > 64) continue;
@@ -422,8 +408,10 @@ std::string renderVerilatorHarness(const frontend::ModuleInfo& info,
         if (reset) {
             os << "    top->" << reset->signal << " = " << reset->active << ";\n"
                << "    for (int i = 0; i < " << reset->cycles << "; ++i) {\n"
-               << "        top->" << *clock << " = 1; top->eval(); trace->dump(now); now += 5;\n"
-               << "        top->" << *clock << " = 0; top->eval(); trace->dump(now); now += 5;\n"
+               << "        top->" << *clock << " = 1; top->eval();\n"
+               << "        if (dump) trace->dump(now); now += 5;\n"
+               << "        top->" << *clock << " = 0; top->eval();\n"
+               << "        if (dump) trace->dump(now); now += 5;\n"
                << "    }\n"
                << "    top->" << reset->signal << " = " << (1 - reset->active) << ";\n";
         }

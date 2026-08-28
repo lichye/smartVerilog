@@ -591,11 +591,13 @@ Two supporting observations:
   search added the most states gave +2.23, -1.11 and -1.26. The correlation
   over all 22 is +0.06.
 
-`trace_policy` stays `random`. The fuzz path is kept, not deleted: the
-measurement rules on the current grammar, and a grammar that can express
-stronger relations (§3.6, the `bv compare` TODO) would deserve the question
-asked again — a wider state set is only a liability while the language cannot
-say anything strong about it.
+`trace_policy` stays `random`. The fuzz path is kept, not deleted: this
+measurement rules on the historical/default-off grammar. Restricted same-width
+BitVec comparisons are now available with `--bv-predicates unsigned`, but the
+mode remains off by default and has not had a complete mutation-detection A/B.
+That experiment must wait for a suitable fixed multi-bit-vector benchmark and
+frozen mutant set; none is currently available. A wider state set may deserve
+the question again once that controlled comparison is possible.
 
 ## 5. Environment facts worth not rediscovering
 
@@ -703,9 +705,13 @@ Also recorded per round now: `minimiser` (before/after/secs) and `msa`
 ### 5c. Supplying invariants to a stuck proof
 
 The natural use of this tool beyond mutation scores: when a design will not
-verify, generate proved lemmas and add them. It works, with one hard
-precondition — **`--unbounded`**, which switches both the block check and the
-final check to k-induction (`Options.cpp:538`, `AssertionWriter.cpp:75`).
+verify, generate proved lemmas and add them. The measurements below originally
+required **`--unbounded`**, which switched both the block check and final check
+to k-induction. As of 2026-08-09 the final output gate uses k-induction by
+default; block checks remain bounded for mining speed, and `--unbounded`
+additionally switches those block checks to k-induction. Use
+`--no-final-unbounded` only when reproducing the historical bounded-final
+tables.
 
 The verdict mapping is conservative: only EBMC exit 0 counts as verified, so an
 inconclusive k-induction is dropped, never promoted.
@@ -900,8 +906,13 @@ What is left is all optional — nothing here blocks the 1.0:
 2. **The shipped default is not the config that was benchmarked.** The 88-run
    used `Block_minimizer: true`; we ship `false` on the strength of one c880
    A/B (§4.3). 22 designs would settle it.
-3. **k-induction retention on large designs** (§5c). Two small sequential
-   circuits gave 100%; that does not generalise, and the invariant-supplier
-   use depends on it.
+3. **k-induction retention on large designs** (§5c). The final output gate now
+   defaults to k-induction. Two small sequential circuits gave 100%; that does
+   not generalise, so the cost and retention of the new default still need the
+   controlled large-design run.
 4. **c1355/c880/c499 residual slowdown** (§4.4). Analytical curiosity — the MSA
    always runs, so "the pipeline without the MSA" is not a real configuration.
+5. **BitVec predicate A/B.** `--bv-predicates unsigned` is implemented and
+   defaults to `off`, but there is no suitable fixed multi-bit-vector benchmark
+   with a frozen mutant set yet. Select and pin one before claiming a mutation-
+   detection or runtime effect.

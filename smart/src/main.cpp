@@ -32,10 +32,13 @@ namespace fs = std::filesystem;
 // which is what the ReadMe promises. An explicit PATH still wins: these are
 // appended, never prepended.
 void addBundledToolsToPath(const std::string& self) {
-    const auto root = fs::path(self).parent_path().parent_path();
+    const auto executableDir = fs::path(self).parent_path();
+    const auto root = executableDir.parent_path();
     // Order matters: oss-cad-suite bundles its own, older cvc5, and ours has
     // to be found first — the solver version decides what gets synthesised.
     const std::vector<fs::path> candidates = {
+        // Release archives put smart and ebmc next to each other in bin/.
+        executableDir,
         root / "third_party/hw-cbmc/src/ebmc",
         root / "otherTools/cvc5/bin",
         root / "otherTools/oss-cad-suite/bin",
@@ -94,6 +97,7 @@ int main(int argc, char* argv[]) {
     Options options;
     try {
         options.parseCommandLine(argc, argv);
+        options.validate();
     } catch (const std::exception& e) {
         std::cerr << "smart: " << e.what() << "\n\n" << Options::usage();
         return static_cast<int>(ExitCode::UserError);
@@ -142,8 +146,14 @@ int main(int argc, char* argv[]) {
     }
 
     if (code == ExitCode::Success) {
-        std::cout << summary.verifiedAssertions << " verified assertion"
-                  << (summary.verifiedAssertions == 1 ? "" : "s") << " of "
+        std::cout << summary.verifiedAssertions << " ";
+        if (!summary.finalChecked)
+            std::cout << "unchecked candidate assertion";
+        else if (summary.finalUnbounded)
+            std::cout << "k-induction-proved invariant";
+        else
+            std::cout << "bounded-verified assertion";
+        std::cout << (summary.verifiedAssertions == 1 ? "" : "s") << " of "
                   << summary.minedAssertions << " mined in " << summary.rounds
                   << " round" << (summary.rounds == 1 ? "" : "s") << ", "
                   << static_cast<int>(summary.seconds) << "s -> "

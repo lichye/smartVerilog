@@ -1,6 +1,6 @@
-// Harness: generate a Verilog testbench for a design and run it under
-// Icarus Verilog to produce VCD traces (WP3). Replaces the cocotb + Verilator
-// flow; see docs/PLAN-cpp-single-binary.md WP3 for why iverilog.
+// Harness: generate VCD traces with Verilator by default, with Icarus Verilog
+// available as an optional backend (WP3). This is the native C++ replacement
+// for the old cocotb-driven flow; see docs/PLAN-cpp-single-binary.md WP3.
 //
 // Stimulus semantics are a port of gen_bench.render_sim_py — the frozen
 // behavioural spec — not of its code: seed the RNG, draw each `(* anyconst *)`
@@ -180,9 +180,10 @@ struct MissingToolError : std::runtime_error {
     std::string tool;
 };
 
-// Write the testbench next to `designFiles`, compile with iverilog, and run
-// `options.traces` simulations into `<outputDir>/sim<i>.vcd`.
-// `workDir` holds the generated tb.sv and the compiled simulation.
+// Compile and run `options.traces` simulations into
+// `<outputDir>/sim<i>.vcd`. Verilator is the default and uses the generated
+// C++ harness; Simulator::Icarus instead compiles tb.sv with iverilog/vvp.
+// `workDir` holds the generated harness and compiled simulation.
 // Throws MissingToolError when a tool is absent, std::runtime_error with the
 // tool output when one runs and fails.
 SimResult runSimulations(const frontend::ModuleInfo& info,

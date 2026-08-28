@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""WP2 acceptance harness: byte-parity between gen_bench.py (the frozen
-behavioral spec) and the C++ frontend (frontend_dump).
+"""Development harness: parity between the legacy parser oracle and the C++
+frontend (frontend_dump).
 
 Usage:
     python3 tools/parity_frontend.py [path/to/frontend_dump]
 
-Builds frontend_dump if no path is given (requires g++). Compares, for every
-design in Benchmark/ and artifact/CaseStudy/Input/:
+Builds frontend_dump if no path is given (requires g++). Compares every
+benchmark fixture that carries a frozen ``sim.py`` oracle:
   1. the canonical frontend JSON (ports/params/free regs/assume flag/guesses)
   2. the assume-stripped source, for files that contain assume statements
 Exits 1 on the first mismatch, printing a unified diff.
@@ -55,7 +55,7 @@ def build_dump():
 
 def collect_designs():
     designs = []
-    for pattern in ["Benchmark/**/sim.py", "artifact/CaseStudy/Input/*/sim.py"]:
+    for pattern in ["Benchmark/**/sim.py"]:
         for sim in glob.glob(os.path.join(ROOT, pattern), recursive=True):
             d = os.path.dirname(sim)
             top = os.path.basename(d)

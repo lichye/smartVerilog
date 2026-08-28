@@ -1,60 +1,40 @@
-ENGINE ?= docker
-IMAGE ?= smartverilog-local
-PULL_IMAGE ?= magna2024/smart
-DOCKERFILE ?= Docker/Dockerfile
-CONTAINER_NAME ?= smart-dev
-PROJECT_ROOT := $(shell pwd)
-RESULTS_DIR := $(PROJECT_ROOT)/Results
-CONFIG_DIR := $(PROJECT_ROOT)/Config
+CMAKE ?= cmake
+BUILD_DIR ?= build
+JOBS ?= $(shell nproc)
+BENCH ?= c17
 CONFIG ?= Config/smart.json
 
-.PHONY: docker-builder pull shell shell-root run clean clean-results
+.PHONY: build test check-env run smoke clean distclean clean-results
 
-docker-builder:
-	@$(ENGINE) build \
-		-f $(DOCKERFILE) \
-		-t $(IMAGE) \
-		$(PROJECT_ROOT)
+build:
+	$(CMAKE) -S . -B $(BUILD_DIR)
+	$(CMAKE) --build $(BUILD_DIR) -j$(JOBS)
 
-pull:
-	@$(ENGINE) pull $(PULL_IMAGE)
+test: build
+	ctest --test-dir $(BUILD_DIR) --output-on-failure
 
-shell:
-	@mkdir -p $(RESULTS_DIR)
-	@$(ENGINE) run --rm -it \
-		--name $(CONTAINER_NAME) \
-		-w /workspace/smartVerilog \
-		-v $(RESULTS_DIR):/workspace/smartVerilog/Results:Z \
-		-v $(CONFIG_DIR):/workspace/smartVerilog/Config:ro,Z \
-		$(IMAGE) /bin/bash
+check-env: build
+	./$(BUILD_DIR)/smart --check-env
 
-shell-root:
-	@mkdir -p $(RESULTS_DIR)
-	@$(ENGINE) run --rm -it \
-		--user root \
-		--name $(CONTAINER_NAME) \
-		-w /workspace/smartVerilog \
-		-v $(RESULTS_DIR):/workspace/smartVerilog/Results:Z \
-		-v $(CONFIG_DIR):/workspace/smartVerilog/Config:ro,Z \
-		$(IMAGE) /bin/bash
+run: build
+	python3 run.py $(BENCH) --config $(CONFIG)
 
-run:
-	@mkdir -p $(RESULTS_DIR)
-	@$(ENGINE) run --rm -it \
-		-w /workspace/smartVerilog \
-		-v $(RESULTS_DIR):/workspace/smartVerilog/Results:Z \
-		-v $(CONFIG_DIR):/workspace/smartVerilog/Config:ro,Z \
-		$(IMAGE) python run.py $(BENCH) $(CONFIG)
+smoke: build
+	tools/smoke.sh $(JOBS)
 
+# Only generated files are removed. Research data, fixed mutants, and locally
+# installed tools deliberately remain outside this target.
 clean:
-	@rm -rf smart/*.txt
-	@rm -rf smart/*.sby
-	@rm -rf smart/*task
-	@rm -rf smart/*.log
-	@rm -rf smart/*.sl
-	@rm -rf smart/result/*
-	@rm -rf smart/src/python/__pycache__
-	@$(MAKE) -C smart all_clean
+	@if [ -f "$(BUILD_DIR)/CMakeCache.txt" ]; then \
+		$(CMAKE) --build "$(BUILD_DIR)" --target clean; \
+	fi
+	@rm -rf __pycache__ .pytest_cache smart-work-* \
+		tools/__pycache__ tools/.pytest_cache \
+		tools/experiments/__pycache__ tools/experiments/.pytest_cache
 
+distclean: clean
+	@rm -rf $(BUILD_DIR) dist smoke-out
+
+# Deliberately separate: experiment results are evidence, not build output.
 clean-results:
-	@rm -rf $(RESULTS_DIR)
+	@rm -rf Results

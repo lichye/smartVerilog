@@ -14,10 +14,11 @@ State::~State(){
     for(auto value : values){
         delete value;
     }
+    delete signals;
     printDebug("State Destructor called",10);
 }
 
-State::State(bool reachable){
+State::State(bool reachable) : State(){
     this->reachable = reachable;
 }
 
@@ -25,16 +26,17 @@ std::string State::toString(){
     std::string str = "";
     assert(signals->size() == values.size());
 
-    for(int i=0;i<signals->size();i++){
+    for(std::size_t i=0;i<signals->size();i++){
         str += (*signals)[i].name + " : " + values[i]->toString() + "\n";
     }
     return str;
 }
 
 std::string State::toVerilogExpr(){
+    if (signals->empty()) return "()";
     std::string str ="(";
     assert(signals->size() == values.size());
-    for(int i=0;i<signals->size()-1;i++){
+    for(std::size_t i=0;i+1<signals->size();i++){
         str += (*signals)[i].name + "==" + values[i]->toVerilogString() + " && ";
     }
     str += (*signals)[signals->size()-1].name + "==" + values[signals->size()-1]->toVerilogString();
@@ -52,13 +54,13 @@ void State::addValue(Value* value){
 
 
 void State::addValue(Signal signal, Value* value){
-    Value* newValue = value->clone();
     if(signalAllExist){
         printDebug("Signal already exists",1);
         exit(1);
     }
 
     signals->push_back(signal);
+    // This overload is used while constructing a trace and takes ownership.
     values.push_back(value);
 }
 

@@ -2,11 +2,11 @@
 """Experiment driver for the SMART benchmarks.
 
 The tool itself is the `smart` binary; this script is the experiment layer
-around it — pick a benchmark, pick a config, run it, file the results under
-Results/. It used to orchestrate the pipeline (setup.py -> smart.py ->
-checker.py); all of that now lives in the binary.
+around it — pick a benchmark, optionally pick a config, run it, and file the
+results under Results/. It used to orchestrate the pipeline (setup.py ->
+smart.py -> checker.py); all of that now lives in the binary.
 
-    python3 run.py c17                       # default config
+    python3 run.py c17                       # smart's built-in defaults
     python3 run.py c17 --config Config/block_msa.json
     python3 run.py --list-benchmarks
     python3 run.py --check-env
@@ -22,7 +22,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-BENCH_DIRS = ["Benchmark", "MutationBenchmark", "CaseStudy", "artifact/CaseStudy/Input"]
+# `Benchmark/` is the small, versioned corpus shipped with SMART.  The fixed
+# mutation suite is deliberately a separate checkout so its generated mutants
+# and experiment output never become part of the tool repository.
+BENCH_DIRS = ["Benchmark", "MutationBenchmark"]
 
 
 def smart_binary():
@@ -46,7 +49,8 @@ def load_env(script):
         script_path = ROOT / script_path
     if not script_path.exists():
         return
-    out = subprocess.run(["bash", "-c", f"source {script_path} && env -0"],
+    out = subprocess.run(["bash", "-c", 'source "$1" && env -0',
+                          "load-env", str(script_path)],
                          stdout=subprocess.PIPE, text=True).stdout
     for entry in out.split("\0"):
         key, sep, value = entry.partition("=")
@@ -132,17 +136,20 @@ def run_experiment(target, config, keep_work, extra_args):
               f"benchmark directory)", file=sys.stderr)
         sys.exit(1)
 
-    config_path = Path(config)
-    if not config_path.is_absolute():
-        config_path = ROOT / config_path
-    if not config_path.exists():
-        print(f"error: config not found: {config_path}", file=sys.stderr)
-        sys.exit(1)
+    config_path = None
+    if config is not None:
+        config_path = Path(config)
+        if not config_path.is_absolute():
+            config_path = ROOT / config_path
+        if not config_path.exists():
+            print(f"error: config not found: {config_path}", file=sys.stderr)
+            sys.exit(1)
 
     setup_env()
     binary = smart_binary()
 
-    result_name = f"{config_path.stem}_{target}"
+    config_name = config_path.stem if config_path is not None else "default"
+    result_name = f"{config_name}_{target}"
     result_dir = ROOT / "Results" / result_name
     if result_dir.exists():
         previous = result_dir.with_name(result_name + ".prev")
@@ -161,14 +168,19 @@ def run_experiment(target, config, keep_work, extra_args):
         print(f"Using the fixed mutants in {mutants.relative_to(ROOT)}")
 
     work_dir = result_dir / "work"
-    command = [str(binary), str(rtl),
-               "--top", target,
-               "--config", str(config_path),
-               "--workdir", str(work_dir),
-               "--output", str(result_dir / f"{target}_assertion.sv"),
-               "--keep-work"] + extra_args
+    command = [str(binary), str(rtl), "--top", target]
+    if config_path is not None:
+        command.extend(["--config", str(config_path)])
+    command.extend([
+        "--workdir", str(work_dir),
+        "--output", str(result_dir / f"{target}_assertion.sv"),
+        "--keep-work",
+    ])
+    command.extend(extra_args)
 
-    print(f"=== {target} with {config_path.name} ===")
+    config_description = (config_path.name if config_path is not None
+                          else "smart built-in defaults")
+    print(f"=== {target} with {config_description} ===")
     print("$ " + " ".join(command))
     completed = subprocess.run(command)
 
@@ -193,8 +205,9 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Unrecognised arguments are passed straight through to `smart`.")
     parser.add_argument("benchmark", nargs="?", help="benchmark name, e.g. c17")
-    parser.add_argument("--config", default="Config/smart.json",
-                        help="experiment config (default: Config/smart.json)")
+    parser.add_argument(
+        "--config",
+        help="experiment config (omit to use smart's built-in defaults)")
     parser.add_argument("--keep-work", action="store_true",
                         help="keep the run's working directory under Results/")
     parser.add_argument("--list-benchmarks", action="store_true")

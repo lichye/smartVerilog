@@ -17,7 +17,7 @@
 #include "VCDFile.hpp"
 
 #define YY_DECL \
-    VCDParser::parser::symbol_type yylex (VCDFileParser & driver)
+    VCDParser::parser::symbol_type yylex (VCDFileParser & /*driver*/)
 
 YY_DECL;
 
@@ -77,4 +77,3 @@ class VCDFileParser {
 };
 
 #endif
-

@@ -46,7 +46,7 @@ State* StateMaker::fixUpState(std::vector<Value*> values){
     assert(values.size() == signals->size());
     State* ret_state = new State();
     ret_state->setSignals(signals);
-    for(int i = 0; i < values.size(); i++){
+    for(std::size_t i = 0; i < values.size(); i++){
         if(values[i]->isUndefined()){
             Value *value = Value::makeRandomValue((*signals)[i].type,(*signals)[i].lindex - (*signals)[i].rindex + 1);
             ret_state->addValue(value);
@@ -63,15 +63,19 @@ State* StateMaker::fixUpState(State* state,std::vector<Value*> values){
     assert(values.size() == signals->size());
     State* ret_state = new State();
     ret_state->setSignals(signals);
-    for(int i = 0; i < values.size(); i++){
+    std::vector<Value*> previousValues = state->getValues();
+    for(std::size_t i = 0; i < values.size(); i++){
         if(values[i]->isUndefined()){
-            Value* nowValue = state->getValues()[i];
-            Value *newValue = Value::makeNewValue(nowValue,(*signals)[i].type,(*signals)[i].lindex - (*signals)[i].rindex + 1);
+            Value *newValue = Value::makeNewValue(
+                previousValues[i],(*signals)[i].type,
+                (*signals)[i].lindex - (*signals)[i].rindex + 1);
             ret_state->addValue(newValue);
+            delete newValue;
         }
         else{
             ret_state->addValue(values[i]);
         }
     }
+    for (Value* value : previousValues) delete value;
     return ret_state;
 }

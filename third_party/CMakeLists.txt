@@ -50,7 +50,9 @@ add_custom_target(hw-cbmc DEPENDS ${HWCBMC_LIBS} ${HWCBMC_EBMC})
 
 # What consumers link against.
 add_library(hwcbmc_frontend INTERFACE)
-target_include_directories(hwcbmc_frontend INTERFACE
+# These are external headers from pinned hw-cbmc/CBMC. Treat them as system
+# includes so project warning policies do not fail on upstream diagnostics.
+target_include_directories(hwcbmc_frontend SYSTEM INTERFACE
     ${HWCBMC_DIR}/src
     ${HWCBMC_CBMC_DIR}/src)
 # Mandatory: without this our irep ids disagree with the libraries'.

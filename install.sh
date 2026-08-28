@@ -7,7 +7,7 @@
 #
 # What gets installed:
 #   third_party/hw-cbmc   EBMC (verification) + the Verilog frontend we link
-#   otherTools/oss-cad-suite  iverilog + vvp (simulation)
+#   otherTools/oss-cad-suite  Verilator (default) + optional iverilog/vvp
 #   otherTools/cvc5       libcvc5 (SyGuS + MSA/MUS), headers and static libs
 set -euo pipefail
 
@@ -60,9 +60,19 @@ if [ "$missing" = 1 ] && [ "$check_only" = 0 ]; then
 fi
 
 if [ "$check_only" = 1 ]; then
-    for d in third_party/hw-cbmc/src/ebmc/ebmc otherTools/oss-cad-suite/bin/iverilog \
-             otherTools/cvc5/include/cvc5/cvc5.h; do
-        [ -e "$d" ] && echo "[ok]      $d" || { echo "[MISSING] $d"; missing=1; }
+    for d in third_party/hw-cbmc/src/ebmc/ebmc \
+             otherTools/oss-cad-suite/bin/verilator; do
+        [ -x "$d" ] && echo "[ok]      $d" || { echo "[MISSING] $d"; missing=1; }
+    done
+    d=otherTools/cvc5/include/cvc5/cvc5.h
+    [ -e "$d" ] && echo "[ok]      $d" || { echo "[MISSING] $d"; missing=1; }
+    for d in otherTools/oss-cad-suite/bin/iverilog \
+             otherTools/oss-cad-suite/bin/vvp; do
+        if [ -x "$d" ]; then
+            echo "[ok]      $d (optional Icarus backend)"
+        else
+            echo "[optional] $d — only needed for --simulator iverilog"
+        fi
     done
     exit $missing
 fi
@@ -73,9 +83,9 @@ git submodule update --init --recursive
 ./third_party/build-hw-cbmc.sh "$jobs"
 
 echo
-echo "== iverilog (simulation) =="
+echo "== simulators (Verilator default, Icarus optional) =="
 mkdir -p otherTools
-if [ ! -x otherTools/oss-cad-suite/bin/iverilog ]; then
+if [ ! -x otherTools/oss-cad-suite/bin/verilator ]; then
     stamp="$(printf '%s' "$OSS_CAD_SUITE_DATE" | tr -d '-')"
     tarball="oss-cad-suite-linux-x64-${stamp}.tgz"
     (cd otherTools && \

@@ -250,11 +250,15 @@ int SygusOperator::getOperandsNumber()
     }
 }
 
+SygusOperatorType SygusOperator::getType() const
+{
+    return op;
+}
+
 //SygusComplexExpr 
 SygusComplexExpr::SygusComplexExpr(SygusOperator* op)
 {
     this->op = op;
-    this->operands = operands;
 }
 
 SygusComplexExpr::~SygusComplexExpr()
@@ -274,7 +278,6 @@ std::string SygusComplexExpr::toString()
 {
     std::string result = "(";
     
-    int index = 0;
     if(operands.size() == 0){
         return "Empty Complex Expression";
     }
@@ -283,7 +286,18 @@ std::string SygusComplexExpr::toString()
             result += op->toString() + " " + operands[0]->toString();
         }
         else if(op->getOperandsNumber() == 2){
-            result += operands[0]->toString() + " " + op->toString() + " " + operands[1]->toString();
+            const SygusOperatorType type = op->getType();
+            const bool unsignedComparison =
+                type == BVULT || type == BVULE || type == BVUGT || type == BVGUE;
+            if(unsignedComparison){
+                result += "$unsigned(" + operands[0]->toString() + ") " +
+                          op->toString() + " $unsigned(" +
+                          operands[1]->toString() + ")";
+            }
+            else{
+                result += operands[0]->toString() + " " + op->toString() + " " +
+                          operands[1]->toString();
+            }
         }
         else{
             throw std::invalid_argument("Unknown operator type: " + std::to_string(op->getOperandsNumber()));
@@ -352,7 +366,7 @@ std::string SygusVariableList::toString()
 {   
     std::string result;
     assert(variables.size()==types.size());
-    for(int i=0;i<variables.size();i++){
+    for(std::size_t i=0;i<variables.size();i++){
         result += "(" + variables[i]->toString() + " " + types[i]->toString() + ")";
     }
     return result;

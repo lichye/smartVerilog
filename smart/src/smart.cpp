@@ -93,9 +93,14 @@ int runSmartBlock(int argc, char* argv[]){
   smart::pipeline::Options options;
   try{
     options.mergeJsonFile(configPath);
+    options.validate();
   }
   catch(const std::exception& e){
     print(std::string("Error: ")+e.what());
+    return -1;
+  }
+  if(options.getString("assumption_mining") != "off"){
+    print("Error: assumption_mining=suggest is reserved; the backend is not implemented yet");
     return -1;
   }
   // A block's output goes to its own log file, so the old default verbosity
@@ -144,6 +149,7 @@ int runSmartBlock(int argc, char* argv[]){
   sygus->setSygusTimeoutMs(static_cast<int>(options.getInt("sygus_timeout_ms")));
   sygus->setUseSubprocess(options.getBool("sygus_subprocess"));
   sygus->setKeepTempFiles(options.getBool("keep_work"));
+  sygus->setBvPredicateMode(options.getString("bv_predicates"));
   checker = new VerilogChecker(verilogSrcPath,currentDir,BackEndSolver::EBMC);
   timer = new Timer();  
 
@@ -180,6 +186,7 @@ int runSmartBlock(int argc, char* argv[]){
   for(int i=0;i<negativeStateNumber;i++){
     State* negativeState = createNegativeState();
     sygus->addConstraints(negativeState,false);
+    delete negativeState;
   }
 
   if(latency == 0){
@@ -217,7 +224,8 @@ int runSmartBlock(int argc, char* argv[]){
     else{
       sygus->printSysgusPath(sygusPath);
     }
-    sygusfunc = parseSygusFunction(sygusPath, sygus,isLTL);    
+    delete sygusfunc;
+    sygusfunc = parseSygusFunction(sygusPath, sygus,isLTL);
     print("\tGet assertion:" + sygusfunc->getBodyVerilogExpr());
 
     SMTVCDfilePath = generateSMTResultPath();
@@ -238,6 +246,7 @@ int runSmartBlock(int argc, char* argv[]){
 
   //append_with_lock_posix("log.txt","This loop's Result: "+std::to_string(verifiedResult)+"\n"+timer->printTime()+"\n");
   writeStringToFile("log.txt","This "+core_id+" 's Result: "+std::to_string(verifiedResult)+"\n"+timer->printTime()+"\n",std::ios::out|std::ios::app);
+  delete sygusfunc;
   fs::remove_all(smt_path);
   return verifiedResult ? 0 : 1;
 }
@@ -373,6 +382,7 @@ State* createNegativeState(){
   int loopTime = 0;
   while(checker->checkStateReachability(negativeState)){
     sygus->addConstraintComments("Getting constraints from the random state",true);
+    delete negativeState;
     negativeState = stateMaker->makeRandomState();
     if(loopTime++>3){
       break;

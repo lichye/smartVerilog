@@ -10,18 +10,18 @@ binary; no Python in the pipeline.
 source load_environment.sh        # required for anything but ./build/smart
 ```
 
-Nothing this tool needs is installed system-wide. The checkout carries all of
-it — `smart`, `ebmc` (hw-cbmc submodule), `cvc5` (built from source), and
-`verilator`/`iverilog` (oss-cad-suite). The binary appends those directories to
-its own PATH at startup, so it runs without help; **everything else does not** —
-calling `ebmc` by hand, running `smart/evaluater.py`, poking at cvc5.
+Nothing this tool needs is installed system-wide. `./install.sh` creates the
+local tool directories: `smart`, `ebmc` (hw-cbmc submodule), `cvc5` (built from
+source), and `verilator`/`iverilog` (oss-cad-suite). The binary appends those
+directories to its own PATH at startup, so it runs without help; **everything
+else does not** — calling `ebmc` by hand or poking at cvc5.
 
 Order matters in one place: oss-cad-suite ships cvc5 1.0.1-dev and ours is
 1.2.0. Sourcing the script puts ours first.
 
 ```bash
 cmake -B build -S . && cmake --build build -j$(nproc)   # builds smart
-cd build && ctest                                       # 5 suites
+cd build && ctest                                       # 8 C++ + 2 Python suites (10 with Python3)
 smart --check-env                                       # what the tool sees
 ```
 
@@ -40,7 +40,10 @@ because shipped configs use them.
 shipped configs through a whole release with no code behind it, so every
 `block_msa_mini` result — ours *and* the published artifact's — was a
 byte-for-byte re-run of the plain configuration. If the behaviour is not
-implemented yet, the key waits.
+implemented yet, the key waits. The only exception is an explicitly reserved
+interface such as `assumption_mining`: its default is inert, every unsupported
+non-default value must fail before side effects, and the documentation must say
+that no backend exists. A reserved value must never be a silent no-op.
 
 **Comments carry the measurement, not the intention.** Defaults in
 `Options.cpp` cite the numbers that chose them, including which claims were
@@ -100,12 +103,16 @@ Fields that exist because of specific mistakes:
   `setup-failed`. All three failure modes used to read `no-assertion`. The
   split matters: infeasible is 44-47% of blocks and killed-on-time is 0-4%, so
   a faster solver buys almost nothing.
-- **`mode`** on the check record — `bounded` or `k-induction`. A bounded run
-  emits properties that hold to `bound` only: sound to report, **not**
-  invariants, and unsound to assume inside another proof. `invariants.txt` is
-  named the same either way and its line format is depended on by
-  `evaluater.py`, so the log is the only place that distinguishes them. Use
-  `--unbounded` when the output is meant to be assumed.
+- **`mode`** on the check record — `bounded` or `k-induction`. The final gate
+  defaults to k-induction, while block checks stay bounded for mining speed.
+  `--no-final-unbounded` is an explicit compatibility escape hatch; its output
+  holds only to `bound`, is **not** an invariant, and is unsound to assume in
+  another proof. `--unbounded` additionally enables k-induction inside blocks.
+- **`assumption_mining`** is a reserved interface, default `off`. `suggest` is
+  accepted by config parsing and `--dump-config` but deliberately fails before
+  frontend/workdir/simulation because no evidence model or synthesis method is
+  chosen yet. Never turn it into a silent no-op or infer environment promises
+  from DUT-only random traces.
 
 ## Where the documentation is
 
@@ -113,8 +120,8 @@ Fields that exist because of specific mistakes:
 |---|---|
 | `docs/FINDINGS.md` | defects, dead ends *with their numbers*, environment facts. Read §3 before repeating an experiment. |
 | `docs/CHANGES-1.0.md` | work record: what was built, measured, and overturned |
-| `docs/PLAN-cpp-single-binary*.md` | the rewrite plan and its tracker (complete) |
-| `ARTIFACT.md`, `artifact/` | frozen for the published artifact — deliberately still describes the container flow |
+| `docs/PLAN-bv-predicates.md` | current BitVec-predicate experiment plan and its evidence boundary |
+| published artifact | maintained separately from this source repository; do not add local artifact data to Git |
 
 ## Mining the top of a hierarchical design
 
@@ -173,12 +180,15 @@ has no scope by that name and the run stops with "no candidate variables".
 ## Live gotchas
 
 - **hw-cbmc drops a single `(* anyseq *)`** — `attr_spec_list` discards `$1`.
-  Patched at build time from `third_party/patches/`. Upstream is out of scope by
-  decision, so the submodule working tree is *expected* to show as modified.
-  Do not commit it.
+  It is patched only while building from `third_party/patches/`, then restored;
+  a normal installation leaves the submodule clean. Do not commit a manually
+  applied copy of this local compatibility patch.
 - **`--trace-policy fuzz`** exists and is off by default; it reached more states
   and did not improve detection. Kept because the measurement rules on the
-  current boolean grammar, not on a richer one.
-- **`SyGuSGenerater.cpp` has a marked TODO** (`//wait for add bv compare
-  grammar`). Nearly half of all blocks fail as infeasible and a counter bound
-  like `count <= limit` is not expressible today. That is where the blocks are.
+  historical/default-off Boolean grammar, not on a richer one.
+- **BitVec predicates are implemented but still experimental.**
+  `--bv-predicates unsigned` enables same-width raw-signal equality, `bvult`,
+  and `bvule`; the default `off` preserves the historical grammar. There is not
+  yet a suitable fixed multi-bit-vector benchmark and frozen mutant set for the
+  complete A/B, so do not enable it by default or infer value from assertion
+  yield alone.

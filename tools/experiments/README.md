@@ -14,6 +14,71 @@ depends on being containerised.
 | `runpol.sh` | §4.6, the 2 x 22 stimulus-policy study |
 | `check_oracle.py [log]` | §4.5, the end-minimiser soundness oracle |
 | `policy_table.py [log]` | §4.6, the policy comparison table |
+| `bv_ab.py prepare/run/summarise` | controlled `off` vs `unsigned` BitVec-predicate Stage A/B |
+
+## Controlled BitVec-predicate A/B
+
+**Status:** the implementation and bookkeeping are complete, but the named
+Stage A/B selections are not a valid value experiment yet. The current fixed
+suite is overwhelmingly scalar, and no suitable fixed multi-bit-vector
+benchmark plus frozen mutant set has been selected. Use the commands below only
+for plumbing checks until that prerequisite in `docs/PLAN-bv-predicates.md` is
+closed; do not report their output as a BitVec effectiveness result.
+
+`bv_ab.py` implements the preparation and bookkeeping protocol from
+`docs/PLAN-bv-predicates.md`. Preparation validates that every design already
+has a non-empty fixed mutant set, hashes those files, the main/sibling RTL, the
+frozen config, and the SMART binary, records the Git state, tool versions, host
+and cell load average, and writes the exact mining commands. It does **not** run
+SMART:
+
+```bash
+python3 tools/experiments/bv_ab.py prepare --stage A \
+  --config Config/block_msa.json --seed 42 --output /work/bv-stage-a
+```
+
+Review `/work/bv-stage-a/manifest.json` and `mine-commands.sh`, arrange an
+otherwise idle machine, then explicitly execute the manifest:
+
+```bash
+python3 tools/experiments/bv_ab.py run /work/bv-stage-a/manifest.json
+python3 tools/experiments/bv_ab.py summarise /work/bv-stage-a/manifest.json
+```
+
+Cells run serially in `off`, `unsigned` order with the same frozen config and
+seed. `run` rechecks all hashes before starting. Evaluation copies the fixed
+`MutationBenchmark/<design>/benchmarks` tree into an isolated cell, verifies
+the copy's hash, and deliberately does not copy `mutation.py`; an absent or
+changed mutant set is therefore a hard error, never a fresh generation.
+
+The current Stage B selector names the same 22 scalar-heavy designs as the
+earlier studies (`--stage B`); it is retained for plumbing regression, not as
+the eventual vector benchmark suite. Use repeatable `--design NAME` during
+plumbing checks without changing the named Stage A/B manifests. Results include
+`summary.csv` and `summary.json` with MD,
+block reasons, candidate blocks, final-check failures, timer-reported CVC5-call
+time, block wall time, and final assertions whose associated SMT definition
+actually contains a raw BitVec comparison. CVC5-call time is diagnostic and is
+not presented as full SyGuS-stage time. Run-log records are grouped by `run`
+before any timing is read; required fields or effective mode mismatches fail
+loudly.
+
+The primary `md_fixed_percent` is always `detected / fixed_mutants`, including
+timed-out mutants in the denominator. The evaluator's historical
+timeout-excluding percentage is retained only as
+`evaluator_non_timeout_md_percent`. A non-zero evaluator exit, evaluator
+timeout, tool error, or denominator mismatch marks the cell invalid; invalid
+cells stay visible with reasons but cannot contribute a pair, delta, or A/B
+aggregate. For Stage A, a complete valid run also enforces the planned 2x
+timing gate using the median of the per-design `unsigned/off` median block-wall
+ratios; a failed gate makes `run`/`summarise` exit non-zero.
+
+The bookkeeping plumbing has a self-contained test that creates synthetic
+logs in a temporary directory and invokes no external tools:
+
+```bash
+python3 -B tools/experiments/test_bv_ab.py
+```
 
 ## Two things they get right that are easy to get wrong
 

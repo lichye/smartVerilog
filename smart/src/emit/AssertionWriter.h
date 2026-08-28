@@ -29,7 +29,7 @@ struct CheckOptions {
     // live in. Empty means topModule.
     std::string injectModule;
     int bound = 10;
-    bool unbounded = false;   // --k-induction instead of a bound
+    bool unbounded = true;    // final output is an invariant by default
     int timeoutSeconds = 180;
     int jobs = 1;
     std::string scratchDir;   // where the per-assertion copies are written
@@ -37,6 +37,11 @@ struct CheckOptions {
 };
 
 enum class CheckStatus { Verified, Refuted, TimedOut, Error };
+
+// What guarantee the emitted assertions carry. Keeping this explicit prevents
+// an experiment run with the final checker disabled from labelling candidates
+// as proved invariants in the generated file.
+enum class VerificationMode { KInduction, Bounded, Unchecked };
 
 struct CheckResult {
     std::string assertion;
@@ -70,7 +75,8 @@ std::vector<CheckResult> checkAssertions(const std::string& designFile,
 void writeAssertionFile(const std::string& designFile, const std::string& output,
                         const std::string& top,
                         const std::vector<std::string>& assertions,
-                        const std::string& configJson);
+                        const std::string& configJson,
+                        VerificationMode verification, int bound);
 
 }  // namespace emit
 }  // namespace smart

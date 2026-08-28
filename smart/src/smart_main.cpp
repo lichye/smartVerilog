@@ -2,7 +2,7 @@
 // The pipeline does not use it — it re-execs itself with `--block` — but a
 // block is much easier to run by hand this way.
 //
-//   smart.out <workdir> <top> <result_file> <variables_file> <core_id> \
+//   smart.out <workdir> <top> <result_file> <variables_file> <core_id>
 //             <latency> <config.json>
 //
 // Must be run with the working directory set to <workdir>.

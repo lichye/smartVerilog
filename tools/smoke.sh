@@ -21,12 +21,11 @@ ebmc="$here/third_party/hw-cbmc/src/ebmc/ebmc"
 export PATH="$here/third_party/hw-cbmc/src/ebmc:$here/otherTools/cvc5/bin:$here/otherTools/oss-cad-suite/bin:$PATH"
 
 designs=(
-    "Benchmark/user/tiny_and tiny_and"
-    "Benchmark/fmcad2025/c17 c17"
-    "Benchmark/fmcad2025/s27 s27"
-    "Benchmark/fmcad2025/arb2 arb2"
-    "Benchmark/HWSpec/axis_fifo axis_fifo"
-    "artifact/CaseStudy/Input/nru_a nru_a"
+    "required Benchmark/user/tiny_and tiny_and"
+    "required Benchmark/fmcad2025/c17 c17"
+    "required Benchmark/fmcad2025/s27 s27"
+    "required Benchmark/fmcad2025/arb2 arb2"
+    "required Benchmark/HWSpec/axis_fifo axis_fifo"
 )
 
 rm -rf "$work"
@@ -36,12 +35,27 @@ failures=0
 printf '%-12s %-8s %10s %8s %s\n' DESIGN MODE ASSERTIONS TIME EBMC
 for entry in "${designs[@]}"; do
     set -- $entry
-    src="$1"; top="$2"
-    [ -f "$here/$src/$top.sv" ] || { printf '%-12s %-8s %10s\n' "$top" "-" "no source"; continue; }
+    kind="$1"; src="$2"; top="$3"
+    if [ ! -f "$here/$src/$top.sv" ]; then
+        if [ "$kind" = required ]; then
+            printf '%-12s %-8s %10s %8s %s\n' \
+                "$top" "-" "-" "-" "MISSING-REQUIRED"
+            failures=$((failures + 1))
+        else
+            printf '%-12s %-8s %10s %8s %s\n' \
+                "$top" "-" "-" "-" "SKIP (optional source missing)"
+        fi
+        continue
+    fi
 
     for mode in plain msa; do
-        flags=""
-        [ "$mode" = msa ] && flags="--msa"
+        if [ "$mode" = plain ]; then
+            flags=(--no-blockified)
+        else
+            # Spell out the product default so this A/B remains stable if the
+            # CLI defaults change: iterative blockification with MSA blocks.
+            flags=(--blockified --msa)
+        fi
 
         dir="$work/${top}_${mode}"
         mkdir -p "$dir"
@@ -49,7 +63,7 @@ for entry in "${designs[@]}"; do
 
         start=$(date +%s)
         count=$(cd "$dir" && timeout 3600 "$smart" "$top.sv" --jobs "$jobs" \
-                    --core-timeout 60 $flags -q 2>"$dir/stderr.log" \
+                    --core-timeout 60 "${flags[@]}" -q 2>"$dir/stderr.log" \
                     | grep -oE '^[0-9]+' | head -1)
         status=$?
         elapsed=$(( $(date +%s) - start ))
@@ -60,7 +74,7 @@ for entry in "${designs[@]}"; do
             verdict="RUN-FAIL"
             failures=$((failures + 1))
         elif [ -f "$dir/${top}_assertion.sv" ]; then
-            if "$ebmc" "$dir/${top}_assertion.sv" -D FORMAL --bound 10 --top "$top" \
+            if "$ebmc" "$dir/${top}_assertion.sv" -D FORMAL --k-induction --top "$top" \
                  >/dev/null 2>&1; then
                 verdict="PASS"
             else

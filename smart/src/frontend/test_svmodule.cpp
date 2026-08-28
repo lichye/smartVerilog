@@ -57,9 +57,10 @@ static void test_non_ansi() {
 static void test_params_clock_reset() {
     auto info = parseModule(read("Benchmark/HWSpec/axis_fifo/axis_fifo.sv"),
                             "axis_fifo");
+    const auto inputs = info.inputs();
     const Port* tdata = nullptr;
     bool hasClk = false, hasRst = false;
-    for (const auto& p : info.inputs()) {
+    for (const auto& p : inputs) {
         if (p.name == "clk") hasClk = true;
         if (p.name == "rst") hasRst = true;
         if (p.name == "s_axis_tdata") tdata = &p;
@@ -74,7 +75,12 @@ static void test_params_clock_reset() {
 }
 
 static void test_free_regs_and_assumes() {
-    std::string text = read("artifact/CaseStudy/Input/nru_a/nru_a.sv");
+    const std::string text =
+        "module nru_a(input clk);\n"
+        "  (* anyconst *) reg [3:0] attacker_hitmap;\n"
+        "  (* anyseq *) reg [3:0] hitmap1;\n"
+        "  always @(*) assume(attacker_hitmap != hitmap1);\n"
+        "endmodule\n";
     auto info = parseModule(text, "nru_a");
     std::set<std::pair<std::string, std::string>> kinds;
     for (const auto& r : info.freeRegs) kinds.insert({r.kind, r.name});

@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "Blocks.h"
+#include "VCDFileParser.hpp"
 
 namespace fs = std::filesystem;
 using smart::pipeline::candidateVariables;
@@ -122,6 +123,17 @@ void testMiningASubmoduleScope(const std::string& dir) {
           "--module still mines one scope, with bare names");
 }
 
+void testTimescale(const std::string& dir) {
+    VCDFileParser parser;
+    VCDFile* file = parser.parse_file(dir + "/sim1.vcd");
+    check(file != nullptr, "trace fixture parses directly");
+    if (file != nullptr) {
+        check(file->time_resolution == 1 && file->time_units == TIME_PS,
+              "VCD timescale keeps its declared unit");
+        delete file;
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -130,6 +142,7 @@ int main() {
     testHierarchicalNaming(dir);
     testDepthIsNotTruncated(dir);
     testMiningASubmoduleScope(dir);
+    testTimescale(dir);
     fs::remove_all(dir);
 
     if (failures != 0) {

@@ -62,7 +62,7 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
         }
         else{
             if(inputConstraints.size() == this->constraints.size()){
-                for(int i = 0;i<constraints.size();i++){
+                for(std::size_t i = 0;i<constraints.size();i++){
                     this->constraints[i].insert(this->constraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
                 }
             }
@@ -79,7 +79,7 @@ void SyGuSGenerater::addConstraints(std::vector<std::vector<Value*>> inputConstr
         }
         else{
             if(inputConstraints.size() == this->falseConstraints.size()){
-                for(int i = 0;i<falseConstraints.size();i++){
+                for(std::size_t i = 0;i<falseConstraints.size();i++){
                     this->falseConstraints[i].insert(this->falseConstraints[i].end(),inputConstraints[i].begin(),inputConstraints[i].end());
                 }
             }
@@ -183,7 +183,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         std::size_t repeats = 0;
         if(constraints.size() >0){
             //we believe that the constraints are the same length with the signals
-            for(int i =0;i<constraints[0].size();i++){
+            for(int i = 0; i < static_cast<int>(constraints[0].size()); i++){
                 const std::string line = createConstraint(true,i);
                 // Commented-out lines (undefined values) carry no constraint;
                 // let them through untouched so the file still documents them.
@@ -205,7 +205,7 @@ void SyGuSGenerater::printSysgusPath(std::string path)
         //print out the false constraints, only if false constraints exist
         file<<"; "<<"False Constraints below"<<std::endl;
         if(falseConstraints.size() > 0){
-            for(int i =0;i<falseConstraints[0].size();i++){
+            for(int i = 0; i < static_cast<int>(falseConstraints[0].size()); i++){
                 if(falseComments.find(i) != falseComments.end()){
                     file<<"; "<<falseComments[i]<<std::endl;
                 }
@@ -237,7 +237,8 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
             //print out  the constraints, only if constraints exist
             if(constraints.size() >0){
                 //we believe that the constraints are the same length with the signals
-                for(int i =0;i+latency<constraints[0].size();i++){
+                for(int i = 0;
+                    i + latency < static_cast<int>(constraints[0].size()); i++){
                     if(comments.find(i) != comments.end()){
                         file<<"; "<<comments[i]<<std::endl;
                     }
@@ -247,7 +248,8 @@ void SyGuSGenerater::printLTLSygusPath(std::string path,int latency)
             printDebug("True Constraints Down in file",3);
             file<<"; "<<"False Constraints below"<<std::endl;
             if(falseConstraints.size() > 0){
-                for(int i =0;i<falseConstraints[0].size();i++){
+                for(int i = 0;
+                    i < static_cast<int>(falseConstraints[0].size()); i++){
                     if(falseComments.find(i) != falseComments.end()){
                         file<<"; "<<falseComments[i]<<std::endl;
                     }
@@ -289,6 +291,20 @@ void SyGuSGenerater::debugPrint()
 void SyGuSGenerater::setSygusTimeoutMs(int ms){ sygusTimeoutMs = ms; }
 void SyGuSGenerater::setUseSubprocess(bool value){ useSubprocess = value; }
 void SyGuSGenerater::setKeepTempFiles(bool value){ keepTempFiles = value; }
+
+void SyGuSGenerater::setBvPredicateMode(const std::string& mode){
+    if(mode == "off"){
+        bvPredicateMode = BvPredicateMode::Off;
+    }
+    else if(mode == "unsigned"){
+        bvPredicateMode = BvPredicateMode::Unsigned;
+    }
+    else{
+        throw std::invalid_argument(
+            "bv_predicates must be one of: off, unsigned (got '" + mode + "')");
+    }
+    printDebug("BitVec predicate mode: " + mode, 1);
+}
 
 void SyGuSGenerater::removeTempFile(const std::string& sygusPath){
   if(keepTempFiles || !deleteTempFile)
@@ -467,6 +483,32 @@ std::string SyGuSGenerater::createFunctionGrammar(int latency)
             }
         }
     }
+    if(bvPredicateMode == BvPredicateMode::Unsigned){
+        for(const auto& typeSignals : sameTypeSignals){
+            if(typeSignals.first.first != SignalType::BITS ||
+               typeSignals.second.size() < 2)
+                continue;
+            functionGrammarDetail += createCmpBvGrammar(typeSignals.second,0);
+            functionGrammar += "(CmpBv" +
+                               std::to_string(typeSignals.first.second) +
+                               " (_ BitVec " +
+                               std::to_string(typeSignals.first.second) + "))\n";
+        }
+        if(latency > 0){
+            for(const auto& typeSignals : sameTypeSignals){
+                if(typeSignals.first.first != SignalType::BITS ||
+                   typeSignals.second.size() < 2)
+                    continue;
+                functionGrammarDetail +=
+                    createCmpBvGrammar(typeSignals.second,latency);
+                functionGrammar += "(CmpBvX" +
+                                   std::to_string(typeSignals.first.second) +
+                                   " (_ BitVec " +
+                                   std::to_string(typeSignals.first.second) +
+                                   "))\n";
+            }
+        }
+    }
     functionGrammar += ")\n";
     functionGrammar += "(\n";
     functionGrammar += functionGrammarDetail;
@@ -536,6 +578,46 @@ std::string SyGuSGenerater::createMixBvGrammar(std::vector<Signal> signals, int 
     return mixBvGrammar;
 }
 
+std::string SyGuSGenerater::createCmpBvGrammar(
+    const std::vector<Signal>& signals, int latency)
+{
+    assert(!signals.empty());
+    const int width = signals.front().lindex - signals.front().rindex + 1;
+    const std::string suffix = latency == 0 ? "" : "X";
+    const std::string startName =
+        "CmpBv" + suffix + std::to_string(width);
+    std::string grammar = "(" + startName + " (_ BitVec " +
+                          std::to_string(width) + ") \n" + "    ( \n";
+    for(auto signal : signals){
+        grammar += "\t" + signal.toSygusName();
+        if(latency > 0) grammar += "_" + std::to_string(latency);
+        grammar += "\n";
+    }
+    grammar += "\t)\n)\n";
+    return grammar;
+}
+
+std::string SyGuSGenerater::createBvPredicateProductions(int latency) const
+{
+    if(bvPredicateMode == BvPredicateMode::Off) return "";
+
+    std::string productions;
+    for(const auto& typeSignals : sameTypeSignals){
+        if(typeSignals.first.first != SignalType::BITS ||
+           typeSignals.second.size() < 2)
+            continue;
+        const std::string nonterminal =
+            "CmpBv" + std::string(latency == 0 ? "" : "X") +
+            std::to_string(typeSignals.first.second);
+        productions += "\t(= " + nonterminal + " " + nonterminal + ")\n";
+        productions +=
+            "\t(bvult " + nonterminal + " " + nonterminal + ")\n";
+        productions +=
+            "\t(bvule " + nonterminal + " " + nonterminal + ")\n";
+    }
+    return productions;
+}
+
 std::string SyGuSGenerater::createAtomGrammar(bool isLTL)
 {   
     std::string boolGra =
@@ -552,8 +634,7 @@ std::string SyGuSGenerater::createAtomGrammar(bool isLTL)
     
     //add the important checker for True return
     boolGra += createKeyGrammar(0);
-
-    //wait for add bv compare grammar
+    boolGra += createBvPredicateProductions(0);
     boolGra += std::string("\t)\n")+ std::string(")\n");
     return boolGra;
 }
@@ -571,8 +652,7 @@ std::string SyGuSGenerater::createAtomXGrammar(int latency)
 
     // //add the important checker for True return
     boolXGra += createKeyGrammar(latency);
-
-    //wait for add bv compare grammar
+    boolXGra += createBvPredicateProductions(latency);
     boolXGra += std::string("\t)\n")+ std::string(")\n");
     return boolXGra;
 }
@@ -654,7 +734,7 @@ std::string SyGuSGenerater::renderArguments(
 
 std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
 {
-    assert(index < constraints[0].size());
+    assert(index >= 0 && static_cast<std::size_t>(index) < constraints[0].size());
 
     std::vector<std::string> bound;
     const std::string arguments =
@@ -677,8 +757,9 @@ std::string SyGuSGenerater::createConstraint(bool constraintType,int index)
 std::string SyGuSGenerater::createLTLConstraint(bool constraintType,int index,int latency)
 {
     // printDebug("Creating "+std::to_string(constraintType)+" LTL Constraint at index "+std::to_string(index)+" with latency "+std::to_string(latency),3);
-    assert(index < constraints[0].size());
-    assert(index + latency < constraints[0].size());
+    assert(index >= 0 && static_cast<std::size_t>(index) < constraints[0].size());
+    assert(latency >= 0 &&
+           static_cast<std::size_t>(index + latency) < constraints[0].size());
     std::string constraintLine;
     
     printDebug("PASS assertion",3);
@@ -738,7 +819,6 @@ std::string SyGuSGenerater::createKeyGrammar(int latency)
         //add true checker for each signal
         for(auto typeSignals : sameTypeSignals){
             SignalType signalType = typeSignals.first.first;
-            int signalWidth = typeSignals.first.second;
             if(signalType == SignalType::BOOLEAN){
                 for(auto signal : typeSignals.second){
                     trueGrammar += "\t" + signal.toSygusName() + "\n";
@@ -759,7 +839,6 @@ std::string SyGuSGenerater::createKeyGrammar(int latency)
     else{
         for(auto typeSignals : sameTypeSignals){
             SignalType signalType = typeSignals.first.first;
-            int signalWidth = typeSignals.first.second;
             if(signalType == SignalType::BOOLEAN){
                 for(auto signal : typeSignals.second){
                     trueGrammar += "\t" + signal.toSygusName()+"_"+std::to_string(latency) + "\n";
@@ -803,4 +882,3 @@ bool SyGuSGenerater::checkConstraintsDefined(int index,bool trueConstrains)
     }
 
 }
-

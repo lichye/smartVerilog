@@ -19,6 +19,7 @@ class Module{
     // material, naming each signal by its instance path. Off keeps the mined
     // scope's own signals only, which is what --module relies on.
     Module(std::string, bool hierarchical = false);
+    ~Module();
     void addTrace(TraceType,std::string);
     void addTracesfromDir(TraceType,std::string);
     std::vector<Signal>* getAllSignals();

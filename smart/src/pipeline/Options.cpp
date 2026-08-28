@@ -120,7 +120,7 @@ std::vector<OptionSpec> buildTable() {
 
         // --- verification ----------------------------------------------
         {"bound", "bound", 0, T::Int, 10LL, "Checker_settings.bounded_depth", "N",
-         "EBMC bound for the final check"},
+         "EBMC bound when the final check is explicitly bounded"},
         {"block_bound", "", 0, T::Int, 10LL, "SMART_settings.bounded_depth", "N",
          "EBMC bound used inside synthesis blocks"},
         // Deciding whether a random state is REACHABLE is a different
@@ -135,9 +135,10 @@ std::vector<OptionSpec> buildTable() {
         {"reachability_bound", "reachability-bound", 0, T::Int, 10LL, "", "N",
          "EBMC bound for the reachability check; -1 uses k-induction"},
         {"unbounded", "unbounded", 0, T::Bool, false, "", "",
-         "use --k-induction instead of a bound"},
-        {"check_unbounded", "", 0, T::Bool, false,
-         "Checker_settings.Check_unbounded", "", "unbounded final check"},
+         "also use --k-induction inside synthesis blocks"},
+        {"check_unbounded", "final-unbounded", 0, T::Bool, true,
+         "Checker_settings.Check_unbounded", "",
+         "prove final output with k-induction (default)"},
         {"unbound_check", "", 0, T::Bool, false, "SMART_settings.unbound_check",
          "", "unbounded check inside blocks"},
         {"check_timeout", "check-timeout", 0, T::Int, 180LL, "", "SECS",
@@ -157,6 +158,11 @@ std::vector<OptionSpec> buildTable() {
          "per-call SyGuS time limit"},
         {"sygus_subprocess", "sygus-subprocess", 0, T::Bool, false, "", "",
          "solve SyGuS by running the cvc5 binary instead of libcvc5"},
+        {"bv_predicates", "bv-predicates", 0, T::String, std::string("off"),
+         "", "MODE", "BitVec predicates: off | unsigned"},
+        {"assumption_mining", "assumption-mining", 0, T::String,
+         std::string("off"), "", "MODE",
+         "reserved assumption mining: off | suggest"},
 
         // --- scheduling -------------------------------------------------
         {"jobs", "jobs", 'j', T::Int, defaultJobs(), "Parallel_settings.max_threads",
@@ -383,6 +389,29 @@ void Options::set(const std::string& key, OptionValue value) {
     explicitlySet_[key] = true;
 }
 
+void Options::validate() const {
+    const auto validateMode = [&](const std::string& key,
+                                  const std::vector<std::string>& accepted) {
+        const auto& value = values_.at(key);
+        const auto* mode = std::get_if<std::string>(&value);
+        if (mode != nullptr &&
+            std::find(accepted.begin(), accepted.end(), *mode) != accepted.end())
+            return;
+
+        const std::string rendered = mode == nullptr ? "<non-string>" : *mode;
+        std::string choices;
+        for (std::size_t i = 0; i < accepted.size(); ++i) {
+            if (i != 0) choices += ", ";
+            choices += accepted[i];
+        }
+        throw std::runtime_error(key + " must be one of: " + choices +
+                                 " (got '" + rendered + "')");
+    };
+
+    validateMode("bv_predicates", {"off", "unsigned"});
+    validateMode("assumption_mining", {"off", "suggest"});
+}
+
 bool Options::wasSetExplicitly(const std::string& key) const {
     auto it = explicitlySet_.find(key);
     return it != explicitlySet_.end() && it->second;
@@ -417,6 +446,14 @@ void Options::applyFlat(const void* jsonPtr) {
         std::string why;
         auto coerced = coerceJson(*spec, it.value(), why);
         if (!coerced) {
+            // Preserve an invalid finite-choice value until validation, rather
+            // than silently replacing it with the default. This also lets a
+            // later CLI value override it according to the normal precedence.
+            if (spec->key == "bv_predicates" ||
+                spec->key == "assumption_mining") {
+                set(spec->key, it.value().dump());
+                continue;
+            }
             warnings_.push_back("config: ignoring '" + it.key() + "': " + why);
             continue;
         }

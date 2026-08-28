@@ -169,15 +169,15 @@ VERSION_TEXT        {COMMENT_TEXT}
     //std::cout << yytext << ", ";
     VCDTimeUnit tr = TIME_S;
 
-    if(std::strcmp(yytext, "s")) {
+    if(std::strcmp(yytext, "s") == 0) {
         tr = TIME_S;
-    } else if(std::strcmp(yytext, "ms")) {
+    } else if(std::strcmp(yytext, "ms") == 0) {
         tr = TIME_MS;
-    } else if(std::strcmp(yytext, "us")) {
+    } else if(std::strcmp(yytext, "us") == 0) {
         tr = TIME_US;
-    } else if(std::strcmp(yytext, "ns")) {
+    } else if(std::strcmp(yytext, "ns") == 0) {
         tr = TIME_NS;
-    } else if(std::strcmp(yytext, "ps")) {
+    } else if(std::strcmp(yytext, "ps") == 0) {
         tr = TIME_PS;
     }
 
@@ -288,7 +288,7 @@ VERSION_TEXT        {COMMENT_TEXT}
     return VCDParser::parser::make_TOK_COLON(loc);
 }
 
-<IN_VAR_RNG,IN_VAR_RNG>{BRACKET_C} {
+<IN_VAR_RNG,IN_VAR_PID>{BRACKET_C} {
     //std::cout << yytext << ", ";
     return VCDParser::parser::make_TOK_BRACKET_C(loc);
 }

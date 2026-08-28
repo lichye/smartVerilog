@@ -10,6 +10,10 @@ Module::Module(std::string inputModuleName, bool inputHierarchical){
     this->hierarchical = inputHierarchical;
 }
 
+Module::~Module(){
+    for (Trace* trace : traces) delete trace;
+}
+
 void Module::addTrace(TraceType traceType,std::string input_tracePath){
     for(auto tracePath:tracePaths){
         if(tracePath == input_tracePath){
@@ -32,7 +36,6 @@ void Module::addTracesfromDir(TraceType traceType, std::string dirPath){
 }
 
 std::vector<Signal>* Module::getAllSignals(){
-    std::vector<Signal>* retSignals = new std::vector<Signal>();
     assert(!traces.empty());
     return traces[0]->getAllSignals(moduleName);
 }

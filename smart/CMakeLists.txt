@@ -117,7 +117,7 @@ target_link_libraries(smart_hwcbmc_frontend PUBLIC smart_frontend hwcbmc_fronten
 add_executable(hwcbmc_dump ${SMART_SRC}/frontend/hwcbmc_dump.cpp)
 target_link_libraries(hwcbmc_dump PRIVATE smart_hwcbmc_frontend)
 
-# --- simgen (WP3): testbench generation + iverilog/vvp ----------------------
+# --- simgen (WP3): Verilator by default; optional Icarus backend -------------
 add_library(smart_simgen STATIC
     ${SMART_SRC}/simgen/Harness.cpp
     ${SMART_SRC}/simgen/Verilator.cpp
@@ -127,6 +127,9 @@ target_link_libraries(smart_simgen PUBLIC smart_frontend)
 
 add_executable(simgen_run ${SMART_SRC}/simgen/simgen_run.cpp)
 target_link_libraries(simgen_run PRIVATE smart_simgen smart_hwcbmc_frontend)
+
+add_executable(test_verilator_state ${SMART_SRC}/simgen/test_verilator_state.cpp)
+target_link_libraries(test_verilator_state PRIVATE smart_simgen)
 
 # --- pipeline (WP4): options/config, workdir, orchestration ----------------
 # Options is separate from the rest of the pipeline because smart_core needs it
@@ -190,6 +193,14 @@ add_executable(test_trace
     ${SMART_SRC}/pipeline/Blocks.cpp)
 target_link_libraries(test_trace PRIVATE smart_core)
 
+add_executable(test_smt_parser ${SMART_SRC}/parser/test_smt_parser.cpp)
+target_link_libraries(test_smt_parser PRIVATE smart_core)
+
+add_executable(test_bv_predicates ${SMART_SRC}/sygus/test_bv_predicates.cpp)
+target_link_libraries(test_bv_predicates PRIVATE smart_core)
+target_compile_definitions(test_bv_predicates PRIVATE
+    SMART_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 # WP2A link spike: proves the hw-cbmc frontend links and exposes what
 # ModuleInfo needs. Kept as the minimal reproducer if linking ever breaks.
 add_executable(hwcbmc_spike EXCLUDE_FROM_ALL ${SMART_SRC}/frontend/hwcbmc_spike.cpp)
@@ -205,3 +216,19 @@ add_test(NAME options COMMAND test_options
 add_test(NAME emit COMMAND test_emit)
 add_test(NAME mus COMMAND test_mus)
 add_test(NAME trace COMMAND test_trace)
+add_test(NAME smt_parser COMMAND test_smt_parser)
+add_test(NAME bv_predicates COMMAND test_bv_predicates)
+add_test(NAME verilator_state COMMAND test_verilator_state)
+
+# The legacy benchmark generator is not in the product pipeline, but it is
+# still shipped and has self-contained regression tests.
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME gen_bench
+             COMMAND ${Python3_EXECUTABLE} -B
+                     ${SMART_SRC}/python/test_gen_bench.py
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    add_test(NAME bv_ab_plumbing
+             COMMAND ${Python3_EXECUTABLE} -B
+                     ${CMAKE_SOURCE_DIR}/tools/experiments/test_bv_ab.py)
+endif()

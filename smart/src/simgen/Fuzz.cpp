@@ -1,4 +1,5 @@
 #include "Fuzz.h"
+#include "../helper/Shell.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -56,8 +57,9 @@ std::set<std::string> runCandidate(const FuzzInput& input,
     std::ostringstream command;
     if (input.timeoutSeconds > 0)
         command << "timeout " << input.timeoutSeconds << " ";
-    command << "'" << input.simulator << "' +nodump '+stim=" << stim
-            << "' '+states=" << states << "' > /dev/null 2>&1";
+    command << helper::shellQuote(input.simulator) << " +nodump +stim="
+            << helper::shellQuote(stim) << " +states="
+            << helper::shellQuote(states) << " > /dev/null 2>&1";
     std::system(command.str().c_str());
 
     std::set<std::string> visited;

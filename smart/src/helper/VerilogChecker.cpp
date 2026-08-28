@@ -3,6 +3,7 @@
 #include "StateMaker.h"
 #include "Timer.h"
 #include "Utils.h"
+#include "Shell.h"
 #include <unistd.h>
 
 #include <string>
@@ -19,7 +20,6 @@
 #include <cctype>
 
 #include <filesystem>
-#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -120,7 +120,7 @@ void VerilogChecker::writeVerilogFile() {
 
         if (line.find("endmodule") != std::string::npos && isModule) {
             assert(properties.size() == propertyTypes.size());
-            for (int i = 0; i < properties.size(); i++) {
+            for (std::size_t i = 0; i < properties.size(); i++) {
                 lines.insert(lines.end() - 1, "    assert property (" + properties[i] + ");\n");
                 insertProperties = true;
             }
@@ -128,16 +128,19 @@ void VerilogChecker::writeVerilogFile() {
         }
 
         if (line.find("module") != std::string::npos) {
-            int start = line.find("module") + 6;
+            std::size_t start = line.find("module") + 6;
 
             // Skip whitespace
-            while (start < line.size() && isspace(line[start])) {
+            while (start < line.size() &&
+                   std::isspace(static_cast<unsigned char>(line[start]))) {
                 ++start;
             }
 
             // Find the end of the module name (before space, '#' or '(' )
-            int end = start;
-            while (end < line.size() && !isspace(line[end]) && line[end] != '#' && line[end] != '(') {
+            std::size_t end = start;
+            while (end < line.size() &&
+                   !std::isspace(static_cast<unsigned char>(line[end])) &&
+                   line[end] != '#' && line[end] != '(') {
                 ++end;
             }
 
@@ -217,12 +220,12 @@ void VerilogChecker::cleanProperties() {
 
 bool VerilogChecker::runEBMC(){
     std::string command = "";
-    command += "ebmc "+formalFilePath;
+    command += smart::helper::shellQuote("ebmc")+" "+smart::helper::shellQuote(formalFilePath);
     command += " -D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
     for(auto &path : relatedFilePaths) {
-        command +=" "+path+ " ";
+        command +=" "+smart::helper::shellQuote(path)+ " ";
     }
     
     if(unboundCheck)
@@ -231,7 +234,7 @@ bool VerilogChecker::runEBMC(){
         command += " --bound "+std::to_string(bound);
 
     if(topModule != "")
-        command += " --top "+topModule;
+        command += " --top "+smart::helper::shellQuote(topModule);
     // command += " --vcd test.vcd";
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
@@ -243,12 +246,12 @@ bool VerilogChecker::runEBMC(){
 
 bool VerilogChecker::runEBMC(std::string tracePath){
     std::string command = "";
-    command += "ebmc "+formalFilePath;
+    command += smart::helper::shellQuote("ebmc")+" "+smart::helper::shellQuote(formalFilePath);
     command += " -D FORMAL ";
     // command += " --bound "+std::to_string(bound);
 
     for(auto &path : relatedFilePaths) {
-        command +=" "+path+ " ";
+        command +=" "+smart::helper::shellQuote(path)+ " ";
     }
 
     if(unboundCheck)
@@ -257,8 +260,8 @@ bool VerilogChecker::runEBMC(std::string tracePath){
         command += " --bound "+std::to_string(bound);
 
     if(topModule != "")
-        command += " --top "+topModule;
-    command += " --vcd "+tracePath;
+        command += " --top "+smart::helper::shellQuote(topModule);
+    command += " --vcd "+smart::helper::shellQuote(tracePath);
     command += " > /dev/null 2>&1";
     printDebug("Running EBMC with command: "+command+"\n",1);
     int status = system(command.c_str());
@@ -322,9 +325,10 @@ bool VerilogChecker::checkExprSafety(SygusFunction* func,std::string tracePath) 
         if(!result){
             //if the result is failure, we need to move vcd file to the right place
             std::string vcdPath = homePath + "/runtime/formal/dis_task/engine_0/trace.vcd";
-            std::string command = "cp "+vcdPath+" "+tracePath;
-            int status = system(command.c_str());
-            if(status!=0) {
+            std::error_code error;
+            fs::copy_file(vcdPath, tracePath,
+                          fs::copy_options::overwrite_existing, error);
+            if(error) {
                 printError("Error: Unable to copy vcd file "+vcdPath+" to "+tracePath+"\n");
                 exit(1);
             }
@@ -437,7 +441,7 @@ bool VerilogChecker::runSby() {
 
 
     std::string command = "";
-    command += "sby "+sbyFilePath;
+    command += smart::helper::shellQuote("sby")+" "+smart::helper::shellQuote(sbyFilePath);
     command += " -f";
 
     command += " > /dev/null 2>&1";
@@ -497,6 +501,7 @@ Constrains VerilogChecker::fixupConstrains(Constrains constrains) {
             //make the state reachable
             State* state = makeReachableState(values);
             std::vector<Value*> newValues = state->getValues();
+            delete state;
             
             //add the new values to the new constrains
             for(int signalIndex=0;signalIndex<signalSize;signalIndex++) {
@@ -533,8 +538,9 @@ State* VerilogChecker::makeReachableState(std::vector<Value*> values){
         return state;
     }
     else{
-        state = sm.fixUpState(state,values);
-        return state;
+        State* refined = sm.fixUpState(state,values);
+        delete state;
+        return refined;
     }
 }
 
@@ -543,9 +549,9 @@ void VerilogChecker::setTimer(Timer* timer) {
 }
 
 void VerilogChecker::deleteVerilogFile(){
-    std::string command = "rm -rf "+formalFilePath;
-    int status = system(command.c_str());
-    if(status!=0) {
+    std::error_code error;
+    const bool removed = fs::remove(formalFilePath, error);
+    if(error || !removed) {
         printError("Error: Unable to delete file "+formalFilePath+"\n");
         exit(1);
     }

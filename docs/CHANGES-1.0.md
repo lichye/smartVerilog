@@ -9,6 +9,12 @@ MutationBenchmark mutant set, `-j16`. Mutant counts match the artifact's on
 all 22 designs. The artifact comparison is like-for-like — same machine, same
 16 threads (`Config/block_msa*.json` all set `max_threads: 16`).
 
+Current proof-strength policy (changed 2026-08-09): the final output gate uses
+EBMC k-induction by default, while checks inside synthesis blocks remain
+bounded for mining speed. The measurements below predate that default unless
+they explicitly say k-induction; `--no-final-unbounded` restores the historical
+bounded final check for reproduction only.
+
 ---
 
 ## 1. Input quality — what reaches the synthesiser
@@ -287,23 +293,27 @@ Both were made from one design and corrected after 22:
   change; the justification did — it does measurable work for no measurable
   gain, which is a simplicity argument, not a performance one.
 
-The shipped default now has a number of its own: **22 designs, MD mean 82.12%,
-total 4655s.**
+The historical bounded-final configuration has a number of its own: **22
+designs, MD mean 82.12%, total 4655s.** These measurements predate the current
+k-induction final gate; reproduce them with `--no-final-unbounded`.
 
 ---
 
 ## 9. Open
 
 1. **s953** — the one design clearly below the artifact (98.6% -> 86.2%).
-2. **k-induction retention at scale.** `--unbounded` turns the output into
-   real invariants, and on s27/s298 it cost nothing (100% survived, same
-   runtime). Two small sequential circuits do not generalise; the large
-   combinational designs are untested, and the invariant-supplier use depends
-   on it.
-3. **BitVec comparisons in the grammar.** The insertion point is marked in
-   `SyGuSGenerater.cpp` (`//wait for add bv compare grammar`). Nearly half of
-   all blocks fail as infeasible, and a counter bound like `count <= limit` is
-   not expressible today. This is where §7 says the blocks are.
+2. **k-induction retention at scale.** The final gate now uses k-induction by
+   default; `--unbounded` additionally enables it inside synthesis blocks. On
+   s27/s298 the final gate cost nothing (100% survived, same runtime), but two
+   small sequential circuits do not generalise. The controlled large-design
+   run is still outstanding; use `--no-final-unbounded` only to reproduce the
+   historical bounded-final experiments.
+3. **Measure the implemented BitVec comparisons.**
+   `--bv-predicates unsigned` now enables restricted same-width raw-signal
+   equality, `bvult`, and `bvule`; it remains `off` by default. A complete A/B
+   has not run because there is not yet a suitable fixed multi-bit-vector
+   benchmark with a frozen mutant set. Selecting and pinning that benchmark is
+   a prerequisite; an ad-hoc fresh mutant set would not be comparable.
 4. c1355 / c880 / c499: our non-MSA work is slower than the artifact's
    (residual 0.5-0.9x). We emit far more assertions there — the obvious but
    unverified suspect.

@@ -47,8 +47,6 @@ VCDTime current_time = 0;
 %token                  TOK_COLON             
 %token                  TOK_DOLLAR            
 %token                  TOK_KW_END            
-%token                  TOK_KW_COMMENT        
-%token <std::string>    TOK_COMMENT_TEXT
 %token                  TOK_KW_DATE           
 %token <std::string>    TOK_DATE_TEXT
 %token                  TOK_KW_ENDDEFINITIONS 
@@ -82,7 +80,6 @@ VCDTime current_time = 0;
 
 %start input
 
-%type <std::string>     comment_text
 %type <std::string>     version_text 
 %type <std::string>     date_text
 %type <VCDSignal*>      reference
@@ -249,7 +246,7 @@ vector_value_change:
     VCDBitVector * vec = new VCDBitVector();
     VCDValue * val = new VCDValue(vec);
 
-    for(int i =1; i < $1.size(); i ++) {
+    for(std::size_t i = 1; i < $1.size(); ++i) {
         switch($1[i]) {
             case '0':
                 vec -> push_back(VCD_0);
@@ -284,7 +281,6 @@ vector_value_change:
     toadd -> time   = current_time;
     toadd -> value  = 0;
 
-    VCDValue * val;
     VCDReal real_value;
     
     // Legal way of parsing dumped floats according to the spec.
@@ -350,14 +346,6 @@ reference:
 
 
 
-
-comment_text :
-    %empty  {
-    $$ = std::string();
-}
-|   TOK_COMMENT_TEXT {
-    $$ = std::string($1);
-}
 
 version_text :
     %empty{

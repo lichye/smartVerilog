@@ -17,7 +17,7 @@ class SmtFunctionParser {
     std::string parseToken(std::istringstream& stream);
     void skipWhitespace(std::istringstream& stream);
     std::string cleanLatency(std::string);
-    int latency;
+    int latency = 0;
 };
 
 #endif

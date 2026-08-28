@@ -27,6 +27,8 @@ struct RunSummary {
     std::string outputFile;
     std::size_t minedAssertions = 0;
     std::size_t verifiedAssertions = 0;
+    bool finalChecked = true;
+    bool finalUnbounded = true;
     int rounds = 0;
     double seconds = 0.0;
     std::string workDir;

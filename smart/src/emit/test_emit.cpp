@@ -5,8 +5,13 @@
 // next argument), which is why it gets a test of its own (plan gotcha 7).
 
 #include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
+
+#include <unistd.h>
 
 #include "AssertionWriter.h"
 
@@ -34,12 +39,19 @@ void testCommandBuilder() {
     options.topModule = "c17";
     options.bound = 10;
 
+    const auto defaultCommand = ebmcCommand("design.sv", options);
+    check(contains(defaultCommand, "--k-induction"),
+          "the checker API defaults to k-induction");
+    check(!contains(defaultCommand, "--bound"),
+          "the default checker API does not silently use a bound");
+
+    options.unbounded = false;
     const auto bounded = ebmcCommand("design.sv", options);
     check(contains(bounded, "'design.sv'"), "design file is quoted");
     check(contains(bounded, " -D FORMAL "),
           "-D FORMAL keeps a space on BOTH sides");
     check(contains(bounded, "--bound 10"), "bounded mode passes --bound");
-    check(contains(bounded, "--top c17"), "top module is passed");
+    check(contains(bounded, "--top 'c17'"), "top module is passed");
     check(!contains(bounded, "--k-induction"), "bounded mode is not k-induction");
 
     options.unbounded = true;
@@ -56,6 +68,12 @@ void testCommandBuilder() {
     options.topModule.clear();
     check(!contains(ebmcCommand("design.sv", options), "--top"),
           "no --top when there is no top module");
+
+    options.ebmc = "tool's ebmc";
+    const auto apostrophe = ebmcCommand("design's copy.sv", options);
+    check(contains(apostrophe, "'tool'\"'\"'s ebmc'") &&
+              contains(apostrophe, "'design'\"'\"'s copy.sv'"),
+          "shell arguments preserve apostrophes");
 }
 
 void testInjection() {
@@ -102,12 +120,57 @@ void testMultipleModules() {
           "injection targets the named module, not the first one");
 }
 
+void testOutputGuaranteeLabels() {
+    namespace fs = std::filesystem;
+    const auto base = fs::temp_directory_path() /
+                      ("smart-emit-test-" +
+                       std::to_string(static_cast<long>(::getpid())));
+    const auto input = base.string() + ".sv";
+    const auto output = base.string() + "-out.sv";
+    {
+        std::ofstream source(input);
+        source << "module top; endmodule\n";
+    }
+
+    const auto readOutput = [&] {
+        std::ifstream in(output);
+        std::ostringstream text;
+        text << in.rdbuf();
+        return text.str();
+    };
+
+    writeAssertionFile(input, output, "top", {"1'b1"}, "{}",
+                       VerificationMode::KInduction, 10);
+    check(contains(readOutput(), "k-induction-proved invariant"),
+          "k-induction output is labelled as an invariant");
+
+    writeAssertionFile(input, output, "top", {"1'b1"}, "{}",
+                       VerificationMode::Bounded, 17);
+    const auto bounded = readOutput();
+    check(contains(bounded, "bounded-verified assertion") &&
+              contains(bounded, "not an invariant") &&
+              contains(bounded, "bound 17"),
+          "bounded output states its weaker guarantee");
+
+    writeAssertionFile(input, output, "top", {"1'b1"}, "{}",
+                       VerificationMode::Unchecked, 10);
+    const auto unchecked = readOutput();
+    check(contains(unchecked, "unverified candidate assertion") &&
+              contains(unchecked, "prove before use"),
+          "unchecked output never claims formal verification");
+
+    std::error_code error;
+    fs::remove(input, error);
+    fs::remove(output, error);
+}
+
 }  // namespace
 
 int main() {
     testCommandBuilder();
     testInjection();
     testMultipleModules();
+    testOutputGuaranteeLabels();
 
     if (failures != 0) {
         std::cout << failures << " emit test(s) failed\n";

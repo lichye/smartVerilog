@@ -16,12 +16,20 @@ SmtFunctionParser::~SmtFunctionParser()
 }
 
 SygusExpr* SmtFunctionParser::parseSmtFunction(std::string function,bool isLTL) {
-    if (function.find("(define-fun") <0) {
+    // This parser instance is reused across CEGIS refinements. A previous LTL
+    // solution must not leak its latency into the next define-fun.
+    latency = 0;
+    const size_t definition = function.find("(define-fun");
+    if (definition == std::string::npos) {
         throw std::invalid_argument("Input is not a valid SMT-LIB function definition.");
     }
 
-    size_t bodyStart = function.find('(', function.find("(define-fun"));
+    size_t bodyStart = function.find('(', definition);
     size_t bodyEnd = function.rfind(')');
+    if (bodyStart == std::string::npos || bodyEnd == std::string::npos ||
+        bodyEnd <= bodyStart) {
+        throw std::invalid_argument("Input has an incomplete SMT-LIB function definition.");
+    }
     std::string body = function.substr(bodyStart, bodyEnd - bodyStart);
 
     // Parse the function body
@@ -43,11 +51,16 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream,bool is
         SygusExprType exprType = getExprType(opToken);
 
         if (exprType == FUNCTION) {
-            SygusIdentifier* id = (SygusIdentifier*)parseExpression(stream,isLTL);
-            SygusVariableList* parameter_list = (SygusVariableList*)parseExpression(stream,isLTL);
-            SygusExpr* return_type = parseExpression(stream,isLTL);
+            // A next-state name in the signature is only a declaration. The
+            // property has temporal latency iff its BODY actually references
+            // such a name, so declarations are parsed without LTL inference.
+            SygusIdentifier* id = (SygusIdentifier*)parseExpression(stream,false);
+            SygusVariableList* parameter_list =
+                (SygusVariableList*)parseExpression(stream,false);
+            SygusExpr* return_type = parseExpression(stream,false);
             SygusExpr* body = parseExpression(stream,isLTL);
             SygusFunction* function = new SygusFunction(id, parameter_list, body);
+            delete return_type;
             stream.get(); // Consume ')'
             if(isLTL)
                 function->setLatency(latency);
@@ -83,7 +96,8 @@ SygusExpr* SmtFunctionParser::parseExpression(std::istringstream& stream,bool is
 
             int bitlengthValue = bitlength->getValue();
             SygusBitsType* bitsType = new SygusBitsType(bitlengthValue);
-
+            delete bitvec;
+            delete bitlength;
             
             stream.get(); // Consume ')' of the bits type
             return bitsType;

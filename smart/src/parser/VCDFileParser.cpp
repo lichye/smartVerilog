@@ -33,22 +33,14 @@ VCDFile *VCDFileParser::parse_file(const std::string &filepath)
 
     // `parent` is a raw pointer in a POD struct, so `new VCDScope` leaves it
     // indeterminate. Every other scope gets one assigned by the grammar; the
-    // roots are the two that do not, and anything walking parent links out of
-    // a top-level scope lands here.
+    // root does not, and anything walking parent links out of a top-level
+    // scope lands here.
     this->fh->root_scope = new VCDScope;
     this->fh->root_scope->name = std::string("$root");
     this->fh->root_scope->type = VCD_SCOPE_ROOT;
     this->fh->root_scope->parent = nullptr;
 
     this->scopes.push(this->fh->root_scope);
-
-    this -> fh -> root_scope = new VCDScope;
-    this -> fh -> root_scope -> name = std::string("");
-    this -> fh -> root_scope -> type = VCD_SCOPE_ROOT;
-    this -> fh -> root_scope -> parent = nullptr;
-
-    this -> scopes.push(this -> fh -> root_scope);
-    
     tr -> add_scope(scopes.top());
 
     
