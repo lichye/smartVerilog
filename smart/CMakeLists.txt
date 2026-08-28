@@ -1,6 +1,5 @@
-# The SMART build. Mirrors smart/Makefile until WP8 retires it; the flex
-# prefix and the generated file names must match exactly or the VCD parser
-# symbols will not link (plan gotcha 8).
+# The SMART build. The flex prefix and generated file names must match exactly
+# or the VCD parser symbols will not link.
 
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
