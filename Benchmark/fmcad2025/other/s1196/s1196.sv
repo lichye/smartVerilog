@@ -4,23 +4,20 @@
 //# 141 inverters
 //# 388 gates (118 ANDs + 119 NANDs + 101 ORs + 50 NORs)
 
+// ISCAS89 dff: the original is a switch-level positive-edge flip-flop
+// (two trireg latches driven by nmos switches). EBMC does not model
+// trireg charge storage, so use the equivalent behavioral flip-flop.
 module dff (CK,Q,D);
 input CK,D;
 output Q;
-  wire NM,NCK;
-  reg NQ,M; // trireg -> reg
-  assign M = D ? NCK : 1'bz; //nmos N7 (M,D,NCK);
-  assign NQ = NM ? CK : 1'bz; //nmos N9 (NQ,NM,CK);
-  not P3 (NM,M);
-  not P5 (Q,NQ);
-  not P1 (NCK,CK);
-
+  reg Q;
+  always @(posedge CK) Q <= D;
 endmodule
 
-module s1196(G0,G1,G10,G11,G12,G13,G2,G3,G4,G45,G5,G530,G532,G535,
+module s1196(CK,G0,G1,G10,G11,G12,G13,G2,G3,G4,G45,G5,G530,G532,G535,
   G537,G539,
   G542,G546,G547,G548,G549,G550,G551,G552,G6,G7,G8,G9);
-input G0,G1,G2,G3,G4,G5,G6,G7,G8,G9,G10,G11,G12,G13;
+input CK,G0,G1,G2,G3,G4,G5,G6,G7,G8,G9,G10,G11,G12,G13;
 output G546,G539,G550,G551,G552,G547,G548,G549,G530,G45,G542,G532,G535,G537;
 
   wire G29,G502,G30,G503,G31,G504,G32,G505,G33,G506,G34,G507,G35,G508,G36,G509,
@@ -60,24 +57,24 @@ output G546,G539,G550,G551,G552,G547,G548,G549,G530,G45,G542,G532,G535,G537;
     G233,G243,G237,G96,G278,G255,G69,G264,G84,G258,G259,G217,G230,G260,G266,
     G262,G256,G113,G268,G253,G254,G523,G247,G246,G185;
 
-  dff DFF_0(G29,G502);
-  dff DFF_1(G30,G503);
-  dff DFF_2(G31,G504);
-  dff DFF_3(G32,G505);
-  dff DFF_4(G33,G506);
-  dff DFF_5(G34,G507);
-  dff DFF_6(G35,G508);
-  dff DFF_7(G36,G509);
-  dff DFF_8(G37,G510);
-  dff DFF_9(G38,G511);
-  dff DFF_10(G39,G512);
-  dff DFF_11(G40,G513);
-  dff DFF_12(G41,G514);
-  dff DFF_13(G42,G515);
-  dff DFF_14(G43,G516);
-  dff DFF_15(G44,G517);
-  dff DFF_16(G45,G518);
-  dff DFF_17(G46,G519);
+  dff DFF_0(CK,G29,G502);
+  dff DFF_1(CK,G30,G503);
+  dff DFF_2(CK,G31,G504);
+  dff DFF_3(CK,G32,G505);
+  dff DFF_4(CK,G33,G506);
+  dff DFF_5(CK,G34,G507);
+  dff DFF_6(CK,G35,G508);
+  dff DFF_7(CK,G36,G509);
+  dff DFF_8(CK,G37,G510);
+  dff DFF_9(CK,G38,G511);
+  dff DFF_10(CK,G39,G512);
+  dff DFF_11(CK,G40,G513);
+  dff DFF_12(CK,G41,G514);
+  dff DFF_13(CK,G42,G515);
+  dff DFF_14(CK,G43,G516);
+  dff DFF_15(CK,G44,G517);
+  dff DFF_16(CK,G45,G518);
+  dff DFF_17(CK,G46,G519);
   not NOT_0(G520,G0);
   not NOT_1(G521,G1);
   not NOT_2(G522,G2);

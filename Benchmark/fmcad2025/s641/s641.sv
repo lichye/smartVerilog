@@ -4,17 +4,14 @@
 //# 272 inverters
 //# 107 gates (90 ANDs + 4 NANDs + 13 ORs + 0 NORs)
 
+// ISCAS89 dff: the original is a switch-level positive-edge flip-flop
+// (two trireg latches driven by nmos switches). EBMC does not model
+// trireg charge storage, so use the equivalent behavioral flip-flop.
 module dff (CK,Q,D);
 input CK,D;
 output Q;
-  wire NM,NCK;
-  reg NQ,M; // trireg -> reg
-  assign M = D ? NCK : 1'bz; //nmos N7 (M,D,NCK);
-  assign NQ = NM ? CK : 1'bz; //nmos N9 (NQ,NM,CK);
-  not P3 (NM,M);
-  not P5 (Q,NQ);
-  not P1 (NCK,CK);
-
+  reg Q;
+  always @(posedge CK) Q <= D;
 endmodule
 module s641(GND,VDD,CK,G1,G10,G100BF,G101BF,G103BF,G104BF,G105BF,G106BF,G107,
   G11,G12,G13,
